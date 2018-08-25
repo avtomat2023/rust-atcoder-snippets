@@ -1,0 +1,7 @@
+[package]
+name = "atcoder_snippets"
+version = "0.0.1"
+authors = ["yoshrc"]
+
+[dependencies]
+cargo-snippet = "0.2"
