@@ -1,3 +1,5 @@
+//! Cumulative sum.
+
 #[snippet = "cumulative"]
 use std::ops::AddAssign;
 
