@@ -9,12 +9,14 @@
 //! # use::atcoder_snippets::read::*;
 //! # use::atcoder_snippets::vec2::*;
 //! #
-//! read!(x1 = i16, y1 = i16, x2 = i16, y2 = i16);
-//! let p1 = Vec2::new(x1, y1);
-//! let p2 = Vec2::new(x2, y2);
-//! let delta = p2 - p1;
-//! let delta_rot = Vec2::new(-delta.y, delta.x);
-//! println!("{} {}", p2 + delta_rot, p1 + delta_rot);
+//! // Use `read` and `vec2` snippet.
+//!
+//! fn main() {
+//!     read!(point1 = Vec2<i16>, point2 = Vec2<i16>);
+//!     let delta = point2 - point1;
+//!     let delta_rotated = Vec2::new(-delta.y, delta.x);
+//!     println!("{} {}", point2 + delta_rotated, point1 + delta_rotated);
+//! }
 //! ```
 
 
@@ -24,7 +26,7 @@ use std::ops::{Add, AddAssign, Sub, SubAssign, Neg, Mul, MulAssign, Div, DivAssi
 use std::fmt::{self, Display, Formatter};
 
 #[snippet = "vec2"]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Vec2<T> {
     pub x: T,
     pub y: T
@@ -147,6 +149,21 @@ impl<S: Copy, T: DivAssign<S>> DivAssign<S> for Vec2<T> {
     }
 }
 
+use read::FromFragments;
+
+#[snippet = "vec2"]
+impl<T: FromFragments> FromFragments for Vec2<T> {
+    fn fragments_count() -> usize {
+        T::fragments_count() * 2
+    }
+
+    fn from_fragments(fragments: &[&str]) -> Result<Vec2<T>, String> {
+        let n = T::fragments_count();
+        Ok(Vec2::new(T::from_fragments(&fragments[..n])?,
+                     T::from_fragments(&fragments[n..])?))
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -210,5 +227,11 @@ mod test {
         let mut v = Vec2::new(10, 20);
         v /= 3;
         assert_eq!(v, Vec2::new(3, 6));
+    }
+
+    #[test]
+    fn test_from_fragments() {
+        let v = Vec2::<i32>::from_fragments(&["1", "2"]);
+        assert_eq!(v, Ok(Vec2::new(1, 2)));
     }
 }

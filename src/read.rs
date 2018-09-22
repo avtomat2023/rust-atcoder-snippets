@@ -99,25 +99,30 @@
 //! ```
 
 #[snippet = "read"]
-pub trait FromFragment: Sized {
-    fn from_fragment(s: &str) -> Result<Self, String>;
+pub trait FromFragments: Sized {
+    fn fragments_count() -> usize;
+    fn from_fragments(fragments: &[&str]) -> Result<Self, String>;
 }
 
 #[snippet = "read"]
-impl FromFragment for String {
-    fn from_fragment(s: &str) -> Result<String, String> { Ok(s.to_owned()) }
+impl FromFragments for String {
+    fn fragments_count() -> usize { 1 }
+    fn from_fragments(fragments: &[&str]) -> Result<String, String> {
+        Ok(fragments[0].to_string())
+    }
 }
 
 // impl FromFragment for bool
 
 #[snippet = "read"]
-macro_rules! impl_from_fragment {
+macro_rules! impl_from_fragments {
     ( $( $t:ty )* ) => { $(
-        impl FromFragment for $t {
-            fn from_fragment(s: &str) -> Result<$t, String> {
+        impl FromFragments for $t {
+            fn fragments_count() -> usize { 1 }
+            fn from_fragments(fragments: &[&str]) -> Result<$t, String> {
                 use std::str::FromStr;
-                <$t>::from_str(s).map_err(|_| {
-                    format!("cannot parse \"{}\" as {}", s, stringify!($t))
+                <$t>::from_str(fragments[0]).map_err(|_| {
+                    format!("cannot parse \"{}\" as {}", fragments[0], stringify!($t))
                 })
             }
         }
@@ -125,7 +130,7 @@ macro_rules! impl_from_fragment {
 }
 
 #[snippet = "read"]
-impl_from_fragment!(isize usize i8 u8 i16 u16 i32 u32 i64 u64 f64);
+impl_from_fragments!(isize usize i8 u8 i16 u16 i32 u32 i64 u64 f32 f64);
 
 #[snippet = "read"]
 pub trait FromLine: Sized {
@@ -133,65 +138,89 @@ pub trait FromLine: Sized {
 }
 
 #[snippet = "read"]
-impl<T: FromFragment> FromLine for T {
+fn split_into_fragments(line: &str) -> Vec<&str> {
+    line.trim_right_matches('\n').split_whitespace().collect()
+}
+
+#[snippet = "read"]
+impl<T: FromFragments> FromLine for T {
     fn from_line(line: &str) -> Result<T, String> {
-        T::from_fragment(line.trim_right_matches('\n'))
+        let fragments = split_into_fragments(line);
+        if fragments.len() != T::fragments_count() {
+            return Err(format!("line \"{}\" has {} fragments, expected {}",
+                               line, fragments.len(), T::fragments_count()));
+        }
+
+        T::from_fragments(&fragments)
     }
 }
 
 /// Reads arbitrary number of `T`s.
 #[snippet = "read"]
-impl<T: FromFragment> FromLine for Vec<T> {
+impl<T: FromFragments> FromLine for Vec<T> {
     fn from_line(line: &str) -> Result<Vec<T>, String> {
+        let n = T::fragments_count();
+        let fragments = split_into_fragments(line);
+        if fragments.len() % n != 0 {
+            return Err(format!("line \"{}\" has {} fragments, expected multiple of {}",
+                               line, fragments.len(), n));
+        }
+
         let mut result = Vec::new();
-        for fragment in line.trim_right_matches('\n').split_whitespace() {
-            match T::from_fragment(fragment) {
+        for chunk in fragments.chunks(n) {
+            match T::from_fragments(chunk) {
                 Ok(v) => result.push(v),
                 Err(msg) => {
+                    let flagment_msg = if n == 1 {
+                        format!("fragment {}", result.len())
+                    } else {
+                        let l = result.len();
+                        format!("fragments {}-{}", n*l + 1, (n+1) * l)
+                    };
                     return Err(format!(
-                        "fragment {} of line \"{}\": {}",
-                        result.len() + 1, line, msg
-                    ))
+                        "{} of line \"{}\": {}", flagment_msg, line, msg
+                    ));
                 }
             }
         }
+
         Ok(result)
     }
 }
 
 #[snippet = "read"]
-macro_rules! impl_from_line_for_tuples {
+macro_rules! impl_from_fragments_for_tuples {
     ($t:ident $var:ident $count:expr) => ();
-    ($t:ident $var:ident $count:expr; $($inner_t:ident $inner_var:ident $inner_count:expr);*) => {
-        impl_from_line_for_tuples!($($inner_t $inner_var $inner_count);*);
+    ($t:ident $var:ident $count:expr;
+     $($inner_t:ident $inner_var:ident $inner_count:expr);*) => {
+        impl_from_fragments_for_tuples!($($inner_t $inner_var $inner_count);*);
 
-        impl <$t: FromFragment, $($inner_t: FromFragment),*> FromLine for ($t, $($inner_t),*) {
+        impl <$t: FromFragments, $($inner_t: FromFragments),*> FromFragments
+            for ($t, $($inner_t),*)
+        {
+            fn fragments_count() -> usize {
+                let mut n = <$t>::fragments_count();
+                $(
+                    n += <$inner_t>::fragments_count();
+                )*
+                n
+            }
+
             #[allow(unused_assignments)]
-            fn from_line(line: &str) -> Result<( $t, $($inner_t),*), String> {
-                let fragments: Vec<&str> =
-                    line.trim_right_matches('\n').split_whitespace().collect();
-                if fragments.len() != $count {
-                    return Err(format!(
-                        "line \"{}\" has {} fragments, expected {}",
-                        line, fragments.len(), $count
-                    ));
-                }
-
-                let mut iter = fragments.iter();
-                let mut n = 1;
-                let $var = <$t>::from_fragment(iter.next().unwrap())
-                    .map_err(|msg| {
-                        format!("fragment {} of line \"{}\": {}", n, line, msg)
-                    })?;
-                n += 1;
+            fn from_fragments(fragments: &[&str]) ->
+                Result<( $t, $($inner_t),*), String>
+            {
+                let mut start = 0;
+                let $var = <$t>::from_fragments(
+                    &fragments[start .. start+<$t>::fragments_count()]
+                )?;
+                start += <$t>::fragments_count();
                 $(
                     let $inner_var =
-                        <$inner_t>::from_fragment(iter.next().unwrap())
-                        .map_err(|msg| {
-                            format!("fragment {} of line \"{}\": {}",
-                                    n, line, msg)
-                        })?;
-                    n += 1;
+                        <$inner_t>::from_fragments(
+                            &fragments[start .. start+<$inner_t>::fragments_count()]
+                        )?;
+                    start += <$inner_t>::fragments_count();
                 )*
                 Ok(( $var, $($inner_var),* ))
             }
@@ -200,7 +229,7 @@ macro_rules! impl_from_line_for_tuples {
 }
 
 #[snippet = "read"]
-impl_from_line_for_tuples!(T4 x4 4; T3 x3 3; T2 x2 2; T1 x1 1);
+impl_from_fragments_for_tuples!(T4 x4 4; T3 x3 3; T2 x2 2; T1 x1 1);
 
 #[macro_export]
 #[snippet = "read"]
@@ -303,9 +332,43 @@ macro_rules! readn_loop {
 mod test {
     use super::*;
 
+    #[derive(Debug, PartialEq)]
+    struct Pair(i32, i32);
+
+    impl FromFragments for Pair {
+        fn fragments_count() -> usize { 2 }
+        fn from_fragments(fragments: &[&str]) -> Result<Pair, String> {
+            let x1 = i32::from_fragments(&fragments[0..1])?;
+            let x2 = i32::from_fragments(&fragments[1..2])?;
+            Ok(Pair(x1, x2))
+        }
+    }
+
     #[test]
-    fn test_from_fragemnt() {
-        assert_eq!(i32::from_fragment("42"), Ok(42));
-        assert_eq!(String::from_fragment("string"), Ok("string".to_owned()));
+    fn test_from_fragemnts_primitives() {
+        assert_eq!(i32::from_fragments(&["42"]), Ok(42));
+        assert!(i32::from_fragments(&["a"]).is_err());
+        assert_eq!(String::from_fragments(&["string"]), Ok("string".to_string()));
+    }
+
+    #[test]
+    fn test_from_fragments_custom() {
+        assert_eq!(Pair::from_fragments(&["1", "2"]), Ok(Pair(1, 2)));
+    }
+
+    #[test]
+    fn test_from_fratments_nested_tuple() {
+        assert_eq!(<(i32, (i32, i32), i32)>::from_fragments(&["1", "2", "3", "4"]),
+                   Ok((1, (2, 3), 4)));
+    }
+
+    #[test]
+    fn test_from_line_vector() {
+        assert_eq!(Vec::<i32>::from_line("1 2 3\n"), Ok(vec![1, 2, 3]));
+    }
+
+    #[test]
+    fn test_from_line_cardinarity_mismatch() {
+        assert!(Vec::<Pair>::from_line("1 2 3\n").is_err());
     }
 }
