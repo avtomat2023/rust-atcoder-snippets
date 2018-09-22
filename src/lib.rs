@@ -7,3 +7,4 @@
 pub mod read;
 pub mod itertools;
 pub mod cumulative;
+pub mod div;
