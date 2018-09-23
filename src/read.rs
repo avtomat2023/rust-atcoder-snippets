@@ -266,6 +266,17 @@ macro_rules! readls {
     }
 }
 
+#[snippet = "read"]
+pub fn read_vec<T: FromLine>() -> Vec<T> {
+    use std::io::{self, BufRead};
+    let stdin = io::stdin();
+    let result = stdin.lock().lines().map(|line_result| {
+        let line = line_result.expect("read from stdin failed");
+        T::from_line(&line).unwrap()
+    }).collect();
+    result
+}
+
 #[macro_export]
 #[snippet = "read"]
 macro_rules! read_loop {
