@@ -9,3 +9,4 @@ pub mod itertools;
 pub mod cumulative;
 pub mod div;
 pub mod vec2;
+pub mod utils;
