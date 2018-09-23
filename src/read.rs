@@ -266,6 +266,46 @@ macro_rules! readls {
     }
 }
 
+/// 標準入力の行をすべて読み込み、`Vec`を返す。
+///
+/// # Example
+///
+/// Solves [AtCoder Beginner Contest 109: Problem B - Shiritori](https://abc109.contest.atcoder.jp/tasks/abc109_b).
+///
+/// ```no_run
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::read::*;
+/// # use atcoder_snippets::utils::yn;
+///
+/// // Use `read` and `yn` snippets.
+///
+/// use std::collections::HashSet;
+///
+/// // Checks whther the given sequence of words satisfies the constraint.
+/// fn check(words: &[String]) -> bool {
+///     let mut occurred = HashSet::new();
+///     let first = &words[0];
+///     occurred.insert(first);
+///     let mut last_char = first.chars().last().unwrap();
+///
+///     for word in &words[1..] {
+///         if !word.starts_with(last_char) {
+///             return false;
+///         }
+///         if !occurred.insert(word) {
+///             return false;
+///         }
+///         last_char = word.chars().last().unwrap();
+///     }
+///
+///     return true;
+/// }
+///
+/// fn main() {
+///     read!();
+///     println!("{}", yn(check(&read_vec())));
+/// }
+/// ```
 #[snippet = "read"]
 pub fn read_vec<T: FromLine>() -> Vec<T> {
     use std::io::{self, BufRead};
