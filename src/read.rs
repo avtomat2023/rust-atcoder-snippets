@@ -90,6 +90,14 @@ pub trait FromFragments: Sized {
 }
 
 #[snippet = "read"]
+impl FromFragments for () {
+    fn fragments_count() -> usize { 1 }
+    fn from_fragments(_fragments: &[&str]) -> Result<(), String> {
+        Ok(())
+    }
+}
+
+#[snippet = "read"]
 impl FromFragments for String {
     fn fragments_count() -> usize { 1 }
     fn from_fragments(fragments: &[&str]) -> Result<String, String> {
@@ -255,6 +263,7 @@ macro_rules! read {
     };
 }
 
+/// 標準入力から複数行を読み込む。
 #[macro_export]
 #[snippet = "read"]
 macro_rules! readls {
