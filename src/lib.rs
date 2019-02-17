@@ -1,12 +1,18 @@
-//! Utility snippets for AtCoder, easily copy-and-pastable by snippet tools
+//! Utility snippets for fighting AtCoder.
+//!
+//! Use [cargo-snippet](https://github.com/hatoo/cargo-snippet) for copy-and-pasting snippets easily.
+
 
 #![feature(plugin)]
 #![feature(test)]
 #![plugin(cargo_snippet)]
 
 pub mod read;
+pub mod write;
+pub mod num;
+pub mod opt;
+pub mod cmp;
 pub mod itertools;
-pub mod cumulative;
-pub mod div;
+pub mod seq;
 pub mod vec2;
 pub mod utils;

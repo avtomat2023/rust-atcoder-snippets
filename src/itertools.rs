@@ -1,5 +1,5 @@
 /// StepBy: Copyright 2013-2016 The Rust Project Developers.
-#[snippet = "richiter"]
+#[snippet = "iter"]
 #[derive(Clone)]
 pub struct StepBy<I> {
     iter: I,
@@ -7,7 +7,7 @@ pub struct StepBy<I> {
     first_take: bool
 }
 
-#[snippet = "richiter"]
+#[snippet = "iter"]
 impl<I: Iterator> Iterator for StepBy<I> {
     type Item = I::Item;
 
@@ -21,8 +21,80 @@ impl<I: Iterator> Iterator for StepBy<I> {
     }
 }
 
-#[snippet = "richiter"]
+#[snippet = "iter"]
+#[derive(Clone)]
+pub struct LScan<I: Iterator, S: Clone, F: FnMut(&S, I::Item) -> S> {
+    iter: I,
+    state: Option<S>,
+    f: F,
+}
+
+#[snippet = "iter"]
+impl<I: Iterator, S: Clone, F> Iterator for LScan<I, S, F>
+where
+    F: FnMut(&S, I::Item) -> S,
+{
+    type Item = S;
+    fn next(&mut self) -> Option<S> {
+        if self.state.is_none() {
+            return None;
+        }
+        let state_inner = self.state.take().unwrap();
+        if let Some(item) = self.iter.next() {
+            self.state = Some((self.f)(&state_inner, item));
+        }
+        Some(state_inner)
+    }
+}
+
+#[snippet = "iter"]
+// #[derive(Clone)]
+pub struct Flatten<I: Iterator>
+where
+    I::Item: IntoIterator
+{
+    outer_iter: I,
+    inner_iter: Option<<<I as Iterator>::Item as IntoIterator>::IntoIter>
+}
+
+#[snippet = "iter"]
+impl<I, J> Iterator for Flatten<I>
+where
+    I: Iterator<Item = J>,
+    J: IntoIterator
+{
+    type Item = <<J as IntoIterator>::IntoIter as Iterator>::Item;
+
+    fn next(&mut self) -> Option<J::Item> {
+        loop {
+            if let Some(inner_iter) = self.inner_iter.as_mut() {
+                if let item@Some(_) = inner_iter.next() {
+                    return item
+                }
+            }
+
+            match self.outer_iter.next() {
+                None => return None,
+                Some(inner) => self.inner_iter = Some(inner.into_iter())
+            }
+        }
+    }
+}
+
+/*
+impl<I, J> DoubleEndedIterator for Flatten<I>
+where
+    I: DoubleEndedIterator,
+    J: DoubleEndedIterator,
+    I::Item: J {}
+*/
+
+#[snippet = "iter"]
+use std::fmt;
+
+#[snippet = "iter"]
 trait RichIterator: Iterator {
+    // Avoid name collision to Iterator::flatten introduced in Rust 1.28.0
     fn step_by_(self, step: usize) -> StepBy<Self> where Self: Sized {
         assert_ne!(step, 0);
         StepBy {
@@ -37,12 +109,113 @@ trait RichIterator: Iterator {
             f(item);
         }
     }
+
+    // Iterator has `scan` method for another purpose.
+    // The name `lscan` corresponds to `rfold` method of DoubleEndedIterator.
+    fn lscan<S: Clone, F>(self, state: S, f: F) -> LScan<Self, S, F>
+    where
+        Self: Sized,
+        F: FnMut(&S, Self::Item) -> S,
+    {
+        LScan {
+            iter: self,
+            state: Some(state),
+            f: f,
+        }
+    }
+
+    // If the iterator has any item and all the items are same, returns `Some` of the first item.
+    // Othewise (having no items or non-unique items), returns `None`.
+    //
+    // Self should implement FusedIterator introduced in rust 1.26.0.
+    fn get_unique(mut self) -> Option<Self::Item> where Self: Sized, Self::Item: Eq {
+        let first_opt = self.next();
+        first_opt.and_then(|first| {
+            if self.all(|item| item == first) { Some(first) } else { None }
+        })
+    }
+
+    // Avoid name collision to Iterator::flatten introduced in Rust 1.29.0
+    fn flatten(mut self) -> Flatten<Self> where Self: Sized, Self::Item: IntoIterator {
+        let inner_opt = self.next();
+        Flatten {
+            outer_iter: self,
+            inner_iter: inner_opt.map(|inner| inner.into_iter())
+        }
+    }
+
+    fn join(mut self, sep: &str) -> String where Self: Sized, Self::Item: fmt::Display {
+        let mut result = String::new();
+        if let Some(first) = self.next() {
+            result.push_str(&format!("{}", first));
+        }
+        for s in self {
+            result.push_str(&format!("{}{}", sep, s));
+        }
+        result
+    }
+
+    fn cat(self) -> String where Self: Sized, Self::Item: fmt::Display { self.join("") }
 }
 
-#[snippet = "richiter"]
+#[snippet = "iter"]
 impl<I: Iterator> RichIterator for I {}
 
-#[snippet(product)]
+#[snippet = "iter"]
+pub struct Unfold<T, F> where F: FnMut(&T) -> Option<T> {
+    state: Option<T>,
+    f: F
+}
+
+#[snippet = "iter"]
+impl<T, F> Iterator for Unfold<T, F> where F: FnMut(&T) -> Option<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        if self.state.is_none() {
+            return None;
+        }
+
+        let state_inner = self.state.take().unwrap();
+        self.state = (self.f)(&state_inner);
+        Some(state_inner)
+    }
+}
+
+#[snippet = "iter"]
+pub fn unfold<T, F>(init: T, f: F) -> Unfold<T, F> where F: FnMut(&T) -> Option<T> {
+    Unfold { state: Some(init), f: f }
+}
+
+#[snippet = "iter"]
+pub struct Iterate<T, F> where F: FnMut(&T) -> T {
+    state: T,
+    f: F
+}
+
+#[snippet = "iter"]
+impl<T, F> Iterator for Iterate<T, F> where F: FnMut(&T) -> T {
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        use std::mem::swap;
+        // reborrow
+        let mut state = (self.f)(&self.state);
+        swap(&mut state, &mut self.state);
+        Some(state)
+    }
+}
+
+#[snippet = "iter"]
+pub fn iterate<T, F>(init: T, f: F) -> Iterate<T, F>
+where
+    F: FnMut(&T) -> T,
+{
+    Iterate { state: init, f: f }
+}
+
+
+#[snippet = "product"]
 #[derive(Clone)]
 pub struct Product2<I, J>
 where
@@ -332,7 +505,7 @@ macro_rules! combinations {
         Combinations::new($iter, 3, false).map(|v| (v[0], v[1], v[2]))
     };
     ($iter:expr, 4) => {
-        Combinations::new($iter, 4, false).map(|v| (v[0], v[1], v[2], v[4]))
+        Combinations::new($iter, 4, false).map(|v| (v[0], v[1], v[2], v[3]))
     };
 }
 
@@ -346,64 +519,47 @@ macro_rules! combinations_repl {
         Combinations::new($iter, 3, true).map(|v| (v[0], v[1], v[2]))
     };
     ($iter:expr, 4) => {
-        Combinations::new($iter, 4, true).map(|v| (v[0], v[1], v[2], v[4]))
+        Combinations::new($iter, 4, true).map(|v| (v[0], v[1], v[2], v[3]))
     };
-}
-
-#[snippet = "join"]
-trait JoinIntoString {
-    fn push_to_string(self, s: &mut String);
-}
-
-#[snippet = "join"]
-impl JoinIntoString for char {
-    fn push_to_string(self, s: &mut String) {
-        s.push(self);
-    }
-}
-
-#[snippet = "join"]
-impl<'a> JoinIntoString for &'a str {
-    fn push_to_string(self, s: &mut String) {
-        s.push_str(self);
-    }
-}
-
-#[snippet = "join"]
-impl JoinIntoString for String {
-    fn push_to_string(self, s: &mut String) {
-        s.push_str(&self);
-    }
-}
-
-#[snippet = "join"]
-trait StringJoinIterator {
-    fn join(self, sep: &str) -> String;
-}
-
-#[snippet = "join"]
-impl<T: JoinIntoString, I: Iterator<Item=T>> StringJoinIterator for I {
-    fn join(mut self, sep: &str) -> String {
-        let mut result = String::new();
-        if let Some(first) = self.next() {
-            first.push_to_string(&mut result);
-            for item in self {
-                result.push_str(sep);
-                item.push_to_string(&mut result);
-            }
-        }
-        result
-    }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use std::iter;
 
     #[test]
     fn test_step_by() {
         let ns: Vec<_> = (1..10).step_by_(3).collect();
         assert_eq!(ns, vec![1, 4, 7]);
+    }
+
+    #[test]
+    fn test_get_unique() {
+        assert_eq!(iter::empty::<i32>().get_unique(), None);
+        assert_eq!(iter::once(42).get_unique(), Some(42));
+        assert_eq!([42, 42].iter().get_unique(), Some(&42));
+        assert_eq!([42, 43].iter().get_unique(), None);
+        assert_eq!(iter::repeat(42).take(10).get_unique(), Some(42));
+    }
+
+    /*
+    // Rename RichIterator::flatten to flatten_ for testing
+    #[test]
+    fn test_flatten() {
+        assert_eq!(iter::empty::<Vec<i32>>().flatten_().collect::<Vec<i32>>(), vec![]);
+        assert_eq!(iter::once(vec![1]).flatten_().collect::<Vec<i32>>(), vec![1]);
+        assert_eq!(iter::once(vec![1, 2, 3]).flatten_().collect::<Vec<i32>>(), vec![1, 2, 3]);
+        let v = vec![vec![], vec![1], vec![], vec![2, 3, 4], vec![5, 6], vec![]];
+        assert_eq!(v.into_iter().flatten_().collect::<Vec<i32>>(), vec![1, 2, 3, 4, 5, 6]);
+    }
+    */
+
+    #[test]
+    fn test_join() {
+        assert_eq!(iter::empty::<i32>().join(" "), "");
+        assert_eq!(iter::once(1).join(" "), "1");
+        assert_eq!([1,2,3].iter().join(" "), "1 2 3");
     }
 }
 

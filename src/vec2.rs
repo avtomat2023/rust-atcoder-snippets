@@ -2,7 +2,7 @@
 //!
 //! # Example
 //!
-//! Solves [AtCoder Beginner Contest 108 Problem B](https://abc108.contest.atcoder.jp/tasks/abc108_b).
+//! Solves [AtCoder Beginner Contest 108: Problem B - Ruined Square](https://abc108.contest.atcoder.jp/tasks/abc108_b).
 //!
 //! ```no_run
 //! # #[macro_use] extern crate atcoder_snippets;
@@ -18,7 +18,6 @@
 //!     println!("{} {}", point2 + delta_rotated, point1 + delta_rotated);
 //! }
 //! ```
-
 
 #[snippet = "vec2"]
 use std::ops::{Add, AddAssign, Sub, SubAssign, Neg, Mul, MulAssign, Div, DivAssign};
@@ -149,18 +148,20 @@ impl<S: Copy, T: DivAssign<S>> DivAssign<S> for Vec2<T> {
     }
 }
 
-use read::FromFragments;
+use read::Readable;
 
 #[snippet = "vec2"]
-impl<T: FromFragments> FromFragments for Vec2<T> {
-    fn fragments_count() -> usize {
-        T::fragments_count() * 2
+impl<T: Readable> Readable for Vec2<T> {
+    type Output = Vec2<T::Output>;
+
+    fn words_count() -> usize {
+        T::words_count() * 2
     }
 
-    fn from_fragments(fragments: &[&str]) -> Result<Vec2<T>, String> {
-        let n = T::fragments_count();
-        Ok(Vec2::new(T::from_fragments(&fragments[..n])?,
-                     T::from_fragments(&fragments[n..])?))
+    fn read_words(words: &[&str]) -> Result<Vec2<T::Output>, String> {
+        let n = T::words_count();
+        Ok(Vec2::new(T::read_words(&words[..n])?,
+                     T::read_words(&words[n..])?))
     }
 }
 
@@ -230,8 +231,8 @@ mod test {
     }
 
     #[test]
-    fn test_from_fragments() {
-        let v = Vec2::<i32>::from_fragments(&["1", "2"]);
+    fn test_read_words() {
+        let v = Vec2::<i32>::read_words(&["1", "2"]);
         assert_eq!(v, Ok(Vec2::new(1, 2)));
     }
 }
