@@ -87,7 +87,46 @@ where
     I: DoubleEndedIterator,
     J: DoubleEndedIterator,
     I::Item: J {}
-*/
+ */
+
+// https://docs.rs/itertools/0.8.0/itertools/structs/struct.GroupBy.html
+#[snippet = "iter"]
+pub struct GroupBy<K: Eq, I: Iterator, F: FnMut(&I::Item) -> K> {
+    cur: Option<(I::Item, K)>,
+    iter: I,
+    key_fn: F
+}
+
+#[snippet = "iter"]
+impl<K: Eq, I: Iterator, F: FnMut(&I::Item) -> K> Iterator for GroupBy<K, I, F> {
+    type Item = Vec<I::Item>;
+
+    fn next(&mut self) -> Option<Vec<I::Item>> {
+        let cur = self.cur.take();
+        cur.map(|(item, key)| {
+            let mut group = vec![item];
+            loop {
+                let next = self.iter.next();
+                match next {
+                    Some(next_item) => {
+                        let next_key = (self.key_fn)(&next_item);
+                        if key == next_key {
+                            group.push(next_item);
+                        } else {
+                            self.cur = Some((next_item, next_key));
+                            break;
+                        }
+                    }
+                    None => {
+                        self.cur = None;
+                        break;
+                    }
+                }
+            }
+            group
+        })
+    }
+}
 
 #[snippet = "iter"]
 use std::fmt;
@@ -141,6 +180,21 @@ trait RichIterator: Iterator {
         Flatten {
             outer_iter: self,
             inner_iter: inner_opt.map(|inner| inner.into_iter())
+        }
+    }
+
+    /// `f`によってグループ分けされた`Vec`を生成するイテレータを返す
+    ///
+    /// SQLのgroup_byではなく、PythonのitertoolやRustのitertoolと同じ意味論である
+    fn group_by<K: Eq, F: FnMut(&Self::Item) -> K>(mut self, mut f: F) -> GroupBy<K, Self, F> where Self: Sized {
+        let next = self.next();
+        GroupBy {
+            cur: next.map(|item| {
+                let key = f(&item);
+                (item, key)
+            }),
+            iter: self,
+            key_fn: f
         }
     }
 
@@ -541,6 +595,36 @@ mod test {
         assert_eq!([42, 42].iter().get_unique(), Some(&42));
         assert_eq!([42, 43].iter().get_unique(), None);
         assert_eq!(iter::repeat(42).take(10).get_unique(), Some(42));
+    }
+
+    #[test]
+    fn test_group_by() {
+        let groups1 = iter::empty::<i32>().group_by(|&x| x % 2)
+            .collect::<Vec<_>>();
+        let expected: Vec<Vec<i32>> = Vec::new();
+        assert_eq!(groups1, expected);
+
+        let groups2 = iter::once(1).group_by(|&x| x % 2)
+            .collect::<Vec<_>>();
+        assert_eq!(groups2, vec![vec![1]]);
+
+        let groups3 = vec![1, 3].into_iter().group_by(|&x| x % 2)
+            .collect::<Vec<_>>();
+        assert_eq!(groups3, vec![vec![1, 3]]);
+
+        let groups4 = vec![1, 2].into_iter().group_by(|&x| x % 2)
+            .collect::<Vec<_>>();
+        assert_eq!(groups4, vec![vec![1], vec![2]]);
+
+        let seq = vec![(0, 'a'), (1, 'a'), (2, 'b'), (3, 'a'), (4, 'c'), (5, 'c')];
+        let groups5 = seq.into_iter().group_by(|x| x.1)
+            .collect::<Vec<_>>();
+        assert_eq!(groups5, vec![
+            vec![(0, 'a'), (1, 'a')],
+            vec![(2, 'b')],
+            vec![(3, 'a')],
+            vec![(4, 'c'), (5, 'c')]
+        ]);
     }
 
     /*
