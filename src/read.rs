@@ -1,19 +1,16 @@
 // # Add Document
 //
 // - custom readable type
-// - ReadExt
 //
 // # Add Implementation
 //
 // - scan関数
-// - readn関数
 // - readマクロに!があったら、そのwordを捨てる
 //
 // # Problems
 //
 // - readって関数を定義したい時があるかも inputのほうがよい？
 // - Output typeの導入で、read関数の型パラメータ指定が必須になってしまった
-// - ReadExtって名前がいまいち
 //
 // # scanのドキュメント
 //
@@ -47,7 +44,7 @@
 //! - 標準入力の1行を読むには、[`read`](fn.read.html)関数、[`read`](../macro.read.html)マクロを用いる。
 //! - 標準入力の複数行を読むには、[`readls`](../macro.readls.html)マクロを用いる。
 //! - 標準入力の一様な行をすべて読むには、[`readx`](fn.readx.html)関数、[`readx_loop`](../macro.readx_loop.html)マクロを用いる。
-//! - 標準入力の一様な行を指定行数読むには、<del><code>readn</code>関数、</del>[`readn_loop`](../macro.readn_loop.html)マクロを用いる。
+//! - 標準入力の一様な行を指定行数読むには、[`readn`](fn.readn.html)関数、[`readn_loop`](../macro.readn_loop.html)マクロを用いる。
 //!
 
 /// Readable from stdin.
@@ -96,8 +93,8 @@ pub trait Readable {
     fn read_words(words: &[&str]) -> Result<Self::Output, String>;
 }
 
-// ABC113 C
-// proc_macroでderive(Readable)したい
+// TODO: ABC113 C
+// TODO: proc_macroでderive(Readable)したい
 /// Makes a type readable from stdin.
 ///
 /// Instead of write `impl Readable` manually, use this handy macro.
@@ -678,7 +675,7 @@ pub fn readn<T: ReadableFromLine>(n: usize) -> Vec<T::Output> {
 ///
 /// # Panic
 ///
-/// 標準入力の残りの行が`n`行未満だった場合、panicする。
+/// 標準入力の残りの行がn行未満だった場合、panicする。
 ///
 /// # Example
 ///
@@ -686,7 +683,7 @@ pub fn readn<T: ReadableFromLine>(n: usize) -> Vec<T::Output> {
 /// # #[macro_use] extern crate atcoder_snippets;
 /// # use atcoder_snippets::read::*;
 /// // Stdin: "5 1 2 3 4 5\n1 10\n2 100 200"
-/// readn_loop!(2, |n = usize, aa = Vec<u8>| println!("{:?}", aa));
+/// readn_loop!(2, |num_count = usize, nums = Vec<u8>| println!("{:?}", nums));
 /// // Stdout:
 /// // 1 2 3 4 5
 /// // 10
@@ -715,20 +712,24 @@ macro_rules! readn_loop {
     };
 }
 
+// TODO: parse().unwrap()ではうまくいかない例を示す
+/// `Readable`を読み出すことができる型。
+///
+/// このトレイトにより、`Readable`の実装が簡単になる場合がある。
 #[snippet = "read"]
-pub trait ReadExt {
+pub trait Words {
     fn read<T: Readable>(&self) -> T::Output;
 }
 
 #[snippet = "read"]
-impl<'a> ReadExt for [&'a str] {
+impl<'a> Words for [&'a str] {
     fn read<T: Readable>(&self) -> T::Output {
         T::read_words(self).unwrap()
     }
 }
 
 #[snippet = "read"]
-impl<'a> ReadExt for &'a str {
+impl<'a> Words for &'a str {
     fn read<T: Readable>(&self) -> T::Output {
         T::read_words(&[self]).unwrap()
     }
@@ -814,7 +815,7 @@ mod test {
     }
 
     #[test]
-    fn test_read_ext() {
+    fn test_words() {
         let words: Vec<&str> = "1 2".split_whitespace().collect();
         let pair: Pair = words.read::<Pair>();
         assert_eq!(pair, Pair(1, 2));
