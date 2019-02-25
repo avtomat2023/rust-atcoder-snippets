@@ -632,9 +632,53 @@ macro_rules! readx_loop {
     };
 }
 
+// TODO: Solve ABC119 D
+/// 標準入力の残りの行を`n`行読み込み、`Vec`を返す。
+///
+/// # Panic
+///
+/// 標準入力の残りの行が`n`行未満だった場合、panicする。
+///
+/// # Example
+///
+/// Reads the input of [ABC119 D: Lazy Faith](https://atcoder.jp/contests/abc119/tasks/abc119_d).
+///
+/// ```no_run
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::read::*;
+/// // Stdin: "2 3 4\n100\n600\n400\n900\n1000\n150\n2000\n899\n799"
+/// read!(shrine_count = usize, temple_count = usize, _ = ());
+/// let shrines = readn::<i64>(shrine_count);
+/// let temples = readn::<i64>(temple_count);
+/// let queries = readx::<i64>();
+///
+/// assert_eq!(shrines, vec![100, 600]);
+/// assert_eq!(temples, vec![400, 900, 1000]);
+/// ```
+#[snippet = "read"]
+pub fn readn<T: ReadableFromLine>(n: usize) -> Vec<T::Output> {
+    use std::io::{self, BufRead};
+    let stdin = io::stdin();
+    // Can be faster by removing UTF-8 validation,
+    // but enables validation in case of feeding a wrong test case manually.
+    let result: Vec<T::Output> = stdin.lock().lines().take(n).map(|line_result| {
+        let line = line_result.expect("read from stdin failed");
+        T::read_line(&line).unwrap()
+    }).collect();
+    if result.len() < n {
+        panic!("expected reading {} lines, but only {} lines are read",
+               n, result.len());
+    }
+    result
+}
 
 // TODO: Improve documentation
+// TODO: Avoid multiple use of std::io::BufRead
 /// 標準入力の残りの行をn行読み、一行ずつ処理する。
+///
+/// # Panic
+///
+/// 標準入力の残りの行が`n`行未満だった場合、panicする。
 ///
 /// # Example
 ///
