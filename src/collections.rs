@@ -1,28 +1,52 @@
+/// Data structures.
+
+#[snippet = "collections"]
 use std::rc::Rc;
+#[snippet = "collections"]
 use std::ops::Deref;
+#[snippet = "collections"]
 use std::fmt;
+#[snippet = "collections"]
+use std::borrow::Borrow;
 // use std::iter::FromIterator;
 
-/// Immutable and persistent list heavily used in functional languages.
-///
-/// https://docs.rs/immutable/0.1.1/immutable/list/enum.List.html
-///
-/// To create a list of non-`Clone` values, create `List<Rc<T>>` instead of `List<T>`.
+/// For pattern match.
+#[snippet = "collections"]
 #[derive(Clone, PartialEq, Eq)]
 pub enum ListInner<T: Clone> {
     Nil,
     Cons(T, List<T>)
 }
 
+#[snippet = "collections"]
 pub use self::ListInner::{Nil, Cons};
 
+/// Immutable and persistent list heavily used in functional languages.
+///
+/// https://docs.rs/immutable/0.1.1/immutable/list/enum.List.html
+///
+/// 要素型にCloneを要求しているのは、コンスセルがRcを用いて参照されており、
+/// headへの参照がうまく取り出せないためである。
+/// To create a list of values not `Clone` or costly to `Clone`,
+/// create `List<Rc<T>>` instead of `List<T>`.
+#[snippet = "collections"]
 #[derive(Clone, PartialEq, Eq)]
 pub struct List<T: Clone> {
     inner: Rc<ListInner<T>>
 }
 
+#[snippet = "collections"]
 impl<T: Clone> List<T> {
     pub fn nil() -> List<T> { List { inner: Rc::new(Nil) } }
+
+    pub fn is_empty(&self) -> bool {
+        match **self {
+            Nil => true,
+            Cons(_, _) => false
+        }
+    }
+
+    pub fn len(&self) -> usize { self.iter().count() }
 
     pub fn iter(&self) -> List<T> {
         self.clone()
@@ -34,12 +58,14 @@ impl<T: Clone> List<T> {
     }
 }
 
+#[snippet = "collections"]
 impl<T: Clone> AsRef<ListInner<T>> for List<T> {
     fn as_ref(&self) -> &ListInner<T> {
         self.inner.as_ref()
     }
 }
 
+#[snippet = "collections"]
 impl<T: Clone> Deref for List<T> {
     type Target = ListInner<T>;
 
@@ -48,6 +74,7 @@ impl<T: Clone> Deref for List<T> {
     }
 }
 
+#[snippet = "collections"]
 impl<T: Clone + fmt::Debug> fmt::Debug for List<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.inner.as_ref() {
@@ -57,6 +84,7 @@ impl<T: Clone + fmt::Debug> fmt::Debug for List<T> {
     }
 }
 
+#[snippet = "collections"]
 impl<T: Clone> Iterator for List<T> {
     type Item = T;
 
@@ -71,6 +99,8 @@ impl<T: Clone> Iterator for List<T> {
     }
 }
 
+
+#[snippet = "collections"]
 impl<'a, T: Clone> IntoIterator for &'a List<T> {
     type Item = T;
     type IntoIter = List<T>;
@@ -80,12 +110,25 @@ impl<'a, T: Clone> IntoIterator for &'a List<T> {
     }
 }
 
-trait IntoCons<T: Clone> {
-    fn cons(self, tail: List<T>) -> List<T>;
+#[snippet = "collections"]
+trait IntoCons<T: Clone, L: Borrow<List<T>>> {
+    fn cons(self, tail: L) -> List<T>;
 }
 
-impl<T: Clone> IntoCons<T> for T {
-    fn cons(self, tail: List<T>) -> List<T> {
+#[snippet = "collections"]
+impl<T: Clone, L: Borrow<List<T>>> IntoCons<T, L> for T {
+    fn cons(self, tail: L) -> List<T> {
+        List { inner: Rc::new(Cons(self, tail.borrow().clone().into())) }
+    }
+}
+
+// TODO: Take a bench comparing with IntoCons
+trait IntoConsByMove<T: Clone> {
+    fn cons_move(self, tail: List<T>) -> List<T>;
+}
+
+impl<T: Clone> IntoConsByMove<T> for T {
+    fn cons_move(self, tail: List<T>) -> List<T> {
         List { inner: Rc::new(Cons(self, tail)) }
     }
 }
@@ -96,6 +139,7 @@ impl<T: Clone> FromIterator for List<T> {
 }
 */
 
+#[snippet = "collections"]
 #[macro_export]
 macro_rules! list {
     [] => { List::nil() };
