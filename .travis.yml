@@ -7,4 +7,4 @@ after_success: |
     echo '<meta http-equiv=refresh content=0;url=rust-atcoder-snippets/index.html>' > target/doc/index.html &&
     sudo pip install ghp-import &&
     ghp-import -n target/doc &&
-    git push -qf origin gh-pages
+    git push -qf https://yoshrc:$GITHUB_ACCESS_TOKEN@github.com/yoshrc/rust-atcoder-snippets.git/ gh-pages
