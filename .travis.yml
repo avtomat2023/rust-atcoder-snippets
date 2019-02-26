@@ -2,7 +2,7 @@ language: rust
 rust: nightly
 after_success: |
     # Build documentation and deploy it to github pages.
-    # [ $TRAVIS_BRANCH = develop ] &&
+    [ $TRAVIS_BRANCH = develop ] &&
     cargo doc &&
     echo '<meta http-equiv="refresh" content="0;url=atcoder_snippets/index.html">' > target/doc/index.html &&
     sudo pip install ghp-import &&
