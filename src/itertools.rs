@@ -132,7 +132,7 @@ impl<K: Eq, I: Iterator, F: FnMut(&I::Item) -> K> Iterator for GroupBy<K, I, F> 
 use std::fmt;
 
 #[snippet = "iter"]
-trait RichIterator: Iterator {
+pub trait RichIterator: Iterator {
     // Avoid name collision to Iterator::flatten introduced in Rust 1.28.0
     fn step_by_(self, step: usize) -> StepBy<Self> where Self: Sized {
         assert_ne!(step, 0);

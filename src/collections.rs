@@ -23,6 +23,9 @@ pub enum ListInner<T: Clone> {
 #[snippet = "collections"]
 pub use self::ListInner::{Nil, Cons};
 
+// The example is ignored because `flatten` method by `iter` snippet collide
+// `flatten` of `std::iter::Iterator` in Rust >= 1.29.0
+
 /// Immutable and persistent list heavily used in functional languages.
 ///
 /// https://docs.rs/immutable/0.1.1/immutable/list/enum.List.html
@@ -31,15 +34,77 @@ pub use self::ListInner::{Nil, Cons};
 /// headへの参照がうまく取り出せないためである。
 /// To create a list of values not `Clone` or costly to `Clone`,
 /// create `List<Rc<T>>` instead of `List<T>`.
+///
+/// # Example
+///
+/// Solves [ABC118 D: Match Matching](https://atcoder.jp/contests/abc118/tasks/abc118_d) by memoized depth-first search.
+///
+/// ```ignore
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::{read::*, itertools::*, collections::*};
+/// use std::cmp::Ordering;
+/// use std::collections::HashMap;
+///
+/// /// `MATCHSTICKS_FOR[digit]` means how many matchsticks are needed
+/// /// to form `digit`.
+/// const MATCHSTICKS_FOR: [u32; 10] = [0, 2, 5, 5, 4, 5, 6, 3, 7, 6];
+///
+/// fn cmp_numbers(n1: &List<usize>, n2: &List<usize>) -> Ordering {
+///     if n1.len() > n2.len() {
+///         Ordering::Greater
+///     } else if n1.len() < n2.len() {
+///         Ordering::Less
+///     } else {
+///         n1.cmp(n2)
+///     }
+/// }
+///
+/// /// Returns maximum number composed by `n` matchsticks.
+/// ///
+/// /// The number is represented as a big-endian list of usize.
+/// /// Each usize value represents a decimal digit.
+/// ///
+/// /// If it is impossible to create any number by `n` matchsticks, returns `None`.
+/// fn dfs(n: u32, digits: &[usize], memo: &mut HashMap<u32, Option<List<usize>>>)
+///        -> Option<List<usize>>
+/// {
+///     if n == 0 {
+///         Some(List::nil())
+///     } else {
+///         let ans = memo.get(&n).cloned();
+///         // If the answer for `n` is already memoized, returns it.
+///         ans.unwrap_or_else(|| {
+///             let new_ans = digits.iter().map(|&digit| {
+///                 n.checked_sub(MATCHSTICKS_FOR[digit]).and_then(|next_n| {
+///                     dfs(next_n, digits, memo).map(|tail| digit.cons(tail))
+///                 })
+///             }).flatten() // Uses `iter` snippet.
+///               .max_by(cmp_numbers);
+///             // Memowise the answer for `n`.
+///             memo.insert(n, new_ans.clone());
+///             new_ans
+///         })
+///     }
+/// }
+///
+/// fn main() {
+///     // Uses `read` snippet.
+///     read!(n = u32, _ = ());
+///     read!(digits = Vec<usize>);
+///     // Uses `iter` snippet for `cat`.
+///     println!("{}", dfs(n, &digits, &mut HashMap::new()).unwrap().cat());
+/// }
+/// ```
 #[snippet = "collections"]
 #[derive(Clone, PartialEq, Eq)]
 pub struct List<T: Clone> {
-    inner: Rc<ListInner<T>>
+    inner: Rc<ListInner<T>>,
+    len: usize
 }
 
 #[snippet = "collections"]
 impl<T: Clone> List<T> {
-    pub fn nil() -> List<T> { List { inner: Rc::new(Nil) } }
+    pub fn nil() -> List<T> { List { inner: Rc::new(Nil), len: 0 } }
 
     pub fn is_empty(&self) -> bool {
         match **self {
@@ -48,7 +113,10 @@ impl<T: Clone> List<T> {
         }
     }
 
-    pub fn len(&self) -> usize { self.iter().count() }
+    /// Length of the list.
+    ///
+    /// `len()` is O(1) time because each sublist holds its length.
+    pub fn len(&self) -> usize { self.len }
 
     pub fn iter(&self) -> List<T> {
         self.clone()
@@ -123,7 +191,6 @@ impl<T: Clone + Ord> Ord for List<T> {
     }
 }
 
-
 #[snippet = "collections"]
 impl<T: Clone> Iterator for List<T> {
     type Item = T;
@@ -151,25 +218,34 @@ impl<'a, T: Clone> IntoIterator for &'a List<T> {
 }
 
 #[snippet = "collections"]
-trait IntoCons<T: Clone, L: Borrow<List<T>>> {
+pub trait IntoCons<T: Clone, L: Borrow<List<T>>> {
     fn cons(self, tail: L) -> List<T>;
 }
 
 #[snippet = "collections"]
 impl<T: Clone, L: Borrow<List<T>>> IntoCons<T, L> for T {
     fn cons(self, tail: L) -> List<T> {
-        List { inner: Rc::new(Cons(self, tail.borrow().clone().into())) }
+        let tail_cloned: List<T> = tail.borrow().clone().into();
+        let tail_len = tail_cloned.len;
+        List {
+            inner: Rc::new(Cons(self, tail_cloned)),
+            len: tail_len + 1
+        }
     }
 }
 
 // TODO: Take a bench comparing with IntoCons
-trait IntoConsByMove<T: Clone> {
+pub trait IntoConsByMove<T: Clone> {
     fn cons_move(self, tail: List<T>) -> List<T>;
 }
 
 impl<T: Clone> IntoConsByMove<T> for T {
     fn cons_move(self, tail: List<T>) -> List<T> {
-        List { inner: Rc::new(Cons(self, tail)) }
+        let tail_len = tail.len;
+        List {
+            inner: Rc::new(Cons(self, tail)),
+            len: tail_len + 1
+        }
     }
 }
 
@@ -248,6 +324,13 @@ mod tests {
          *   b: 1 - 2 - 3
          */
         assert_eq!(Rc::strong_count(&list_a_nil.take()), 2);
+    }
+
+    #[test]
+    fn test_len() {
+        assert_eq!(List::<i32>::nil().len(), 0);
+        assert_eq!(list![1].len(), 1);
+        assert_eq!(list![1, 2].len(), 2);
     }
 
     #[test]
