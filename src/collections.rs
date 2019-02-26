@@ -7,6 +7,8 @@ use std::ops::Deref;
 #[snippet = "collections"]
 use std::fmt;
 #[snippet = "collections"]
+use std::cmp::Ordering;
+#[snippet = "collections"]
 use std::borrow::Borrow;
 // use std::iter::FromIterator;
 
@@ -85,6 +87,44 @@ impl<T: Clone + fmt::Debug> fmt::Debug for List<T> {
 }
 
 #[snippet = "collections"]
+impl<T: Clone + PartialOrd> PartialOrd for List<T> {
+    fn partial_cmp(&self, other: &List<T>) -> Option<Ordering> {
+        match (self.as_ref(), other.as_ref()) {
+            (&Nil, &Nil) => Some(Ordering::Equal),
+            (&Nil, &Cons(_, _)) => Some(Ordering::Less),
+            (&Cons(_, _), &Nil) => Some(Ordering::Greater),
+            (&Cons(ref head1, ref tail1), &Cons(ref head2, ref tail2)) => {
+                head1.partial_cmp(&head2).and_then(|ordering| {
+                    match ordering {
+                        Ordering::Equal => tail1.partial_cmp(tail2),
+                        _ => Some(ordering)
+                    }
+                })
+            }
+        }
+    }
+}
+
+// Needed in ABC118 D
+#[snippet = "collections"]
+impl<T: Clone + Ord> Ord for List<T> {
+    fn cmp(&self, other: &List<T>) -> Ordering {
+        match (self.as_ref(), other.as_ref()) {
+            (&Nil, &Nil) => Ordering::Equal,
+            (&Nil, &Cons(_, _)) => Ordering::Less,
+            (&Cons(_, _), &Nil) => Ordering::Greater,
+            (&Cons(ref head1, ref tail1), &Cons(ref head2, ref tail2)) => {
+                match head1.cmp(&head2) {
+                    Ordering::Equal => tail1.cmp(tail2),
+                    determined => determined
+                }
+            }
+        }
+    }
+}
+
+
+#[snippet = "collections"]
 impl<T: Clone> Iterator for List<T> {
     type Item = T;
 
@@ -151,6 +191,8 @@ macro_rules! list {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::cmp::Ordering::*;
+    use std::f64;
 
     #[test]
     fn test_list_macro() {
@@ -231,6 +273,41 @@ mod tests {
     #[test]
     fn test_format() {
         assert_eq!(format!("{:?}", list!["a", "b"]), r#""a":"b":[]"#);
+    }
+
+    #[test]
+    fn test_partial_ord() {
+        assert_eq!(List::<f64>::nil().partial_cmp(List::nil()), Some(Equal));
+        assert_eq!(list![1.0].partial_cmp(&List::nil()), Some(Greater));
+        assert_eq!(List::<f64>::nil().partial_cmp(&list![1.0]), Some(Less));
+        assert_eq!(list![1.0].partial_cmp(&list![1.0]), Some(Equal));
+
+        assert_eq!(list![1.0, 1.0].partial_cmp(&list![1.0]), Some(Greater));
+        assert_eq!(list![1.0].partial_cmp(&list![1.0, 1.0]), Some(Less));
+        assert_eq!(list![2.0, 1.0].partial_cmp(&list![1.0, 1.0]), Some(Greater));
+        assert_eq!(list![1.0, 1.0].partial_cmp(&list![2.0, 1.0]), Some(Less));
+        assert_eq!(list![1.0, 2.0].partial_cmp(&list![1.0, 1.0]), Some(Greater));
+        assert_eq!(list![1.0, 1.0].partial_cmp(&list![1.0, 2.0]), Some(Less));
+        assert_eq!(list![1.0, 1.0].partial_cmp(&list![1.0, 1.0]), Some(Equal));
+
+        assert_eq!(list![1.0].partial_cmp(&list![f64::NAN]), None);
+        assert_eq!(list![1.0].partial_cmp(&list![1.0, f64::NAN]), Some(Less));
+    }
+
+    #[test]
+    fn test_ord() {
+        assert!(List::<i32>::nil() == List::nil());
+        assert!(list![1] > List::nil());
+        assert!(List::nil() < list![1]);
+        assert!(list![1] == list![1]);
+
+        assert!(list![1, 1] > list![1]);
+        assert!(list![1] < list![1, 1]);
+        assert!(list![1, 2] > list![1, 1]);
+        assert!(list![1, 1] < list![1, 2]);
+        assert!(list![2, 1] > list![1, 1]);
+        assert!(list![1, 1] < list![2, 1]);
+        assert!(list![1, 1] == list![1, 1]);
     }
 
     #[test]
