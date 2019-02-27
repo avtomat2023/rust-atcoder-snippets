@@ -1,26 +1,20 @@
-/// Data structures.
+//! Data structures.
 
-#[snippet = "collections"]
-use std::rc::Rc;
-#[snippet = "collections"]
-use std::ops::Deref;
-#[snippet = "collections"]
-use std::fmt;
-#[snippet = "collections"]
-use std::cmp::Ordering;
-#[snippet = "collections"]
-use std::borrow::Borrow;
 // use std::iter::FromIterator;
 
 /// For pattern match.
-#[snippet = "collections"]
+///
+/// It is not necessary to use this enum directly.
+/// See [Example section of `List`](struct.List.html#example)
+/// for usage in pattern matching.
+#[snippet = "list"]
 #[derive(Clone, PartialEq, Eq)]
 pub enum ListInner<T: Clone> {
     Nil,
     Cons(T, List<T>)
 }
 
-#[snippet = "collections"]
+#[snippet = "list"]
 pub use self::ListInner::{Nil, Cons};
 
 // The example is ignored because `flatten` method by `iter` snippet collide
@@ -28,16 +22,58 @@ pub use self::ListInner::{Nil, Cons};
 
 /// Immutable and persistent list heavily used in functional languages.
 ///
-/// https://docs.rs/immutable/0.1.1/immutable/list/enum.List.html
-///
-/// 要素型にCloneを要求しているのは、コンスセルがRcを用いて参照されており、
-/// headへの参照がうまく取り出せないためである。
+/// The item type must be `Clone` because it is impossible to borrow the head of a cons cell
+/// referenced by `Rc`.
 /// To create a list of values not `Clone` or costly to `Clone`,
 /// create `List<Rc<T>>` instead of `List<T>`.
 ///
+/// Each list contains its length, so the length can be obtained in constant time,
+/// although it takes O(n) time almost all functional languages.
+///
+/// The implementation is based on [`List`](https://docs.rs/immutable/0.1.1/immutable/list/enum.List.html) in `immutable` crate,
+/// but the interface and implementation details are modified a lot.
+///
 /// # Example
 ///
-/// Solves [ABC118 D: Match Matching](https://atcoder.jp/contests/abc118/tasks/abc118_d) by memoized depth-first search.
+/// To make a list, use [`List::nil`](#method.nil), [`IntoCons`](trait.IntoCons.html) trait
+/// or [`list`](../macro.list.html) macro.
+///
+/// ```
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::collections::*;
+/// assert_eq!(List::<i32>::nil(), list![]);
+/// let sublist = 2.cons(List::nil());
+/// assert_eq!(1.cons(sublist), list![1, 2]);
+/// ```
+///
+/// By `as_ref` method of `AsRef` trait impl-ed by `List`, you can use pattern matching.
+///
+/// ```
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::collections::*;
+/// fn power_set<T: Clone>(set: &List<T>) -> List<List<T>> {
+///     match set.as_ref() {
+///         &Nil => list![list![]],
+///         &Cons(ref head, ref tail) => {
+///             let subsets = power_set(&tail);
+///             subsets.iter().map(|list| head.clone().cons(list))
+///                 .collect::<List<_>>()
+///                 .append(&subsets)
+///         }
+///     }
+/// }
+///
+/// assert_eq!(
+///     power_set(&list![1, 2, 3]),
+///     list![list![1, 2, 3], list![1, 2], list![1, 3], list![1],
+///           list![2, 3], list![2], list![3], list![]]
+/// );
+/// ```
+///
+/// However, it is not possible to use deeper patterns such as `Cons(a, Cons(b, _))`.
+///
+/// Finally, solves [ABC118 D: Match Matching](https://atcoder.jp/contests/abc118/tasks/abc118_d) by memoized depth-first search.
+/// The solution takes advantage of constant time `len()`.
 ///
 /// ```ignore
 /// # #[macro_use] extern crate atcoder_snippets;
@@ -95,21 +131,22 @@ pub use self::ListInner::{Nil, Cons};
 ///     println!("{}", dfs(n, &digits, &mut HashMap::new()).unwrap().cat());
 /// }
 /// ```
-#[snippet = "collections"]
+#[snippet = "list"]
 #[derive(Clone, PartialEq, Eq)]
 pub struct List<T: Clone> {
-    inner: Rc<ListInner<T>>,
+    inner: std::rc::Rc<ListInner<T>>,
     len: usize
 }
 
-#[snippet = "collections"]
+#[snippet = "list"]
 impl<T: Clone> List<T> {
-    pub fn nil() -> List<T> { List { inner: Rc::new(Nil), len: 0 } }
+    pub fn nil() -> List<T> { List { inner: std::rc::Rc::new(Nil), len: 0 } }
 
-    pub fn is_empty(&self) -> bool {
-        match **self {
-            Nil => true,
-            Cons(_, _) => false
+    /// Whether the list is nil.
+    pub fn is_nil(&self) -> bool {
+        match self.as_ref() {
+            &Nil => true,
+            &Cons(_, _) => false
         }
     }
 
@@ -118,53 +155,137 @@ impl<T: Clone> List<T> {
     /// `len()` is O(1) time because each sublist holds its length.
     pub fn len(&self) -> usize { self.len }
 
+    /// Gets an iterator without moving `self`.
     pub fn iter(&self) -> List<T> {
         self.clone()
     }
 
+    /// Concatenates two lists.
+    pub fn append(&self, other: &List<T>) -> List<T> {
+        append_tailrec(self, other, List::nil())
+    }
+
+    /// Reverses `self`, then concatenates two lists.
+    pub fn rev_append(&self, other: &List<T>) -> List<T> {
+        match self.as_ref() {
+            &Nil => other.clone(),
+            &Cons(ref head, ref tail) =>
+                tail.rev_append(&head.clone().cons(other))
+        }
+    }
+
     #[cfg(test)]
-    fn take(self) -> Rc<ListInner<T>> {
+    fn take(self) -> std::rc::Rc<ListInner<T>> {
         self.inner
     }
 }
 
-#[snippet = "collections"]
+#[snippet = "list"]
+fn append_tailrec<T: Clone>(
+    list1: &List<T>,
+    list2: &List<T>,
+    list1_rev: List<T>
+) -> List<T> {
+    match list1.as_ref() {
+        &Nil => list1_rev.rev_append(list2),
+        &Cons(ref head, ref tail) =>
+            append_tailrec(tail, list2, head.clone().cons(list1_rev))
+    }
+}
+
+/// For pattern matching.
+///
+/// # Example
+///
+/// ```
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::collections::*;
+/// let list = list![1, 2, 3];
+/// match list.as_ref() {
+///     // The patterns can be writtern `Nil` and `Cons(head, tail)`
+///     // by match ergonomics in Rust >=1.26.0
+///     &Nil => println!("The list is nil."),
+///     &Cons(ref head, ref tail) =>
+///         println!("head = {}, length of tail = {}", head, tail.len())
+/// }
+///
+/// // `list` is not moved, still usable.
+/// println!("length of list = {}", list.len());
+/// ```
+#[snippet = "list"]
 impl<T: Clone> AsRef<ListInner<T>> for List<T> {
     fn as_ref(&self) -> &ListInner<T> {
         self.inner.as_ref()
     }
 }
 
-#[snippet = "collections"]
-impl<T: Clone> Deref for List<T> {
-    type Target = ListInner<T>;
+/*
+ * If the given list is singleton `Rc`, `list.into()` may be slightly efficient.
+ * However, it is too complecated for users to think about whether the list is singleton,
+ * so I don't provide this impl until a usecase is found.
+ *
+ * /// For pattern matching.
+ * ///
+ * /// The content of the list (nil or cons cell) referenced by `Rc` may be cloned.
+ * ///
+ * /// # Example
+ * ///
+ * /// ```
+ * /// # #[macro_use] extern crate atcoder_snippets;
+ * /// # use atcoder_snippets::collections::*;
+ * /// let list = list![1, 2, 3];
+ * ///
+ * /// match list.into() {
+ * ///     Nil => println!("The list is nil."),
+ * ///     Cons(head, tail) =>
+ * ///         println!("head = {}, length of tail = {}", head, tail.len())
+ * /// }
+ * ///
+ * /// // `list` is moved, cannot use it anymore.
+ * /// ```
+ * #[snippet = "list"]
+ * impl<T: Clone> From<List<T>> for ListInner<T> {
+ *     fn from(list: List<T>) -> ListInner<T> {
+ *         match std::rc::Rc::try_unwrap(list.inner) {
+ *             Ok(list_inner) => list_inner,
+ *             Err(list) => list.as_ref().clone()
+ *         }
+ *     }
+ * }
+ */
 
-    fn deref(&self) -> &ListInner<T> {
-        self.inner.deref()
-    }
-}
-
-#[snippet = "collections"]
-impl<T: Clone + fmt::Debug> fmt::Debug for List<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+/// Formatting for debug.
+///
+/// # Example:
+///
+/// ```
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::collections::*;
+/// assert_eq!(format!("{:?}", list!["a", "b"]), r#""a" :: "b" :: nil"#);
+/// ```
+#[snippet = "list"]
+impl<T: Clone + std::fmt::Debug> std::fmt::Debug for List<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self.inner.as_ref() {
-            &Nil => write!(f, "[]"),
-            &Cons(ref head, ref tail) => write!(f, "{:?}:{:?}", head, tail)
+            &Nil => write!(f, "nil"),
+            &Cons(ref head, ref tail) => write!(f, "{:?} :: {:?}", head, tail)
         }
     }
 }
 
-#[snippet = "collections"]
+/// Comparation by dictionary order.
+#[snippet = "list"]
 impl<T: Clone + PartialOrd> PartialOrd for List<T> {
-    fn partial_cmp(&self, other: &List<T>) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &List<T>) -> Option<std::cmp::Ordering> {
+        use std::cmp::Ordering::*;
         match (self.as_ref(), other.as_ref()) {
-            (&Nil, &Nil) => Some(Ordering::Equal),
-            (&Nil, &Cons(_, _)) => Some(Ordering::Less),
-            (&Cons(_, _), &Nil) => Some(Ordering::Greater),
+            (&Nil, &Nil) => Some(Equal),
+            (&Nil, &Cons(_, _)) => Some(Less),
+            (&Cons(_, _), &Nil) => Some(Greater),
             (&Cons(ref head1, ref tail1), &Cons(ref head2, ref tail2)) => {
                 head1.partial_cmp(&head2).and_then(|ordering| {
                     match ordering {
-                        Ordering::Equal => tail1.partial_cmp(tail2),
+                        Equal => tail1.partial_cmp(tail2),
                         _ => Some(ordering)
                     }
                 })
@@ -173,17 +294,18 @@ impl<T: Clone + PartialOrd> PartialOrd for List<T> {
     }
 }
 
-// Needed in ABC118 D
-#[snippet = "collections"]
+/// Comparation by dictionary order.
+#[snippet = "list"]
 impl<T: Clone + Ord> Ord for List<T> {
-    fn cmp(&self, other: &List<T>) -> Ordering {
+    fn cmp(&self, other: &List<T>) -> std::cmp::Ordering {
+        use std::cmp::Ordering::*;
         match (self.as_ref(), other.as_ref()) {
-            (&Nil, &Nil) => Ordering::Equal,
-            (&Nil, &Cons(_, _)) => Ordering::Less,
-            (&Cons(_, _), &Nil) => Ordering::Greater,
+            (&Nil, &Nil) => Equal,
+            (&Nil, &Cons(_, _)) => Less,
+            (&Cons(_, _), &Nil) => Greater,
             (&Cons(ref head1, ref tail1), &Cons(ref head2, ref tail2)) => {
                 match head1.cmp(&head2) {
-                    Ordering::Equal => tail1.cmp(tail2),
+                    Equal => tail1.cmp(tail2),
                     determined => determined
                 }
             }
@@ -191,23 +313,23 @@ impl<T: Clone + Ord> Ord for List<T> {
     }
 }
 
-#[snippet = "collections"]
+/// `List` is both a collection and an iterator.
+#[snippet = "list"]
 impl<T: Clone> Iterator for List<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
         let cons;
-        match **self {
-            Nil => return None,
-            Cons(ref head, ref tail) => cons = (head.clone(), tail.clone())
+        match self.as_ref() {
+            &Nil => return None,
+            &Cons(ref head, ref tail) => cons = (head.clone(), tail.clone())
         }
         *self = cons.1;
         Some(cons.0)
     }
 }
 
-
-#[snippet = "collections"]
+#[snippet = "list"]
 impl<'a, T: Clone> IntoIterator for &'a List<T> {
     type Item = T;
     type IntoIter = List<T>;
@@ -217,18 +339,50 @@ impl<'a, T: Clone> IntoIterator for &'a List<T> {
     }
 }
 
-#[snippet = "collections"]
-pub trait IntoCons<T: Clone, L: Borrow<List<T>>> {
+// TODO: Bench
+// TODO: Specialize the implementation when IntoIter is DoubleEndedIterator
+/// Collects into `List`.
+///
+/// # Example
+///
+/// ```
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::collections::*;
+/// assert_eq!(vec![1, 2, 3].into_iter().collect::<List<_>>(), list![1, 2, 3]);
+/// ```
+#[snippet = "list"]
+impl<T: Clone> std::iter::FromIterator<T> for List<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> List<T> {
+        let xs: Vec<T> = iter.into_iter().collect();
+        let mut list = List::nil();
+        for x in xs.into_iter().rev() {
+            list = x.cons(list);
+        }
+        list
+    }
+}
+
+/// A trait for making a cons cell in intuitive way.
+///
+/// # Example
+///
+/// ```
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::collections::*;
+/// assert_eq!(1.cons(2.cons(List::nil())), list![1, 2]);
+/// ```
+#[snippet = "list"]
+pub trait IntoCons<T: Clone, L: std::borrow::Borrow<List<T>>> {
     fn cons(self, tail: L) -> List<T>;
 }
 
-#[snippet = "collections"]
-impl<T: Clone, L: Borrow<List<T>>> IntoCons<T, L> for T {
+#[snippet = "list"]
+impl<T: Clone, L: std::borrow::Borrow<List<T>>> IntoCons<T, L> for T {
     fn cons(self, tail: L) -> List<T> {
         let tail_cloned: List<T> = tail.borrow().clone().into();
         let tail_len = tail_cloned.len;
         List {
-            inner: Rc::new(Cons(self, tail_cloned)),
+            inner: std::rc::Rc::new(Cons(self, tail_cloned)),
             len: tail_len + 1
         }
     }
@@ -243,19 +397,16 @@ impl<T: Clone> IntoConsByMove<T> for T {
     fn cons_move(self, tail: List<T>) -> List<T> {
         let tail_len = tail.len;
         List {
-            inner: Rc::new(Cons(self, tail)),
+            inner: std::rc::Rc::new(Cons(self, tail)),
             len: tail_len + 1
         }
     }
 }
 
-/*
-impl<T: Clone> FromIterator for List<T> {
-
-}
-*/
-
-#[snippet = "collections"]
+/// Makes a list by enumerating its contents.
+///
+/// See [Example section of `List`](collections/struct.List.html#example) for usage.
+#[snippet = "list"]
 #[macro_export]
 macro_rules! list {
     [] => { List::nil() };
@@ -267,6 +418,7 @@ macro_rules! list {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::rc::Rc;
     use std::cmp::Ordering::*;
     use std::f64;
 
@@ -346,16 +498,6 @@ mod tests {
             &Nil => panic!(),
             &Cons(head, _) => assert_eq!(head, 1)
         }
-
-        match *list {
-            Nil => panic!(),
-            Cons(head, _) => assert_eq!(head, 1)
-        }
-    }
-
-    #[test]
-    fn test_format() {
-        assert_eq!(format!("{:?}", list!["a", "b"]), r#""a":"b":[]"#);
     }
 
     #[test]
