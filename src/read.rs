@@ -463,6 +463,16 @@ pub fn read<T: ReadableFromLine>() -> T::Output {
 /// assert_eq!(n, 60);
 /// ```
 ///
+/// *pattern* `=` *type* の代わりに `!` と書くと、その位置のwordを捨てる。
+///
+/// ```no_run
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::read::*;
+/// // Stdin: "10 20"
+/// read!(!, k = usize);
+/// assert_eq!(k, 20);
+/// ```
+///
 /// 単に`read!()`と書くと、入力の1行を捨てる。
 ///
 /// ```no_run
@@ -484,14 +494,39 @@ macro_rules! read {
         std::io::stdin().read_line(&mut line).unwrap();
     };
 
+    ( $( $body:tt )+ ) => {
+        read_inner!($($body)+; );
+    };
+}
+
+// This macro works in latest stable Rust, but it doesn't in Rust 1.15.1.
+#[macro_export]
+#[doc(hidden)]
+#[snippet = "read"]
+macro_rules! read_inner {
+    ( $pat:pat = $t:ty ; $( $acc:tt )* ) => {
+        read_inner!(; $($acc)* $pat = $t,);
+    };
+
+    ( $pat:pat = $t:ty, $( $pat_rest:pat = $t_rest:ty ),+  ; $( $acc:tt )* ) => {
+        read_inner!($($pat_rest = $t_rest),+; $($acc)* $pat = $t,);
+    };
+
+    ( ! ; $( $acc:tt )* ) => {
+        read_inner!(; $($acc)* _ = (),);
+    };
+
+    ( !, $( $pat_rest:pat = $t_rest:ty ),*; $( $acc:tt )* ) => {
+        read_inner!($($pat_rest = $t_rest),*; $($acc)* _ = (), );
+    };
+
     // Gets a ReadableFromLine
-    ( $pat:pat = $t:ty ) => {
+    ( ; $pat:pat = $t:ty , ) => {
         let $pat = read::<$t>();
     };
 
-    // Gets Readable's
-    ( $( $pat:pat = $t:ty ),+ ) => {
-        read!(($($pat),*) = ($($t),*));
+    ( ; $( $pat:pat = $t:ty ),+ , ) => {
+        read_inner!(; ($($pat),*) = ($($t),*),);
     };
 }
 
