@@ -155,6 +155,46 @@ impl<T: Clone> List<T> {
     /// `len()` is O(1) time because each sublist holds its length.
     pub fn len(&self) -> usize { self.len }
 
+    /// Extract head of non-empty list.
+    ///
+    /// # Panic
+    ///
+    /// Panics if `self` is nil.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::*;
+    /// assert_eq!(list![1, 2, 3].head(), 1);
+    /// ```
+    pub fn head(&self) -> T {
+        match self.as_ref() {
+            &Nil => panic!("cannot find head of nil"),
+            &Cons(ref head, _) => head.clone()
+        }
+    }
+
+    /// Extract tail of non-empty list.
+    ///
+    /// # Panic
+    ///
+    /// Panics if `self` is nil.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::*;
+    /// assert_eq!(list![1, 2, 3].tail(), list![2, 3]);
+    /// ```
+    pub fn tail(&self) -> List<T> {
+        match self.as_ref() {
+            &Nil => panic!("cannot find head of nil"),
+            &Cons(_, ref tail) => tail.clone()
+        }
+    }
+
     /// Gets an iterator without moving `self`.
     pub fn iter(&self) -> List<T> {
         self.clone()
