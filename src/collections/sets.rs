@@ -113,7 +113,8 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug> HashUnionFindSets<T> {
                 UnionFindNodeInner::Root { len } => (node, len),
                 UnionFindNodeInner::Child { parent } => {
                     let (root, len) = go(parent);
-                    node.0.as_ref().replace(UnionFindNodeInner::Child { parent: root.clone() });
+                    let mut borrowed = node.0.borrow_mut();
+                    *borrowed = UnionFindNodeInner::Child { parent: root.clone() };
                     (root, len)
                 }
             }
@@ -201,21 +202,13 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug> HashUnionFindSets<T> {
                 if root1 == root2 {
                     Ok(false)
                 } else {
-                    if len1 < len2 {
-                        root2.0.as_ref().replace(
-                            UnionFindNodeInner::Root { len: len1 + len2 }
-                        );
-                        root1.0.as_ref().replace(
-                            UnionFindNodeInner::Child { parent: root2.clone() }
-                        );
+                    let (mut root, mut child, root_node) = if len1 < len2 {
+                        (root2.0.borrow_mut(), root1.0.borrow_mut(), &root2)
                     } else {
-                        root1.0.as_ref().replace(
-                            UnionFindNodeInner::Root { len: len1 + len2 }
-                        );
-                        root2.0.as_ref().replace(
-                            UnionFindNodeInner::Child { parent: root1.clone() }
-                        );
-                    }
+                        (root1.0.borrow_mut(), root2.0.borrow_mut(), &root1)
+                    };
+                    *root = UnionFindNodeInner::Root { len: len1 + len2 };
+                    *child = UnionFindNodeInner::Child { parent: root_node.clone() };
                     Ok(true)
                 }
             },
