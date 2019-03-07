@@ -1,4 +1,4 @@
-//! Data structures.
+//! Functional list.
 
 // use std::iter::FromIterator;
 
@@ -40,7 +40,7 @@ pub use self::ListInner::{Nil, Cons};
 ///
 /// ```
 /// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::collections::*;
+/// # use atcoder_snippets::collections::list::*;
 /// assert_eq!(List::<i32>::nil(), list![]);
 /// let sublist = 2.cons(List::nil());
 /// assert_eq!(1.cons(sublist), list![1, 2]);
@@ -50,7 +50,7 @@ pub use self::ListInner::{Nil, Cons};
 ///
 /// ```
 /// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::collections::*;
+/// # use atcoder_snippets::collections::list::*;
 /// fn power_set<T: Clone>(set: &List<T>) -> List<List<T>> {
 ///     match set.as_ref() {
 ///         &Nil => list![list![]],
@@ -165,7 +165,7 @@ impl<T: Clone> List<T> {
     ///
     /// ```
     /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::collections::*;
+    /// # use atcoder_snippets::collections::list::*;
     /// assert_eq!(list![1, 2, 3].head(), 1);
     /// ```
     pub fn head(&self) -> T {
@@ -185,7 +185,7 @@ impl<T: Clone> List<T> {
     ///
     /// ```
     /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::collections::*;
+    /// # use atcoder_snippets::collections::list::*;
     /// assert_eq!(list![1, 2, 3].tail(), list![2, 3]);
     /// ```
     pub fn tail(&self) -> List<T> {
@@ -239,7 +239,7 @@ fn append_tailrec<T: Clone>(
 ///
 /// ```
 /// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::collections::*;
+/// # use atcoder_snippets::collections::list::*;
 /// let list = list![1, 2, 3];
 /// match list.as_ref() {
 ///     // The patterns can be writtern `Nil` and `Cons(head, tail)`
@@ -272,7 +272,7 @@ impl<T: Clone> AsRef<ListInner<T>> for List<T> {
  * ///
  * /// ```
  * /// # #[macro_use] extern crate atcoder_snippets;
- * /// # use atcoder_snippets::collections::*;
+ * /// # use atcoder_snippets::collections::list::*;
  * /// let list = list![1, 2, 3];
  * ///
  * /// match list.into() {
@@ -300,7 +300,7 @@ impl<T: Clone> AsRef<ListInner<T>> for List<T> {
 ///
 /// ```
 /// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::collections::*;
+/// # use atcoder_snippets::collections::list::*;
 /// assert_eq!(format!("{:?}", list!["a", "b"]), r#""a" :: "b" :: nil"#);
 /// ```
 #[snippet = "list"]
@@ -387,7 +387,7 @@ impl<'a, T: Clone> IntoIterator for &'a List<T> {
 ///
 /// ```
 /// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::collections::*;
+/// # use atcoder_snippets::collections::list::*;
 /// assert_eq!(vec![1, 2, 3].into_iter().collect::<List<_>>(), list![1, 2, 3]);
 /// ```
 #[snippet = "list"]
@@ -408,7 +408,7 @@ impl<T: Clone> std::iter::FromIterator<T> for List<T> {
 ///
 /// ```
 /// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::collections::*;
+/// # use atcoder_snippets::collections::list::*;
 /// assert_eq!(1.cons(2.cons(List::nil())), list![1, 2]);
 /// ```
 #[snippet = "list"]

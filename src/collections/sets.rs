@@ -1,0 +1,326 @@
+//! Disjoint-set data structure, known as union-find.
+
+/// Disjoint-set data structure, known as union-find.
+#[snippet = "sets"]
+pub struct HashUnionFindSets<T: Eq + std::hash::Hash + std::fmt::Debug> {
+    items: std::collections::HashMap<T, UnionFindNode>
+}
+
+#[snippet = "sets"]
+#[derive(Clone)]
+enum UnionFindNodeInner {
+    Root {
+        len: usize,
+    },
+    Child {
+        parent: UnionFindNode
+    }
+}
+
+#[snippet = "sets"]
+#[derive(Clone)]
+struct UnionFindNode(std::rc::Rc<std::cell::RefCell<UnionFindNodeInner>>);
+
+#[snippet = "sets"]
+impl UnionFindNode {
+    fn new() -> UnionFindNode {
+        UnionFindNode(std::rc::Rc::new(std::cell::RefCell::new(
+            UnionFindNodeInner::Root { len: 1 }
+        )))
+    }
+}
+
+#[snippet = "sets"]
+impl std::cmp::PartialEq for UnionFindNode {
+    fn eq(&self, other: &UnionFindNode) -> bool {
+        std::rc::Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+#[snippet = "sets"]
+impl std::cmp::Eq for UnionFindNode {}
+
+#[snippet = "sets"]
+impl std::hash::Hash for UnionFindNode {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        use std::rc::Rc;
+        let ptr = Rc::into_raw(self.0.clone());
+        ptr.hash(state);
+        unsafe { Rc::from_raw(ptr) };
+    }
+}
+
+#[snippet = "sets"]
+impl<T: Eq + std::hash::Hash + std::fmt::Debug> HashUnionFindSets<T> {
+    /// Creates an empty forest.
+    pub fn new() -> HashUnionFindSets<T> {
+        HashUnionFindSets { items: std::collections::HashMap::new() }
+    }
+
+    fn error_msg(items: &[&T]) -> String {
+        assert!(items.len() == 1 || items.len() == 2);
+        if items.len() == 1 {
+            format!("no set contains {:?}", items[0])
+        } else {
+            format!("no set contains {:?} and no set contains {:?}", items[0], items[1])
+        }
+    }
+
+    /// Adds a singleton set composed of only `item`.
+    ///
+    /// If a set containing `item` already exists, the sets don't change.
+    /// In the case, returns `false`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::sets::*;
+    /// let mut sets = HashUnionFindSets::new();
+    /// assert!(sets.add(1));
+    /// assert!(!sets.add(1));
+    /// assert_eq!(sets.items_len(), 1);
+    /// ```
+    pub fn add(&mut self, item: T) -> bool {
+        if self.items.contains_key(&item) {
+            false
+        } else {
+            self.items.insert(item, UnionFindNode::new());
+            true
+        }
+    }
+
+    /// Returns how many items are contained by all the sets.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::sets::*;
+    /// let mut sets: HashUnionFindSets<i32> = vec![1, 2].into_iter().collect();
+    /// assert_eq!(sets.items_len(), 2);
+    /// sets.unite(&1, &2);
+    /// assert_eq!(sets.items_len(), 2);
+    /// ```
+    pub fn items_len(&self) -> usize {
+        self.items.len()
+    }
+
+    fn find(&self, item: &T) -> Option<(UnionFindNode, usize)> {
+        fn go(node: UnionFindNode) -> (UnionFindNode, usize) {
+            let inner = node.0.as_ref().clone().into_inner();
+            match inner {
+                UnionFindNodeInner::Root { len } => (node, len),
+                UnionFindNodeInner::Child { parent } => {
+                    let (root, len) = go(parent);
+                    node.0.as_ref().replace(UnionFindNodeInner::Child { parent: root.clone() });
+                    (root, len)
+                }
+            }
+        }
+
+        self.items.get(item).cloned().map(go)
+    }
+
+    /* Requires additional infomation in data structure
+    /// Returns how many sets are contained by the sets.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::sets::*;
+    /// let mut sets: HashUnionFindSets<i32> = vec![1, 2].into_iter().collect();
+    /// assert_eq!(sets.sets_len(), 2);
+    /// sets.unite(&1, &2);
+    /// assert_eq!(sets.sets_len(), 1);
+    /// ```
+    pub fn sets_len(&self) -> usize {
+        unimplemented!()
+    }
+    */
+
+    /// Returns how many items are contained by the set holding `item`.
+    ///
+    /// If no set contains `item`, returns `Err` with an error message.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::sets::*;
+    /// let mut sets: HashUnionFindSets<i32> = vec![1, 2].into_iter().collect();
+    ///
+    /// assert_eq!(sets.len_of(&1), Ok(1));
+    /// sets.unite(&1, &2);
+    /// assert_eq!(sets.len_of(&1), Ok(2));
+    ///
+    /// assert!(sets.len_of(&3).is_err());
+    /// ```
+    pub fn len_of(&self, item: &T) -> Result<usize, String> {
+        self.find(item).map(|(_, len)| len).ok_or_else(|| {
+            HashUnionFindSets::error_msg(&[item])
+        })
+    }
+
+    /// Returns if two sets holding `item1` and `item2` are the same one.
+    ///
+    /// If no set contains `item1` or `item2`, returns `Err` with an error message.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::sets::*;
+    /// let mut sets: HashUnionFindSets<i32> = vec![1, 2].into_iter().collect();
+    ///
+    /// assert_eq!(sets.set_eq(&1, &2), Ok(false));
+    /// sets.unite(&1, &2);
+    /// assert_eq!(sets.set_eq(&1, &2), Ok(true));
+    ///
+    /// assert!(sets.set_eq(&1, &3).is_err());
+    /// assert!(sets.set_eq(&3, &4).is_err());
+    /// ```
+    pub fn set_eq(&self, item1: &T, item2: &T) -> Result<bool, String> {
+        match (self.find(item1), self.find(item2)) {
+            (Some((root1, _)), Some((root2, _))) => Ok(root1 == root2),
+            (Some(_), None) => Err(HashUnionFindSets::error_msg(&[item2])),
+            (None, Some(_)) => Err(HashUnionFindSets::error_msg(&[item1])),
+            (None, None) => Err(HashUnionFindSets::error_msg(&[item1, item2])),
+        }
+    }
+
+    /// Merges two sets, set containing `item1` and set containing `item2`.
+    ///
+    /// If the two sets is already merged, do nothing and returns `Ok(false)`.
+    ///
+    /// If no set contains `item1` or `item2`, returns `Err` with an error message.
+    pub fn unite(&mut self, item1: &T, item2: &T) -> Result<bool, String> {
+        match (self.find(item1), self.find(item2)) {
+            (Some((root1, len1)), Some((root2, len2))) => {
+                if root1 == root2 {
+                    Ok(false)
+                } else {
+                    if len1 < len2 {
+                        root2.0.as_ref().replace(
+                            UnionFindNodeInner::Root { len: len1 + len2 }
+                        );
+                        root1.0.as_ref().replace(
+                            UnionFindNodeInner::Child { parent: root2.clone() }
+                        );
+                    } else {
+                        root1.0.as_ref().replace(
+                            UnionFindNodeInner::Root { len: len1 + len2 }
+                        );
+                        root2.0.as_ref().replace(
+                            UnionFindNodeInner::Child { parent: root1.clone() }
+                        );
+                    }
+                    Ok(true)
+                }
+            },
+            (Some(_), None) => Err(HashUnionFindSets::error_msg(&[item2])),
+            (None, Some(_)) => Err(HashUnionFindSets::error_msg(&[item1])),
+            (None, None) => Err(HashUnionFindSets::error_msg(&[item1, item2]))
+        }
+    }
+}
+
+#[snippet = "sets"]
+impl<T: Eq + std::hash::Hash + std::fmt::Debug> std::fmt::Debug for HashUnionFindSets<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        use std::collections::{HashMap, HashSet};
+
+        let mut root_to_set = HashMap::new();
+        for item in self.items.keys() {
+            let root = self.find(item);
+            let set = root_to_set.entry(root).or_insert(HashSet::new());
+            set.insert(item);
+        }
+
+        let sets: Vec<HashSet<&T>> = root_to_set.into_iter().map(|(_, v)| v).collect();
+        if sets.len() == 0 {
+            write!(f, "{{}}")
+        } else {
+            write!(f, "{{{:?}", sets[0])?;
+            for set in &sets[1..] {
+                write!(f, ", {:?}", set)?;
+            }
+            write!(f, "}}")
+        }
+    }
+}
+
+#[snippet = "sets"]
+impl<T: Eq + std::hash::Hash + std::fmt::Debug> std::iter::FromIterator<T>
+    for HashUnionFindSets<T>
+{
+    /// Creates forest of singletons from an iterator.
+    ///
+    /// If `iter` has duplicated elements, only the first one is added.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// #[macro_use] extern crate atcoder_snippets;
+    /// use atcoder_snippets::collections::sets::*;
+    /// let sets: HashUnionFindSets<i32> = vec![1, 2, 3, 1].into_iter().collect();
+    /// assert_eq!(sets.items_len(), 3);
+    /// ```
+    ///
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> HashUnionFindSets<T> {
+        HashUnionFindSets {
+            items: iter.into_iter().map(|x| (x, UnionFindNode::new())).collect()
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_many_items() {
+        let mut sets: HashUnionFindSets<i32> = (0..20).collect();
+
+        // unite in sequential order
+        for i in 0..9 {
+            sets.unite(&i, &(i+1)).unwrap();
+        }
+
+        for i in 0..10 {
+            for j in 0..10 {
+                assert!(sets.set_eq(&i, &j).unwrap());
+            }
+        }
+        for i in 0..10 {
+            for j in 10..20 {
+                assert!(!sets.set_eq(&i, &j).unwrap());
+            }
+        }
+
+        // unite in random order
+        sets.unite(&10, &11).unwrap();
+        sets.unite(&12, &13).unwrap();
+        sets.unite(&10, &12).unwrap();
+
+        sets.unite(&14, &15).unwrap();
+        sets.unite(&16, &17).unwrap();
+        sets.unite(&17, &18).unwrap();
+        sets.unite(&14, &17).unwrap();
+
+        sets.unite(&10, &14).unwrap();
+        sets.unite(&10, &19).unwrap();
+
+        for i in 10..20 {
+            for j in 10..20 {
+                assert!(sets.set_eq(&i, &j).unwrap());
+            }
+        }
+        for i in 0..10 {
+            for j in 10..20 {
+                assert!(!sets.set_eq(&i, &j).unwrap());
+            }
+        }
+    }
+}
