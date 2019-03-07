@@ -65,7 +65,7 @@ impl<T: Eq + std::hash::Hash> std::hash::Hash for UnionFindNode<T> {
 
 #[snippet = "sets"]
 impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
-    /// Creates an empty forest.
+    /// Creates empty sets.
     pub fn new() -> HashUnionFindSets<T> {
         HashUnionFindSets { items: std::collections::HashMap::new() }
     }
@@ -154,7 +154,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
     }
     */
 
-    /// Returns how many items are contained by the set holding `item`.
+    /// Returns how many items are contained by the set which contains `item`.
     ///
     /// If no set contains `item`, returns `Err` with an error message.
     ///
@@ -177,7 +177,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
         })
     }
 
-    /// Returns if two sets holding `item1` and `item2` are the same one.
+    /// Returns if two sets containing `item1` and `item2` are the same one.
     ///
     /// If no set contains `item1` or `item2`, returns `Err` with an error message.
     ///
@@ -206,7 +206,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
 
     /// Merges two sets, set containing `item1` and set containing `item2`.
     ///
-    /// If the two sets is already merged, do nothing and returns `Ok(false)`.
+    /// If the two sets are same (already merged ones), do nothing and returns `Ok(false)`.
     ///
     /// If no set contains `item1` or `item2`, returns `Err` with an error message.
     pub fn unite(&mut self, item1: &T, item2: &T) -> Result<bool, String> {
