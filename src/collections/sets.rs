@@ -1,57 +1,62 @@
 //! Disjoint-set data structure, known as union-find.
 
+// Since Rust version of AtCoder is too outdated,
+// `Rc`s cannot be compared by their pointer values.
+// So, every node must have the cloned item for equality check.
+// After language update of AtCoder, merge branch `disjoint-set-for-latest-rust`,
+// and `T` does not require `Clone`.
+
 /// Disjoint-set data structure, known as union-find.
 #[snippet = "sets"]
 pub struct HashUnionFindSets<T: Eq + std::hash::Hash + std::fmt::Debug> {
-    items: std::collections::HashMap<T, UnionFindNode>
+    items: std::collections::HashMap<T, UnionFindNode<T>>
 }
 
 #[snippet = "sets"]
 #[derive(Clone)]
-enum UnionFindNodeInner {
+enum UnionFindNodeInner<T: Eq + std::hash::Hash> {
     Root {
         len: usize,
     },
     Child {
-        parent: UnionFindNode
+        parent: UnionFindNode<T>
     }
 }
 
 #[snippet = "sets"]
 #[derive(Clone)]
-struct UnionFindNode(std::rc::Rc<std::cell::RefCell<UnionFindNodeInner>>);
+struct UnionFindNode<T: Eq + std::hash::Hash>(
+    std::rc::Rc<std::cell::RefCell<UnionFindNodeInner<T>>>, T
+);
 
 #[snippet = "sets"]
-impl UnionFindNode {
-    fn new() -> UnionFindNode {
+impl<T: Eq + std::hash::Hash + Clone> UnionFindNode<T> {
+    fn new(item: T) -> UnionFindNode<T> {
         UnionFindNode(std::rc::Rc::new(std::cell::RefCell::new(
             UnionFindNodeInner::Root { len: 1 }
-        )))
+        )), item)
     }
 }
 
 #[snippet = "sets"]
-impl std::cmp::PartialEq for UnionFindNode {
-    fn eq(&self, other: &UnionFindNode) -> bool {
-        std::rc::Rc::ptr_eq(&self.0, &other.0)
+impl<T: Eq + std::hash::Hash> std::cmp::PartialEq for UnionFindNode<T> {
+    fn eq(&self, other: &UnionFindNode<T>) -> bool {
+        self.1 == other.1
     }
 }
 
 #[snippet = "sets"]
-impl std::cmp::Eq for UnionFindNode {}
+impl<T: Eq + std::hash::Hash> std::cmp::Eq for UnionFindNode<T> {}
 
 #[snippet = "sets"]
-impl std::hash::Hash for UnionFindNode {
+impl<T: Eq + std::hash::Hash> std::hash::Hash for UnionFindNode<T> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        use std::rc::Rc;
-        let ptr = Rc::into_raw(self.0.clone());
-        ptr.hash(state);
-        unsafe { Rc::from_raw(ptr) };
+        self.1.hash(state);
     }
 }
 
 #[snippet = "sets"]
-impl<T: Eq + std::hash::Hash + std::fmt::Debug> HashUnionFindSets<T> {
+impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
     /// Creates an empty forest.
     pub fn new() -> HashUnionFindSets<T> {
         HashUnionFindSets { items: std::collections::HashMap::new() }
@@ -85,7 +90,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug> HashUnionFindSets<T> {
         if self.items.contains_key(&item) {
             false
         } else {
-            self.items.insert(item, UnionFindNode::new());
+            self.items.insert(item.clone(), UnionFindNode::new(item));
             true
         }
     }
@@ -106,8 +111,8 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug> HashUnionFindSets<T> {
         self.items.len()
     }
 
-    fn find(&self, item: &T) -> Option<(UnionFindNode, usize)> {
-        fn go(node: UnionFindNode) -> (UnionFindNode, usize) {
+    fn find(&self, item: &T) -> Option<(UnionFindNode<T>, usize)> {
+        fn go<T: Eq + std::hash::Hash + Clone>(node: UnionFindNode<T>) -> (UnionFindNode<T>, usize) {
             let inner = node.0.as_ref().clone().into_inner();
             match inner {
                 UnionFindNodeInner::Root { len } => (node, len),
@@ -220,7 +225,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug> HashUnionFindSets<T> {
 }
 
 #[snippet = "sets"]
-impl<T: Eq + std::hash::Hash + std::fmt::Debug> std::fmt::Debug for HashUnionFindSets<T> {
+impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> std::fmt::Debug for HashUnionFindSets<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         use std::collections::{HashMap, HashSet};
 
@@ -245,7 +250,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug> std::fmt::Debug for HashUnionFin
 }
 
 #[snippet = "sets"]
-impl<T: Eq + std::hash::Hash + std::fmt::Debug> std::iter::FromIterator<T>
+impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> std::iter::FromIterator<T>
     for HashUnionFindSets<T>
 {
     /// Creates forest of singletons from an iterator.
@@ -263,7 +268,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug> std::iter::FromIterator<T>
     ///
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> HashUnionFindSets<T> {
         HashUnionFindSets {
-            items: iter.into_iter().map(|x| (x, UnionFindNode::new())).collect()
+            items: iter.into_iter().map(|x| (x.clone(), UnionFindNode::new(x))).collect()
         }
     }
 }
