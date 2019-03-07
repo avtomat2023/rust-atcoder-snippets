@@ -13,7 +13,7 @@ pub mod num;
 pub mod opt;
 pub mod cmp;
 pub mod itertools;
-pub mod seq;
+pub mod slice;
 pub mod collections;
 pub mod vec2;
 pub mod utils;
