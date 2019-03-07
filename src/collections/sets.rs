@@ -6,7 +6,15 @@
 // After language update of AtCoder, merge branch `disjoint-set-for-latest-rust`,
 // and `T` does not require `Clone`.
 
+// TODO: Show solution of ABC120 D as an example
 /// Disjoint-set data structure, known as union-find.
+///
+/// `HashUnionFindsets` uses `HashMap` internally to manage items.
+/// Therefore, item type `T` must implement `Hash`.
+///
+/// Thanks to union-by-size and path-compression strategy,
+/// average cost of each operation is so much low that
+/// it can be regarded as constant time, although theoretically it is not constant.
 #[snippet = "sets"]
 pub struct HashUnionFindSets<T: Eq + std::hash::Hash + std::fmt::Debug> {
     items: std::collections::HashMap<T, UnionFindNode<T>>
