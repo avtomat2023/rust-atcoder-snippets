@@ -9,7 +9,7 @@
 // TODO: Show solution of ABC120 D as an example
 /// Disjoint-set data structure, known as union-find.
 ///
-/// `HashUnionFindsets` uses `HashMap` internally to manage items.
+/// `HashUnionFindSets` uses `HashMap` internally to manage items.
 /// Therefore, item type `T` must implement `Hash`.
 ///
 /// Thanks to union-by-size and path-compression strategy,
@@ -261,7 +261,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> std::fmt::Debug for Hash
 impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> std::iter::FromIterator<T>
     for HashUnionFindSets<T>
 {
-    /// Creates forest of singletons from an iterator.
+    /// Creates sets of singletons from an iterator.
     ///
     /// If `iter` has duplicated elements, only the first one is added.
     ///
