@@ -210,12 +210,62 @@ impl<T: Clone> List<T> {
         ListIter { iter: self.clone() }
     }
 
+    /// Get reversed list in O(n) time.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::list::*;
+    /// assert_eq!(list![1, 2, 3].rev(), list![3, 2, 1]);
+    /// ```
+    pub fn rev(&self) -> List<T> {
+        fn go<T: Clone>(list: &List<T>, acc: List<T>) -> List<T> {
+            match list.as_ref() {
+                &Nil => acc,
+                &Cons(ref head, ref tail) => go(tail, head.clone().cons(acc))
+            }
+        }
+
+        go(self, List::nil())
+    }
+
     /// Concatenates two lists.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::list::*;
+    /// assert_eq!(list![1, 2, 3].append(&list![4, 5, 6]), list![1, 2, 3, 4, 5, 6]);
+    /// ```
     pub fn append(&self, other: &List<T>) -> List<T> {
-        append_tailrec(self, other, List::nil())
+        fn go<T: Clone>(
+            list1: &List<T>,
+            list2: &List<T>,
+            list1_rev: List<T>
+        ) -> List<T> {
+            match list1.as_ref() {
+                &Nil => list1_rev.rev_append(list2),
+                &Cons(ref head, ref tail) =>
+                    go(tail, list2, head.clone().cons(list1_rev))
+            }
+        }
+
+        go(self, other, List::nil())
     }
 
     /// Reverses `self`, then concatenates two lists.
+    ///
+    /// It is more efficient than `self.rev().append(other)`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::list::*;
+    /// assert_eq!(list![1, 2, 3].rev_append(&list![4, 5, 6]), list![3, 2, 1, 4, 5, 6]);
+    /// ```
     pub fn rev_append(&self, other: &List<T>) -> List<T> {
         match self.as_ref() {
             &Nil => other.clone(),
@@ -224,22 +274,12 @@ impl<T: Clone> List<T> {
         }
     }
 
+    // TODO: Add `rev_map` method
+    // https://caml.inria.fr/pub/docs/manual-ocaml/libref/List.html
+
     #[cfg(test)]
     fn take(self) -> std::rc::Rc<ListInner<T>> {
         self.inner
-    }
-}
-
-#[snippet = "list"]
-fn append_tailrec<T: Clone>(
-    list1: &List<T>,
-    list2: &List<T>,
-    list1_rev: List<T>
-) -> List<T> {
-    match list1.as_ref() {
-        &Nil => list1_rev.rev_append(list2),
-        &Cons(ref head, ref tail) =>
-            append_tailrec(tail, list2, head.clone().cons(list1_rev))
     }
 }
 
