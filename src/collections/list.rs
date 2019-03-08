@@ -1,7 +1,5 @@
 //! Functional list.
 
-// use std::iter::FromIterator;
-
 /// For pattern match.
 ///
 /// It is not necessary to use this enum directly.
@@ -384,7 +382,18 @@ impl<T: Clone> Iterator for ListIter<T> {
         self.iter = cons.1;
         Some(cons.0)
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.iter.len(), Some(self.iter.len()))
+    }
+
+    fn count(self) -> usize {
+        self.iter.len()
+    }
 }
+
+#[snippet = "list"]
+impl<T: Clone> ExactSizeIterator for ListIter<T> {}
 
 #[snippet = "list"]
 impl<T: Clone> IntoIterator for List<T> {
