@@ -196,8 +196,20 @@ impl<T: Clone> List<T> {
     }
 
     /// Gets an iterator without moving `self`.
-    pub fn iter(&self) -> List<T> {
-        self.clone()
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::list::*;
+    /// let mut iter = list![1, 2, 3].iter();
+    /// assert_eq!(iter.next(), Some(1));
+    /// assert_eq!(iter.next(), Some(2));
+    /// assert_eq!(iter.next(), Some(3));
+    /// assert_eq!(iter.next(), None);
+    /// ```
+    pub fn iter(&self) -> ListIter<T> {
+        ListIter { iter: self.clone() }
     }
 
     /// Concatenates two lists.
@@ -353,28 +365,43 @@ impl<T: Clone + Ord> Ord for List<T> {
     }
 }
 
-/// `List` is both a collection and an iterator.
+/// An iterator over the items of a `List`.
 #[snippet = "list"]
-impl<T: Clone> Iterator for List<T> {
+pub struct ListIter<T: Clone> {
+    iter: List<T>
+}
+
+#[snippet = "list"]
+impl<T: Clone> Iterator for ListIter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
         let cons;
-        match self.as_ref() {
+        match self.iter.as_ref() {
             &Nil => return None,
             &Cons(ref head, ref tail) => cons = (head.clone(), tail.clone())
         }
-        *self = cons.1;
+        self.iter = cons.1;
         Some(cons.0)
+    }
+}
+
+#[snippet = "list"]
+impl<T: Clone> IntoIterator for List<T> {
+    type Item = T;
+    type IntoIter = ListIter<T>;
+
+    fn into_iter(self) -> ListIter<T> {
+        ListIter { iter: self }
     }
 }
 
 #[snippet = "list"]
 impl<'a, T: Clone> IntoIterator for &'a List<T> {
     type Item = T;
-    type IntoIter = List<T>;
+    type IntoIter = ListIter<T>;
 
-    fn into_iter(self) -> List<T> {
+    fn into_iter(self) -> ListIter<T> {
         self.iter()
     }
 }
@@ -542,7 +569,7 @@ mod tests {
 
     #[test]
     fn test_partial_ord() {
-        assert_eq!(List::<f64>::nil().partial_cmp(List::nil()), Some(Equal));
+        assert_eq!(List::<f64>::nil().partial_cmp(&List::nil()), Some(Equal));
         assert_eq!(list![1.0].partial_cmp(&List::nil()), Some(Greater));
         assert_eq!(List::<f64>::nil().partial_cmp(&list![1.0]), Some(Less));
         assert_eq!(list![1.0].partial_cmp(&list![1.0]), Some(Equal));
