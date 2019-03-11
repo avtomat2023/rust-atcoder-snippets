@@ -2,8 +2,9 @@
 
 ## Requirements
 
-- rust-mode
-- yasnippet
+- [cargo-snippet](https://github.com/hatoo/cargo-snippet)
+- [rust-mode](https://github.com/rust-lang/rust-mode)
+- [yasnippet](https://github.com/joaotavora/yasnippet)
 
 ## How to use
 
