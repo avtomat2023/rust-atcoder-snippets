@@ -1,7 +1,7 @@
 //! Enriches slices.
 
 // TODO: ABC038 D, AGC026 A
-/// An iterator created by [`group_by`](struct.SliceExtGroupBy.group_by) method on slices.
+/// An iterator created by [`group_by`](trait.SliceExt.html#tymethod.group_by) method on slices.
 #[snippet = "slice"]
 pub struct SliceGroupBy<'a, T: 'a, K: Eq, F: Fn(&T) -> K> {
     key_fn: F,
@@ -30,39 +30,7 @@ impl<'a, T, K: Eq, F: Fn(&T) -> K> Iterator for SliceGroupBy<'a, T, K, F> {
     }
 }
 
-/// Enriches slices by adding `group_by` method.
-#[snippet = "slice"]
-pub trait SliceExtGroupBy<T, K: Eq, F: Fn(&T) -> K> {
-    /// Returns an iterator yielding groups.
-    ///
-    /// Each group is a pair of key and subslice.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # extern crate atcoder_snippets;
-    /// # use atcoder_snippets::slice::*;
-    /// let seq = [('a', 0), ('a', 1), ('a', 2), ('b', 0), ('a', 0), ('a', 1)];
-    /// let grouped: Vec<(char, Vec<(char, i32)>)> = seq
-    ///     .group_by(|&(ch, _)| ch)
-    ///     .map(|(ch, pairs)| (ch, pairs.to_vec()))
-    ///     .collect();
-    /// assert_eq!(grouped,
-    ///            vec![('a', vec![('a', 0), ('a', 1), ('a', 2)]),
-    ///                 ('b', vec![('b', 0)]),
-    ///                 ('a', vec![('a', 0), ('a', 1)])]);
-    /// ```
-    fn group_by(&self, key_fn: F) -> SliceGroupBy<T, K, F>;
-}
-
-#[snippet = "slice"]
-impl<T, K: Eq, F: Fn(&T) -> K> SliceExtGroupBy<T, K, F> for [T] {
-    fn group_by(&self, key_fn: F) -> SliceGroupBy<T, K, F> {
-        SliceGroupBy { key_fn: key_fn, rest: self }
-    }
-}
-
-/// An iterator created by [`permutations`](struct.SliceExtGroupBy.permutations)
+/// An iterator created by [`permutations`](trait.SliceExt.html#tymethod.permutations)
 /// method on slices.
 #[snippet = "slice"]
 pub struct Permutations<'a, T: 'a> {
@@ -107,9 +75,30 @@ fn next_permutation(mut indices: Vec<usize>) -> Option<Vec<usize>> {
         })
 }
 
-/// Enriches slices.
+/// Enriches slices by adding various methods.
 #[snippet = "slice"]
 pub trait SliceExt<T> {
+    /// Returns an iterator yielding groups.
+    ///
+    /// Each group is a pair of key and subslice.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # extern crate atcoder_snippets;
+    /// # use atcoder_snippets::slice::*;
+    /// let seq = [('a', 0), ('a', 1), ('a', 2), ('b', 0), ('a', 0), ('a', 1)];
+    /// let grouped: Vec<(char, Vec<(char, i32)>)> = seq
+    ///     .group_by(|&(ch, _)| ch)
+    ///     .map(|(ch, pairs)| (ch, pairs.to_vec()))
+    ///     .collect();
+    /// assert_eq!(grouped,
+    ///            vec![('a', vec![('a', 0), ('a', 1), ('a', 2)]),
+    ///                 ('b', vec![('b', 0)]),
+    ///                 ('a', vec![('a', 0), ('a', 1)])]);
+    /// ```
+    fn group_by<K: Eq, F: Fn(&T) -> K>(&self, key_fn: F) -> SliceGroupBy<T, K, F>;
+
     // TODO: ABC103 A
     /// Returns an iterator yielding all permutations of the slice.
     ///
@@ -134,6 +123,10 @@ pub trait SliceExt<T> {
 
 #[snippet = "slice"]
 impl<T> SliceExt<T> for [T] {
+    fn group_by<K: Eq, F: Fn(&T) -> K>(&self, key_fn: F) -> SliceGroupBy<T, K, F> {
+        SliceGroupBy { key_fn: key_fn, rest: self }
+    }
+
     fn permutations(&self) -> Permutations<T> {
         let indices = if self.is_empty() {
             None

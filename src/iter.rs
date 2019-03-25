@@ -1,4 +1,6 @@
-/// StepBy: Copyright 2013-2016 The Rust Project Developers.
+//! Enriches iterators.
+
+/// An iterator created by [`step_by_`](trait.IteratorExt.html#method.step_by_) method of on iterators.
 #[snippet = "iter"]
 #[derive(Clone)]
 pub struct StepBy<I> {
@@ -21,6 +23,8 @@ impl<I: Iterator> Iterator for StepBy<I> {
     }
 }
 
+/// An iterator created by [`lscan`](trait.IteratorExt.html#method.lscan) method
+/// on iterators.
 #[snippet = "iter"]
 #[derive(Clone)]
 pub struct LScan<I: Iterator, S: Clone, F: FnMut(&S, I::Item) -> S> {
@@ -47,6 +51,8 @@ where
     }
 }
 
+/// An iterator created by [`flatten`](trait.IteratorExt.html#method.flatten) method
+/// on iterators.
 #[snippet = "iter"]
 // #[derive(Clone)]
 pub struct Flatten<I: Iterator>
@@ -87,9 +93,10 @@ where
     I: DoubleEndedIterator,
     J: DoubleEndedIterator,
     I::Item: J {}
- */
+*/
 
-// https://docs.rs/itertools/0.8.0/itertools/structs/struct.GroupBy.html
+/// An iterator created by [`group_by`](trait.IteratorExt#method.group_by) method
+/// on iterators.
 #[snippet = "iter"]
 pub struct GroupBy<K: Eq, I: Iterator, F: FnMut(&I::Item) -> K> {
     cur: Option<(I::Item, K)>,
@@ -99,9 +106,9 @@ pub struct GroupBy<K: Eq, I: Iterator, F: FnMut(&I::Item) -> K> {
 
 #[snippet = "iter"]
 impl<K: Eq, I: Iterator, F: FnMut(&I::Item) -> K> Iterator for GroupBy<K, I, F> {
-    type Item = Vec<I::Item>;
+    type Item = (K, Vec<I::Item>);
 
-    fn next(&mut self) -> Option<Vec<I::Item>> {
+    fn next(&mut self) -> Option<(K, Vec<I::Item>)> {
         let cur = self.cur.take();
         cur.map(|(item, key)| {
             let mut group = vec![item];
@@ -123,17 +130,30 @@ impl<K: Eq, I: Iterator, F: FnMut(&I::Item) -> K> Iterator for GroupBy<K, I, F> 
                     }
                 }
             }
-            group
+            (key, group)
         })
     }
 }
 
+/// Enriches iterators by adding various methods.
 #[snippet = "iter"]
-use std::fmt;
-
-#[snippet = "iter"]
-pub trait RichIterator: Iterator {
-    // Avoid name collision to Iterator::flatten introduced in Rust 1.28.0
+pub trait IteratorExt: Iterator {
+    /// Returns an iterator skipping a constant number of items in each iteration.
+    ///
+    /// This method is introduced in Rust 1.28.0 for `Iterator`.
+    /// The trailing underbar is for avoiding the name collision.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::iter::*;
+    /// let mut iter = (0..10).step_by(4);
+    /// assert_eq!(iter.next(), Some(0));
+    /// assert_eq!(iter.next(), Some(4));
+    /// assert_eq!(iter.next(), Some(8));
+    /// assert_eq!(iter.next(), None);
+    /// ```
     fn step_by_(self, step: usize) -> StepBy<Self> where Self: Sized {
         assert_ne!(step, 0);
         StepBy {
@@ -143,14 +163,42 @@ pub trait RichIterator: Iterator {
         }
     }
 
+    /// Applying an function (usually producing a side effect) for each items.
+    ///
+    /// This method is introduced in Rust 1.21.0 for `Iterator`.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::iter::*;
+    /// let mut sum = 0;
+    /// (0..10).for_each(|x| sum += x);
+    /// assert_eq!(sum, 45);
+    /// ```
     fn for_each<F: FnMut(Self::Item)>(self, mut f: F) where Self: Sized {
         for item in self {
             f(item);
         }
     }
 
-    // Iterator has `scan` method for another purpose.
-    // The name `lscan` corresponds to `rfold` method of DoubleEndedIterator.
+    /// Returns an iterator folding the inner iterator
+    /// and yielding all intermidiate states.
+    ///
+    /// This method acts like [Haskell's scanl function](https://hackage.haskell.org/package/base-4.12.0.0/docs/Prelude.html#v:scanl).
+    /// The name `lscan` corresponds to `rfold` method of `DoubleEndedIterator`.
+    ///
+    /// # Example
+    ///
+    /// Calculates a cumulative sum.
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::iter::*;
+    /// let data = vec![1, 2, 3, 4, 5];
+    /// let cumsum: Vec<i32> = data.into_iter().lscan(0, |&acc, x| acc + x).collect();
+    /// assert_eq!(cumsum, vec![0, 1, 3, 6, 10, 15]);
+    /// ```
     fn lscan<S: Clone, F>(self, state: S, f: F) -> LScan<Self, S, F>
     where
         Self: Sized,
@@ -174,7 +222,17 @@ pub trait RichIterator: Iterator {
         })
     }
 
-    // Avoid name collision to Iterator::flatten introduced in Rust 1.29.0
+    // TODO, If possible, avoid name collision to Iterator::flatten introduced in Rust 1.29.0
+    /// Returns an iterator concatenating its inner `IntoIterator`s.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::iter::*;
+    /// let seq = vec![Some(1), Some(2), None, Some(3), None, None];
+    /// assert_eq!(seq.into_iter().flatten().collect(), vec![1, 2, 3]);
+    /// ```
     fn flatten(mut self) -> Flatten<Self> where Self: Sized, Self::Item: IntoIterator {
         let inner_opt = self.next();
         Flatten {
@@ -186,6 +244,22 @@ pub trait RichIterator: Iterator {
     /// `f`によってグループ分けされた`Vec`を生成するイテレータを返す
     ///
     /// SQLのgroup_byではなく、PythonのitertoolやRustのitertoolと同じ意味論である
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::iter::*;
+    /// let seq = vec![('a', 0), ('a', 1), ('a', 2), ('b', 0), ('a', 0), ('a', 1)];
+    /// let grouped: Vec<(char, Vec<(char, i32)>)> = seq
+    ///     .into_iter()
+    ///     .group_by(|&(ch, _)| ch)
+    ///     .collect();
+    /// assert_eq!(grouped,
+    ///            vec![('a', vec![('a', 0), ('a', 1), ('a', 2)]),
+    ///                 ('b', vec![('b', 0)]),
+    ///                 ('a', vec![('a', 0), ('a', 1)])]);
+    /// ```
     fn group_by<K: Eq, F: FnMut(&Self::Item) -> K>(mut self, mut f: F) -> GroupBy<K, Self, F> where Self: Sized {
         let next = self.next();
         GroupBy {
@@ -198,7 +272,16 @@ pub trait RichIterator: Iterator {
         }
     }
 
-    fn join(mut self, sep: &str) -> String where Self: Sized, Self::Item: fmt::Display {
+    /// Concatenates items into a string with interleaving separators.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::iter::*;
+    /// assert_eq!(&vec![1, 2, 3].into_iter().join(", "), "1, 2, 3");
+    /// ```
+    fn join(mut self, sep: &str) -> String where Self: Sized, Self::Item: std::fmt::Display {
         let mut result = String::new();
         if let Some(first) = self.next() {
             result.push_str(&format!("{}", first));
@@ -209,12 +292,22 @@ pub trait RichIterator: Iterator {
         result
     }
 
-    fn cat(self) -> String where Self: Sized, Self::Item: fmt::Display { self.join("") }
+    /// Concatenates items into a string.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::iter::*;
+    /// assert_eq!(&vec![1, 2, 3].into_iter().cat(), "123");
+    /// ```
+    fn cat(self) -> String where Self: Sized, Self::Item: std::fmt::Display { self.join("") }
 }
 
 #[snippet = "iter"]
-impl<I: Iterator> RichIterator for I {}
+impl<I: Iterator> IteratorExt for I {}
 
+/// An iterator created by [`unfold`](fn.unfold.html) function.
 #[snippet = "iter"]
 pub struct Unfold<T, F> where F: FnMut(&T) -> Option<T> {
     state: Option<T>,
@@ -236,11 +329,28 @@ impl<T, F> Iterator for Unfold<T, F> where F: FnMut(&T) -> Option<T> {
     }
 }
 
+/// Returns an iterator applying `f` to `init` repeatedly.
+///
+/// The iterator yields inner values of `Options` until `f` returns `None`.
+///
+/// # Example
+///
+/// ```
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::iter::*;
+/// fn twice_until_10(x: &i32) -> Option<i32> {
+///    let y = *x * 2;
+///    if y < 10 { Some(y) } else { None }
+/// }
+///
+/// assert_eq!(unfold(1, twice_until_10).collect::<Vec<_>>(), vec![1, 2, 4, 8]);
+/// ```
 #[snippet = "iter"]
 pub fn unfold<T, F>(init: T, f: F) -> Unfold<T, F> where F: FnMut(&T) -> Option<T> {
     Unfold { state: Some(init), f: f }
 }
 
+/// An iterator created by [`iterate`](fn.iterate.html) function.
 #[snippet = "iter"]
 pub struct Iterate<T, F> where F: FnMut(&T) -> T {
     state: T,
@@ -260,6 +370,18 @@ impl<T, F> Iterator for Iterate<T, F> where F: FnMut(&T) -> T {
     }
 }
 
+/// Returns an iterator yielding `init`, `f(init)`, `f(f(init))`, ... infinitely.
+///
+/// # Example
+///
+/// ```
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::iter::*;
+/// assert_eq!(
+///     iterate(1, |x| x * 2).take_while(|&y| y < 10).collect::<Vec<_>>(),
+///     vec![1, 2, 4, 8]
+/// );
+/// ```
 #[snippet = "iter"]
 pub fn iterate<T, F>(init: T, f: F) -> Iterate<T, F>
 where
@@ -271,7 +393,7 @@ where
 
 #[snippet = "product"]
 #[derive(Clone)]
-pub struct Product2<I, J>
+struct Product2<I, J>
 where
     I: Iterator,
     I::Item: Clone,
@@ -351,7 +473,7 @@ where
 
 #[snippet = "product"]
 #[derive(Clone)]
-pub struct Product3<I, J, K>
+struct Product3<I, J, K>
 where
     I: Iterator,
     I::Item: Clone,
@@ -393,14 +515,13 @@ where
 }
 
 #[snippet = "product"]
-#[allow(unused_macros)]
 macro_rules! product {
     ($i:expr, $j:expr) => ( Product2::new($i, $j) );
     ($i:expr, $j:expr, $k:expr) => ( Product3::new($i, $j, $k) );
 }
 
 #[snippet = "combinations"]
-pub struct Combinations<I: Iterator + Clone>
+struct Combinations<I: Iterator + Clone>
 where
     I::Item: Clone
 {
@@ -550,7 +671,6 @@ where
 }
 
 #[snippet = "combinations"]
-#[allow(unused_macros)]
 macro_rules! combinations {
     ($iter:expr, 2) => {
         Combinations::new($iter, 2, false).map(|v| (v[0], v[1]))
@@ -601,34 +721,34 @@ mod test {
     fn test_group_by() {
         let groups1 = iter::empty::<i32>().group_by(|&x| x % 2)
             .collect::<Vec<_>>();
-        let expected: Vec<Vec<i32>> = Vec::new();
+        let expected: Vec<(i32, Vec<i32>)> = Vec::new();
         assert_eq!(groups1, expected);
 
         let groups2 = iter::once(1).group_by(|&x| x % 2)
             .collect::<Vec<_>>();
-        assert_eq!(groups2, vec![vec![1]]);
+        assert_eq!(groups2, vec![(1, vec![1])]);
 
         let groups3 = vec![1, 3].into_iter().group_by(|&x| x % 2)
             .collect::<Vec<_>>();
-        assert_eq!(groups3, vec![vec![1, 3]]);
+        assert_eq!(groups3, vec![(1, vec![1, 3])]);
 
         let groups4 = vec![1, 2].into_iter().group_by(|&x| x % 2)
             .collect::<Vec<_>>();
-        assert_eq!(groups4, vec![vec![1], vec![2]]);
+        assert_eq!(groups4, vec![(1, vec![1]), (0, vec![2])]);
 
         let seq = vec![(0, 'a'), (1, 'a'), (2, 'b'), (3, 'a'), (4, 'c'), (5, 'c')];
         let groups5 = seq.into_iter().group_by(|x| x.1)
             .collect::<Vec<_>>();
         assert_eq!(groups5, vec![
-            vec![(0, 'a'), (1, 'a')],
-            vec![(2, 'b')],
-            vec![(3, 'a')],
-            vec![(4, 'c'), (5, 'c')]
+            ('a', vec![(0, 'a'), (1, 'a')]),
+            ('b', vec![(2, 'b')]),
+            ('a', vec![(3, 'a')]),
+            ('c', vec![(4, 'c'), (5, 'c')])
         ]);
     }
 
     /*
-    // Rename RichIterator::flatten to flatten_ for testing
+    // Rename IteratorExt::flatten to flatten_ for testing
     #[test]
     fn test_flatten() {
         assert_eq!(iter::empty::<Vec<i32>>().flatten_().collect::<Vec<i32>>(), vec![]);
