@@ -10,7 +10,6 @@
 pub mod read;
 pub mod write;
 pub mod num;
-pub mod opt;
 pub mod cmp;
 pub mod iter;
 pub mod slice;
