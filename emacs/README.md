@@ -11,7 +11,7 @@
 1. Clone this repository.
 2. Add the path of `emacs/bin` directory under the repository to `$PATH` by editing the login commands file like `~/.profile`.
 3. Log out from your OS and log in again.
-4. Execute:
+4. Evaluate the following S-expressions:
    ```
    (push "/path/to/atcoder-snippets/emacs" load-path)
    (require 'atcoder-snippets)
