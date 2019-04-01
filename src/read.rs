@@ -132,6 +132,7 @@ readable!(String, 1, |ss| ss[0].to_string());
 
 // Is `impl Readable for bool` necessary?
 
+#[snippet = "read"]
 impl Readable for char {
     type Output = char;
 
@@ -143,6 +144,30 @@ impl Readable for char {
         } else {
             Err(format!("cannot parse \"{}\" as a char", words[0]))
         }
+    }
+}
+
+/// For reading a string as `Vec<char>`.
+///
+/// # Example
+///
+/// ```no_run
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::read::*;
+/// // Stdin: "CHARACTERS"
+/// read!(s = Chars);
+/// assert_eq!(s, vec!['C', 'H', 'A', 'R', 'A', 'C', 'T', 'E', 'R', 'S']);
+/// ```
+#[snippet = "read"]
+pub struct Chars();
+
+#[snippet = "read"]
+impl Readable for Chars {
+    type Output = Vec<char>;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<Vec<char>, String> {
+        Ok(words[0].chars().collect())
     }
 }
 
@@ -772,6 +797,12 @@ mod test {
         assert!(char::read_words(&["input"]).is_err());
         assert_eq!(i32::read_words(&["42"]), Ok(42));
         assert!(i32::read_words(&["a"]).is_err());
+    }
+
+    #[test]
+    fn test_read_chars() {
+        let s = Chars::read_words(&["CHARACTERS"]);
+        assert_eq!(s, Ok(vec!['C', 'H', 'A', 'R', 'A', 'C', 'T', 'E', 'R', 'S']));
     }
 
     #[test]
