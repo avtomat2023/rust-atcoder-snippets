@@ -55,6 +55,7 @@
 /// 以下の型は、`Readable`をimplしている。
 ///
 /// - ユニット型 `()`
+/// - `char`
 /// - `String`
 /// - すべての数値型(`isize`, `usize`, `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`, `f32`, `f64`)
 ///
@@ -134,6 +135,20 @@ readable!((), |_ss| ());
 readable!(String, |ss| ss[0].to_string());
 
 // Is `impl Readable for bool` necessary?
+
+impl Readable for char {
+    type Output = char;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<char, String> {
+        let chars: Vec<char> = words[0].chars().collect();
+        if chars.len() == 1 {
+            Ok(chars[0])
+        } else {
+            Err(format!("cannot parse \"{}\" as a char", words[0]))
+        }
+    }
+}
 
 #[snippet = "read"]
 macro_rules! impl_readable_for_ints {
@@ -757,6 +772,8 @@ mod test {
     fn test_read_words_primitives() {
         assert_eq!(<()>::read_words(&["input"]), Ok(()));
         assert_eq!(String::read_words(&["input"]), Ok("input".to_string()));
+        assert_eq!(char::read_words(&["a"]), Ok('a'));
+        assert!(char::read_words(&["input"]).is_err());
         assert_eq!(i32::read_words(&["42"]), Ok(42));
         assert!(i32::read_words(&["a"]).is_err());
     }
