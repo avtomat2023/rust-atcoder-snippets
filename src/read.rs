@@ -112,10 +112,6 @@ pub trait Readable {
 #[macro_export]
 #[snippet = "read"]
 macro_rules! readable {
-    ( $t:ty, |$words:ident| $read_words:expr ) => {
-        readable!($t, 1, |$words| $read_words);
-    };
-
     ( $t:ty, $words_count:expr, |$words:ident| $read_words:expr ) => {
         impl Readable for $t {
             type Output = $t;
@@ -129,10 +125,10 @@ macro_rules! readable {
 }
 
 #[snippet = "read"]
-readable!((), |_ss| ());
+readable!((), 1, |_ss| ());
 
 #[snippet = "read"]
-readable!(String, |ss| ss[0].to_string());
+readable!(String, 1, |ss| ss[0].to_string());
 
 // Is `impl Readable for bool` necessary?
 
