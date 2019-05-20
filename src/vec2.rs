@@ -25,7 +25,7 @@ use std::ops::{Add, AddAssign, Sub, SubAssign, Neg, Mul, MulAssign, Div, DivAssi
 use std::fmt::{self, Display, Formatter};
 
 #[snippet = "vec2"]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Vec2<T> {
     pub x: T,
     pub y: T
