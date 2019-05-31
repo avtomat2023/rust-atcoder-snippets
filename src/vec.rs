@@ -7,7 +7,7 @@
 //! ```no_run
 //! # #[macro_use] extern crate atcoder_snippets;
 //! # use::atcoder_snippets::read::*;
-//! # use::atcoder_snippets::vec2::*;
+//! # use::atcoder_snippets::vec::*;
 //! #
 //! // Use `read` and `vec2` snippet.
 //!
@@ -18,11 +18,6 @@
 //!     println!("{} {}", point2 + delta_rotated, point1 + delta_rotated);
 //! }
 //! ```
-
-#[snippet = "vec2"]
-use std::ops::{Add, AddAssign, Sub, SubAssign, Neg, Mul, MulAssign, Div, DivAssign};
-#[snippet = "vec2"]
-use std::fmt::{self, Display, Formatter};
 
 #[snippet = "vec2"]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -39,14 +34,14 @@ impl<T> Vec2<T> {
 }
 
 #[snippet = "vec2"]
-impl<T: Display> Display for Vec2<T> {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl<T: std::fmt::Display> std::fmt::Display for Vec2<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{} {}", self.x, self.y)
     }
 }
 
 #[snippet = "vec2"]
-impl<S, T: Add<S>> Add<Vec2<S>> for Vec2<T> {
+impl<S, T: std::ops::Add<S>> std::ops::Add<Vec2<S>> for Vec2<T> {
     type Output = Vec2<T::Output>;
 
     fn add(self, rhs: Vec2<S>) -> Self::Output {
@@ -55,7 +50,7 @@ impl<S, T: Add<S>> Add<Vec2<S>> for Vec2<T> {
 }
 
 #[snippet = "vec2"]
-impl<S, T: AddAssign<S>> AddAssign<Vec2<S>> for Vec2<T> {
+impl<S, T: std::ops::AddAssign<S>> std::ops::AddAssign<Vec2<S>> for Vec2<T> {
     fn add_assign(&mut self, rhs: Vec2<S>) {
         self.x += rhs.x;
         self.y += rhs.y;
@@ -63,7 +58,7 @@ impl<S, T: AddAssign<S>> AddAssign<Vec2<S>> for Vec2<T> {
 }
 
 #[snippet = "vec2"]
-impl<S, T: Sub<S>> Sub<Vec2<S>> for Vec2<T> {
+impl<S, T: std::ops::Sub<S>> std::ops::Sub<Vec2<S>> for Vec2<T> {
     type Output = Vec2<T::Output>;
 
     fn sub(self, rhs: Vec2<S>) -> Self::Output {
@@ -72,7 +67,7 @@ impl<S, T: Sub<S>> Sub<Vec2<S>> for Vec2<T> {
 }
 
 #[snippet = "vec2"]
-impl<S, T: SubAssign<S>> SubAssign<Vec2<S>> for Vec2<T> {
+impl<S, T: std::ops::SubAssign<S>> std::ops::SubAssign<Vec2<S>> for Vec2<T> {
     fn sub_assign(&mut self, rhs: Vec2<S>) {
         self.x -= rhs.x;
         self.y -= rhs.y;
@@ -80,7 +75,7 @@ impl<S, T: SubAssign<S>> SubAssign<Vec2<S>> for Vec2<T> {
 }
 
 #[snippet = "vec2"]
-impl<T: Neg> Neg for Vec2<T> {
+impl<T: std::ops::Neg> std::ops::Neg for Vec2<T> {
     type Output = Vec2<T::Output>;
 
     fn neg(self) -> Self::Output {
@@ -91,8 +86,8 @@ impl<T: Neg> Neg for Vec2<T> {
 #[snippet = "vec2"]
 macro_rules! impl_mul_vec2 {
     ( $($t: ty)* ) => { $(
-        impl Mul<Vec2<$t>> for $t {
-            type Output = Vec2<<$t as Mul>::Output>;
+        impl std::ops::Mul<Vec2<$t>> for $t {
+            type Output = Vec2<<$t as std::ops::Mul>::Output>;
 
             fn mul(self, rhs: Vec2<$t>) -> Self::Output {
                 Vec2::new(self * rhs.x, self * rhs.y)
@@ -106,7 +101,7 @@ impl_mul_vec2!(i8 u8 i16 u16 i32 u32 i64 u64 f32 f64);
 
 // Somehow this code doesn't compile
 // #[snippet = "vec2"]
-// impl<S, T: Copy + Mul<S>> Mul<Vec2<S>> for T {
+// impl<S, T: Copy + std::ops::Mul<S>> std::ops::Mul<Vec2<S>> for T {
 //     type Output = Vec2<T::Output>;
 //
 //     fn mul(self, rhs: Vec2<S>) -> Self::Output {
@@ -115,7 +110,7 @@ impl_mul_vec2!(i8 u8 i16 u16 i32 u32 i64 u64 f32 f64);
 // }
 
 #[snippet = "vec2"]
-impl<S: Copy, T: Mul<S>> Mul<S> for Vec2<T> {
+impl<S: Copy, T: std::ops::Mul<S>> std::ops::Mul<S> for Vec2<T> {
     type Output = Vec2<T::Output>;
 
     fn mul(self, rhs: S) -> Self::Output {
@@ -124,7 +119,7 @@ impl<S: Copy, T: Mul<S>> Mul<S> for Vec2<T> {
 }
 
 #[snippet = "vec2"]
-impl<S: Copy, T: MulAssign<S>> MulAssign<S> for Vec2<T> {
+impl<S: Copy, T: std::ops::MulAssign<S>> std::ops::MulAssign<S> for Vec2<T> {
     fn mul_assign(&mut self, rhs: S) {
         self.x *= rhs;
         self.y *= rhs;
@@ -132,7 +127,7 @@ impl<S: Copy, T: MulAssign<S>> MulAssign<S> for Vec2<T> {
 }
 
 #[snippet = "vec2"]
-impl<S: Copy, T: Div<S>> Div<S> for Vec2<T> {
+impl<S: Copy, T: std::ops::Div<S>> std::ops::Div<S> for Vec2<T> {
     type Output = Vec2<T::Output>;
 
    fn div(self, rhs: S) -> Self::Output {
@@ -141,7 +136,7 @@ impl<S: Copy, T: Div<S>> Div<S> for Vec2<T> {
 }
 
 #[snippet = "vec2"]
-impl<S: Copy, T: DivAssign<S>> DivAssign<S> for Vec2<T> {
+impl<S: Copy, T: std::ops::DivAssign<S>> std::ops::DivAssign<S> for Vec2<T> {
     fn div_assign(&mut self, rhs: S) {
         self.x /= rhs;
         self.y /= rhs;

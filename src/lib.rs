@@ -14,5 +14,5 @@ pub mod cmp;
 pub mod iter;
 pub mod slice;
 pub mod collections;
-pub mod vec2;
+pub mod vec;
 pub mod utils;
