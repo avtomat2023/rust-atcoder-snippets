@@ -15,4 +15,5 @@ pub mod iter;
 pub mod slice;
 pub mod collections;
 pub mod vec;
+pub mod bsearch;
 pub mod utils;
