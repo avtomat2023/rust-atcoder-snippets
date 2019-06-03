@@ -7,8 +7,8 @@
 //! # use atcoder_snippets::bsearch::*;
 //! fn count_key(sorted_slice: &[i32], key: i32) -> usize {
 //!     let len = sorted_slice.len();
-//!     match ((0..len).bsearch_min(|&i| key <= sorted_slice[i]),
-//!            (0..len).bsearch_min(|&i| key < sorted_slice[i])) {
+//!     match ((0..len).bsearch_right_min(|&i| key <= sorted_slice[i]),
+//!            (0..len).bsearch_right_min(|&i| key < sorted_slice[i])) {
 //!         (Some(Some(l)), Some(r)) => r.unwrap_or(len) - l,
 //!         _ => 0
 //!     }
@@ -80,7 +80,7 @@ pub trait BSearch: Sized {
 
     /// Returns the maximum item satisfing `is_left`.
     ///
-    /// When calling `bsearch_max`, you must make sure that
+    /// When calling `bsearch_left_max`, you must make sure that
     /// the sequence can be partitioned by `is_left`.
     /// That is, there must be a position satisfying that:
     ///
@@ -103,9 +103,9 @@ pub trait BSearch: Sized {
     /// # #[macro_use] extern crate atcoder_snippets;
     /// # use atcoder_snippets::bsearch::*;
     /// let seq = [3, 6, 9, 12, 15];
-    /// assert_eq!((0..seq.len()).bsearch_max(|&i| seq[i] <= 10), Some(Some(2)));
+    /// assert_eq!((0..seq.len()).bsearch_left_max(|&i| seq[i] <= 10), Some(Some(2)));
     /// ```
-    fn bsearch_max<F>(&self, mut is_left: F) -> Option<Option<Self::Item>>
+    fn bsearch_left_max<F>(&self, mut is_left: F) -> Option<Option<Self::Item>>
     where
         F: FnMut(&Self::Item) -> bool
     {
@@ -118,14 +118,14 @@ pub trait BSearch: Sized {
             if is_left(&rightmost) {
                 Some(Some(rightmost))
             } else {
-                Some(Some(bsearch_max_sub(self, is_left)))
+                Some(Some(bsearch_left_max_sub(self, is_left)))
             }
         }
     }
 
     /// Returns the minimum item satisfing `is_right`.
     ///
-    /// See doc of [`bsearch_max`](#method.bsearch_min).
+    /// See doc of [`bsearch_left_max`](#method.bsearch_left_max).
     ///
     /// # Example
     ///
@@ -133,9 +133,9 @@ pub trait BSearch: Sized {
     /// # #[macro_use] extern crate atcoder_snippets;
     /// # use atcoder_snippets::bsearch::*;
     /// let seq = [3, 6, 9, 12, 15];
-    /// assert_eq!((0..seq.len()).bsearch_min(|&i| seq[i] >= 10), Some(Some(3)));
+    /// assert_eq!((0..seq.len()).bsearch_right_min(|&i| seq[i] >= 10), Some(Some(3)));
     /// ```
-    fn bsearch_min<F>(&self, mut is_right: F) -> Option<Option<Self::Item>>
+    fn bsearch_right_min<F>(&self, mut is_right: F) -> Option<Option<Self::Item>>
     where
         F: FnMut(&Self::Item) -> bool
     {
@@ -148,13 +148,13 @@ pub trait BSearch: Sized {
             if is_right(&leftmost) {
                 Some(Some(leftmost))
             } else {
-                Some(Some(bsearch_min_sub(self, is_right)))
+                Some(Some(bsearch_right_min_sub(self, is_right)))
             }
         }
     }
 }
 
-fn bsearch_max_sub<Items, T, F>(items: &Items, mut is_left: F) -> T
+fn bsearch_left_max_sub<Items, T, F>(items: &Items, mut is_left: F) -> T
 where
     Items: BSearch<Item=T>,
     F: FnMut(&T) -> bool
@@ -163,14 +163,14 @@ where
         items.leftmost_item()
     } else {
         if is_left(&items.middle_item()) {
-            bsearch_max_sub(&items.right_half(), is_left)
+            bsearch_left_max_sub(&items.right_half(), is_left)
         } else {
-            bsearch_max_sub(&items.left_half(), is_left)
+            bsearch_left_max_sub(&items.left_half(), is_left)
         }
     }
 }
 
-fn bsearch_min_sub<Items, T, F>(items: &Items, mut is_right: F) -> T
+fn bsearch_right_min_sub<Items, T, F>(items: &Items, mut is_right: F) -> T
 where
     Items: BSearch<Item=T>,
     F: FnMut(&T) -> bool
@@ -179,9 +179,9 @@ where
         items.rightmost_item()
     } else {
         if is_right(&items.middle_item()) {
-            bsearch_min_sub(&items.left_half(), is_right)
+            bsearch_right_min_sub(&items.left_half(), is_right)
         } else {
-            bsearch_min_sub(&items.right_half(), is_right)
+            bsearch_right_min_sub(&items.right_half(), is_right)
         }
     }
 }
@@ -253,11 +253,11 @@ impl<'a, T> BSearch for &'a [T] {
 pub trait SliceBSearch {
     type Item;
 
-    fn bsearch_max<F>(&self, is_left: F) -> Option<Option<&Self::Item>>
+    fn bsearch_left_max<F>(&self, is_left: F) -> Option<Option<&Self::Item>>
     where
         F: FnMut(&Self::Item) -> bool;
 
-    fn bsearch_min<F>(&self, is_right: F) -> Option<Option<&Self::Item>>
+    fn bsearch_right_min<F>(&self, is_right: F) -> Option<Option<&Self::Item>>
     where
         F: FnMut(&Self::Item) -> bool;
 }
@@ -265,42 +265,56 @@ pub trait SliceBSearch {
 impl<T> SliceBSearch for [T] {
     type Item = T;
 
-    fn bsearch_max<F>(&self, mut is_left: F) -> Option<Option<&T>>
+    fn bsearch_left_max<F>(&self, mut is_left: F) -> Option<Option<&T>>
     where
         F: FnMut(&T) -> bool
     {
-        BSearch::bsearch_max(&self, |&x| is_left(x))
+        BSearch::bsearch_left_max(&self, |&x| is_left(x))
     }
 
-    fn bsearch_min<F>(&self, mut is_right: F) -> Option<Option<&Self::Item>>
+    fn bsearch_right_min<F>(&self, mut is_right: F) -> Option<Option<&T>>
     where
         F: FnMut(&T) -> bool
     {
-        BSearch::bsearch_min(&self, |&x| is_right(x))
+        BSearch::bsearch_right_min(&self, |&x| is_right(x))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::BSearch;
 
     #[test]
-    fn test_bsearch_max() {
+    fn test_slice_bsearch_left_max() {
+        use super::SliceBSearch;
+
         let empty: Vec<i32> = Vec::new();
-        assert_eq!(empty.bsearch_max(|&x| x <= 0), None);
+        assert_eq!(empty.bsearch_left_max(|&x| x <= 0), None);
         let seq = vec![3, 6, 9, 12, 15];
-        assert_eq!(seq.bsearch_max(|&x| x <= 0), Some(None));
-        assert_eq!(seq.bsearch_max(|&x| x <= 10), Some(Some(&9)));
-        assert_eq!(seq.bsearch_max(|&x| x <= 20), Some(Some(&15)));
+        assert_eq!(seq.bsearch_left_max(|&x| x <= 0), Some(None));
+        assert_eq!(seq.bsearch_left_max(|&x| x <= 10), Some(Some(&9)));
+        assert_eq!(seq.bsearch_left_max(|&x| x <= 20), Some(Some(&15)));
     }
 
     #[test]
-    fn test_bsearch_min() {
+    fn test_slice_bsearch_right_min() {
+        use super::SliceBSearch;
+
         let empty: Vec<i32> = Vec::new();
-        assert_eq!(empty.bsearch_min(|&x| x <= 0), None);
+        assert_eq!(empty.bsearch_right_min(|&x| x <= 0), None);
         let seq = vec![3, 6, 9, 12, 15];
-        assert_eq!(seq.bsearch_min(|&x| x >= 0), Some(Some(&3)));
-        assert_eq!(seq.bsearch_min(|&x| x >= 10), Some(Some(&12)));
-        assert_eq!(seq.bsearch_min(|&x| x >= 20), Some(None));
+        assert_eq!(seq.bsearch_right_min(|&x| x >= 0), Some(Some(&3)));
+        assert_eq!(seq.bsearch_right_min(|&x| x >= 10), Some(Some(&12)));
+        assert_eq!(seq.bsearch_right_min(|&x| x >= 20), Some(None));
+    }
+
+    #[test]
+    fn test_bsearch_left_max() {
+        let empty: Vec<i32> = Vec::new();
+        assert_eq!(empty.as_slice().bsearch_left_max(|&&x| x <= 0), None);
+        let seq = vec![3, 6, 9, 12, 15];
+        assert_eq!(seq.as_slice().bsearch_left_max(|&&x| x <= 0), Some(None));
+        assert_eq!(seq.as_slice().bsearch_left_max(|&&x| x <= 10), Some(Some(&9)));
+        assert_eq!(seq.as_slice().bsearch_left_max(|&&x| x <= 20), Some(Some(&15)));
     }
 }
