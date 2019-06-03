@@ -1,10 +1,11 @@
 //! Extension traits for primitive integer types.
 
+use crate::num::Integer;
 // use crate::num::BigDigit;
 
 /// Enriches signed and unsigned integer types.
 #[snippet = "num"]
-pub trait PrimitiveInteger {
+pub trait PrimitiveInteger: Integer {
     /// Calculate absolute value of *a* - *b*.
     ///
     /// This is useful for unsigned integers because overflow never happens
@@ -42,6 +43,10 @@ pub trait PrimitiveInteger {
 #[snippet = "num"]
 macro_rules! impl_primitive_integer {
     ( $($t: ty)* ) => { $(
+        impl Integer for $t {
+            fn one() -> $t { 1 }
+        }
+
         impl PrimitiveInteger for $t {
             fn abs_diff(self, rhs: $t) -> $t {
                 if self < rhs { rhs - self } else { self - rhs }
@@ -66,7 +71,7 @@ impl_primitive_integer!(u8 u16 u32 u64 usize i8 i16 i32 i64 isize);
 
 /// Enriches unsigned integer types.
 #[snippet = "num"]
-pub trait PrimitiveUnsigned {
+pub trait PrimitiveUnsigned: PrimitiveInteger {
     /// Division with ceiling.
     ///
     /// # Example

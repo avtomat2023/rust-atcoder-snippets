@@ -23,7 +23,10 @@
 //! assert_eq!(count_key(&[2,2,2,2,2,2], 2), 6);
 //! ```
 
+use num::Integer;
+
 /// A sequence that binary search is applicable to.
+#[snippet = "bsearch"]
 pub trait BSearch: Sized {
     /// Item type of the sequence.
     type Item;
@@ -154,6 +157,7 @@ pub trait BSearch: Sized {
     }
 }
 
+#[snippet = "bsearch"]
 fn bsearch_left_max_sub<Items, T, F>(items: &Items, mut is_left: F) -> T
 where
     Items: BSearch<Item=T>,
@@ -170,6 +174,7 @@ where
     }
 }
 
+#[snippet = "bsearch"]
 fn bsearch_right_min_sub<Items, T, F>(items: &Items, mut is_right: F) -> T
 where
     Items: BSearch<Item=T>,
@@ -186,38 +191,40 @@ where
     }
 }
 
-impl BSearch for std::ops::Range<usize> {
-    type Item = usize;
+#[snippet = "bsearch"]
+impl<T: Integer + Clone> BSearch for std::ops::Range<T> {
+    type Item = T;
 
     fn is_empty(&self) -> bool {
         self.end <= self.start
     }
 
-    fn leftmost_item(&self) -> usize {
-        self.start
+    fn leftmost_item(&self) -> T {
+        self.start.clone()
     }
 
-    fn rightmost_item(&self) -> usize {
-        self.end - 1
+    fn rightmost_item(&self) -> T {
+        self.end.clone() - &T::one()
     }
 
-    fn middle_item(&self) -> usize {
-        (self.start + self.end) / 2
+    fn middle_item(&self) -> T {
+        (self.start.clone() + &self.end) / &(T::one() + &T::one())
     }
 
-    fn left_half(&self) -> std::ops::Range<usize> {
-        self.start..self.middle_item()+1
+    fn left_half(&self) -> std::ops::Range<T> {
+        self.start.clone()..(self.middle_item() + &T::one())
     }
 
-    fn right_half(&self) -> std::ops::Range<usize> {
-        self.middle_item()..self.end
+    fn right_half(&self) -> std::ops::Range<T> {
+        self.middle_item()..self.end.clone()
     }
 
     fn is_bsearch_converged(&self) -> bool {
-        ExactSizeIterator::len(self) <= 2
+        BSearch::is_empty(self) || self.end.clone() - &self.start <= T::one() + &T::one()
     }
 }
 
+#[snippet = "bsearch"]
 impl<'a, T> BSearch for &'a [T] {
     type Item = &'a T;
 
@@ -250,6 +257,7 @@ impl<'a, T> BSearch for &'a [T] {
     }
 }
 
+#[snippet = "bsearch"]
 pub trait SliceBSearch {
     type Item;
 
@@ -262,6 +270,7 @@ pub trait SliceBSearch {
         F: FnMut(&Self::Item) -> bool;
 }
 
+#[snippet = "bsearch"]
 impl<T> SliceBSearch for [T] {
     type Item = T;
 
