@@ -1,7 +1,6 @@
 //! Extension traits for primitive integer types.
 
-use crate::num::Integer;
-// use crate::num::BigDigit;
+use num::integer::{WithZero, WithOne, Integer};
 
 /// Enriches signed and unsigned integer types.
 #[snippet = "num"]
@@ -43,9 +42,15 @@ pub trait PrimitiveInteger: Integer {
 #[snippet = "num"]
 macro_rules! impl_primitive_integer {
     ( $($t: ty)* ) => { $(
-        impl Integer for $t {
+        impl WithZero for $t {
+            fn zero() -> $t { 0 }
+        }
+
+        impl WithOne for $t {
             fn one() -> $t { 1 }
         }
+
+        impl Integer for $t {}
 
         impl PrimitiveInteger for $t {
             fn abs_diff(self, rhs: $t) -> $t {
