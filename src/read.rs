@@ -270,7 +270,7 @@ macro_rules! impl_readable_for_tuples {
 }
 
 #[snippet = "read"]
-impl_readable_for_tuples!(T4 x4; T3 x3; T2 x2; T1 x1);
+impl_readable_for_tuples!(T8 x8; T7 x7; T6 x6; T5 x5; T4 x4; T3 x3; T2 x2; T1 x1);
 
 /// Readable by `read` function.
 #[snippet = "read"]
@@ -397,7 +397,7 @@ macro_rules! impl_readable_from_line_for_tuples_with_vec {
 }
 
 #[snippet = "read"]
-impl_readable_from_line_for_tuples_with_vec!(T4 t4; T3 t3; T2 t2; T1 t1);
+impl_readable_from_line_for_tuples_with_vec!(T8 x8; T7 x7; T6 x6; T5 x5; T4 t4; T3 t3; T2 t2; T1 t1);
 
 /// Returns `Readable`s read from a line of stdin.
 ///
