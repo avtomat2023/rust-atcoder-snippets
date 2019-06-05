@@ -1,7 +1,8 @@
 // # Add Document
 //
 // - custom readable type
-// - ReadableFromSequence for Set (Codeforces Round #562 (Div. 2) B)
+// - custom readable collection
+// - VecとHashSetがreadable collectionであること
 //
 // # Add Implementation
 //
@@ -408,10 +409,51 @@ macro_rules! impl_readable_from_line_for_tuples_with_from_iterator {
     };
 }
 
+/// Make collection type readable from input line.
+///
+/// The collection type must implement `FromIterator`.
+///
+/// For example, `Vec` and `HashSet` are readable from inpu line by these declaration:
+///
+/// ```ignore
+/// readable_collection!(U => Vec<U>, Vec<U::Output>);
+/// readable_collection!(U: Eq, Hash => HashSet<U>, HashSet<U::Output>);
+/// ```
+///
+/// The content of this macro should be either of the followings:
+///
+/// - `U` `=>` collection type for `U` `,` collection type for `U::Output`
+/// - `U` `:` type bounds of the item type `=>` collection type for `U` `,` collection type for `U::Output`
+///
+/// The first identifier must be `U`, or the compilation may fail.
+///
+/// Be careful that the separator of type bounds is `,` not `+`.
+/// This is because of a restriction of Rust's macro system.
 #[snippet = "read"]
-impl_readable_from_line_for_tuples_with_from_iterator!(U: => Vec<U>, Vec<U::Output>; T8 x8, T7 x7, T6 x6, T5 x5, T4 t4, T3 t3, T2 t2, T1 t1);
+#[macro_export]
+macro_rules! readable_collection {
+    ($u:ident => $collection_in:ty, $collection_out:ty) => {
+        impl_readable_from_line_for_tuples_with_from_iterator!(
+            $u: => $collection_in, $collection_out;
+            T8 x8, T7 x7, T6 x6, T5 x5, T4 t4, T3 t3, T2 t2, T1 t1
+        );
+    };
+
+    ($u:ident : $( $bound:path ),* => $collection_in:ty, $collection_out:ty) => {
+        impl_readable_from_line_for_tuples_with_from_iterator!(
+            $u: $(+ $bound)* => $collection_in, $collection_out;
+            T8 x8, T7 x7, T6 x6, T5 x5, T4 t4, T3 t3, T2 t2, T1 t1
+        );
+    }
+}
+
 #[snippet = "read"]
-impl_readable_from_line_for_tuples_with_from_iterator!(U: + Eq + std::hash::Hash => std::collections::HashSet<U>, std::collections::HashSet<U::Output>; T8 x8, T7 x7, T6 x6, T5 x5, T4 t4, T3 t3, T2 t2, T1 t1);
+readable_collection!(U => Vec<U>, Vec<U::Output>);
+
+#[snippet = "read"]
+readable_collection!(
+    U: Eq, std::hash::Hash => std::collections::HashSet<U>, std::collections::HashSet<U::Output>
+);
 
 
 /// Returns `Readable`s read from a line of stdin.
