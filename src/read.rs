@@ -208,7 +208,7 @@ macro_rules! define_one_origin_int_types {
         /// assert_eq!(a, 0);
         /// ```
         #[allow(non_camel_case_types)]
-        pub struct $new_t();
+        pub struct $new_t;
 
         impl Readable for $new_t {
             type Output = $int_t;
@@ -303,13 +303,16 @@ impl<T: Readable> ReadableFromLine for T {
 }
 
 #[snippet = "read"]
-macro_rules! impl_readable_from_line_for_tuples_with_vec {
-    ( $t:ident $var:ident ) => {
-        impl<T: Readable> ReadableFromLine for Vec<T> {
-            type Output = Vec<T::Output>;
+macro_rules! impl_readable_from_line_for_tuples_with_from_iterator {
+    ( $u:ident : $( + $bound:path )* => $seq_in:ty, $seq_out:ty; $t:ident $var:ident ) => {
+        impl<$u: Readable> ReadableFromLine for $seq_in
+        where
+            <$u as Readable>::Output: Sized $(+ $bound)*
+        {
+            type Output = $seq_out;
 
-            fn read_line(line: &str) -> Result<Self::Output, String> {
-                let n = T::words_count();
+            fn read_line(line: &str) -> Result<$seq_out, String> {
+                let n = $u::words_count();
                 let words = split_into_words(line);
                 if words.len() % n != 0 {
                     return Err(format!("line \"{}\" has {} words, expected multiple of {}",
@@ -318,7 +321,7 @@ macro_rules! impl_readable_from_line_for_tuples_with_vec {
 
                 let mut result = Vec::new();
                 for chunk in words.chunks(n) {
-                    match T::read_words(chunk) {
+                    match $u::read_words(chunk) {
                         Ok(v) => result.push(v),
                         Err(msg) => {
                             let flagment_msg = if n == 1 {
@@ -334,12 +337,15 @@ macro_rules! impl_readable_from_line_for_tuples_with_vec {
                     }
                 }
 
-                Ok(result)
+                Ok(result.into_iter().collect())
             }
         }
 
-        impl<T: Readable, U: Readable> ReadableFromLine for (T, Vec<U>) {
-            type Output = (T::Output, <Vec<U> as ReadableFromLine>::Output);
+        impl<T: Readable, $u: Readable> ReadableFromLine for (T, $seq_in)
+        where
+            <$u as Readable>::Output: Sized $(+ $bound)*
+        {
+            type Output = (T::Output, $seq_out);
 
             fn read_line(line: &str) -> Result<Self::Output, String> {
                 let n = T::words_count();
@@ -355,19 +361,24 @@ macro_rules! impl_readable_from_line_for_tuples_with_vec {
                 let words = &words_and_rest[..n];
                 let empty_str = "";
                 let rest = words_and_rest.get(n).unwrap_or(&empty_str);
-                Ok((T::read_words(words)?, Vec::<U>::read_line(rest)?))
+                Ok((T::read_words(words)?, <$seq_in>::read_line(rest)?))
             }
         }
 
     };
 
-    ( $t:ident $var:ident; $( $inner_t:ident $inner_var:ident );+ ) => {
-        impl_readable_from_line_for_tuples_with_vec!($($inner_t $inner_var);+);
+    ( $u:ident : $( + $bound:path )* => $seq_in:ty, $seq_out:ty;
+      $t:ident $var:ident, $( $inner_t:ident $inner_var:ident ),+ ) => {
+        impl_readable_from_line_for_tuples_with_from_iterator!(
+            $u: $(+ $bound)* => $seq_in, $seq_out; $($inner_t $inner_var),+
+        );
 
-        impl<$t: Readable, $($inner_t: Readable),+ , U: Readable> ReadableFromLine
-            for ($t, $($inner_t),+ , Vec<U>)
+        impl<$t: Readable, $($inner_t: Readable),+ , $u: Readable> ReadableFromLine
+            for ($t, $($inner_t),+ , $seq_in)
+        where
+            <$u as Readable>::Output: Sized $(+ $bound)*
         {
-            type Output = ($t::Output, $($inner_t::Output),+ , Vec<U::Output>);
+            type Output = ($t::Output, $($inner_t::Output),+ , $seq_out);
 
             fn read_line(line: &str) -> Result<Self::Output, String> {
                 let mut n = $t::words_count();
@@ -391,14 +402,17 @@ macro_rules! impl_readable_from_line_for_tuples_with_vec {
                 let rest = words_and_rest.get(n).unwrap_or(&empty_str);
                 let ($var, $($inner_var),*) =
                     <($t, $($inner_t),+)>::read_words(words)?;
-                Ok(($var, $($inner_var),* , Vec::<U>::read_line(rest)?))
+                Ok(($var, $($inner_var),* , <$seq_in>::read_line(rest)?))
             }
         }
     };
 }
 
 #[snippet = "read"]
-impl_readable_from_line_for_tuples_with_vec!(T8 x8; T7 x7; T6 x6; T5 x5; T4 t4; T3 t3; T2 t2; T1 t1);
+impl_readable_from_line_for_tuples_with_from_iterator!(U: => Vec<U>, Vec<U::Output>; T8 x8, T7 x7, T6 x6, T5 x5, T4 t4, T3 t3, T2 t2, T1 t1);
+#[snippet = "read"]
+impl_readable_from_line_for_tuples_with_from_iterator!(U: + Eq + std::hash::Hash => std::collections::HashSet<U>, std::collections::HashSet<U::Output>; T8 x8, T7 x7, T6 x6, T5 x5, T4 t4, T3 t3, T2 t2, T1 t1);
+
 
 /// Returns `Readable`s read from a line of stdin.
 ///
@@ -775,6 +789,7 @@ impl<'a> Words for &'a str {
 #[cfg(test)]
 mod test {
     use super::*;
+    use std::collections::HashSet;
 
     #[derive(Debug, PartialEq, Eq)]
     struct Pair(i32, i32);
@@ -852,6 +867,12 @@ mod test {
     #[test]
     fn test_read_line_vector_of_one_origin_integers() {
         assert_eq!(Vec::<usize_>::read_line("1 2 3\n"), Ok(vec![0, 1, 2]));
+    }
+
+    #[test]
+    fn test_read_line_hash_set() {
+        let expected: HashSet<u32> = (1..=3).collect();
+        assert_eq!(HashSet::<u32>::read_line("1 2 1 3"), Ok(expected));
     }
 
     #[test]
