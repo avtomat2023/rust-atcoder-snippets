@@ -1,6 +1,7 @@
 // # Add Document
 //
 // - custom readable type
+// - ReadableFromSequence for Set (Codeforces Round #562 (Div. 2) B)
 //
 // # Add Implementation
 //
@@ -302,64 +303,64 @@ impl<T: Readable> ReadableFromLine for T {
 }
 
 #[snippet = "read"]
-impl<T: Readable> ReadableFromLine for Vec<T> {
-    type Output = Vec<T::Output>;
+macro_rules! impl_readable_from_line_for_tuples_with_vec {
+    ( $t:ident $var:ident ) => {
+        impl<T: Readable> ReadableFromLine for Vec<T> {
+            type Output = Vec<T::Output>;
 
-    fn read_line(line: &str) -> Result<Self::Output, String> {
-        let n = T::words_count();
-        let words = split_into_words(line);
-        if words.len() % n != 0 {
-            return Err(format!("line \"{}\" has {} words, expected multiple of {}",
-                               line, words.len(), n));
-        }
-
-        let mut result = Vec::new();
-        for chunk in words.chunks(n) {
-            match T::read_words(chunk) {
-                Ok(v) => result.push(v),
-                Err(msg) => {
-                    let flagment_msg = if n == 1 {
-                        format!("word {}", result.len())
-                    } else {
-                        let l = result.len();
-                        format!("words {}-{}", n*l + 1, (n+1) * l)
-                    };
-                    return Err(format!(
-                        "{} of line \"{}\": {}", flagment_msg, line, msg
-                    ));
+            fn read_line(line: &str) -> Result<Self::Output, String> {
+                let n = T::words_count();
+                let words = split_into_words(line);
+                if words.len() % n != 0 {
+                    return Err(format!("line \"{}\" has {} words, expected multiple of {}",
+                                       line, words.len(), n));
                 }
+
+                let mut result = Vec::new();
+                for chunk in words.chunks(n) {
+                    match T::read_words(chunk) {
+                        Ok(v) => result.push(v),
+                        Err(msg) => {
+                            let flagment_msg = if n == 1 {
+                                format!("word {}", result.len())
+                            } else {
+                                let l = result.len();
+                                format!("words {}-{}", n*l + 1, (n+1) * l)
+                            };
+                            return Err(format!(
+                                "{} of line \"{}\": {}", flagment_msg, line, msg
+                            ));
+                        }
+                    }
+                }
+
+                Ok(result)
             }
         }
 
-        Ok(result)
-    }
-}
+        impl<T: Readable, U: Readable> ReadableFromLine for (T, Vec<U>) {
+            type Output = (T::Output, <Vec<U> as ReadableFromLine>::Output);
 
-#[snippet = "read"]
-impl<T: Readable, U: Readable> ReadableFromLine for (T, Vec<U>) {
-    type Output = (T::Output, <Vec<U> as ReadableFromLine>::Output);
+            fn read_line(line: &str) -> Result<Self::Output, String> {
+                let n = T::words_count();
+                #[allow(deprecated)]
+                let trimmed = line.trim_right_matches('\n');
+                let words_and_rest: Vec<&str> = trimmed.splitn(n + 1, ' ').collect();
 
-    fn read_line(line: &str) -> Result<Self::Output, String> {
-        let n = T::words_count();
-        #[allow(deprecated)]
-        let trimmed = line.trim_right_matches('\n');
-        let words_and_rest: Vec<&str> = trimmed.splitn(n + 1, ' ').collect();
+                if words_and_rest.len() < n {
+                    return Err(format!("line \"{}\" has {} words, expected at least {}",
+                                       line, words_and_rest.len(), n));
+                }
 
-        if words_and_rest.len() < n {
-            return Err(format!("line \"{}\" has {} words, expected at least {}",
-                               line, words_and_rest.len(), n));
+                let words = &words_and_rest[..n];
+                let empty_str = "";
+                let rest = words_and_rest.get(n).unwrap_or(&empty_str);
+                Ok((T::read_words(words)?, Vec::<U>::read_line(rest)?))
+            }
         }
 
-        let words = &words_and_rest[..n];
-        let empty_str = "";
-        let rest = words_and_rest.get(n).unwrap_or(&empty_str);
-        Ok((T::read_words(words)?, Vec::<U>::read_line(rest)?))
-    }
-}
+    };
 
-#[snippet = "read"]
-macro_rules! impl_readable_from_line_for_tuples_with_vec {
-    ( $t:ident $var:ident ) => ();
     ( $t:ident $var:ident; $( $inner_t:ident $inner_var:ident );+ ) => {
         impl_readable_from_line_for_tuples_with_vec!($($inner_t $inner_var);+);
 
