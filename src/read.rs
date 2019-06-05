@@ -144,7 +144,7 @@ impl Readable for char {
         if chars.len() == 1 {
             Ok(chars[0])
         } else {
-            Err(format!("cannot parse \"{}\" as a char", words[0]))
+            Err(format!("cannot parse `{}` as a char", words[0]))
         }
     }
 }
@@ -183,7 +183,7 @@ macro_rules! impl_readable_for_ints {
             fn read_words(words: &[&str]) -> Result<$t, String> {
                 use std::str::FromStr;
                 <$t>::from_str(words[0]).map_err(|_| {
-                    format!("cannot parse \"{}\" as {}", words[0], stringify!($t))
+                    format!("cannot parse `{}` as {}", words[0], stringify!($t))
                 })
             }
         }
@@ -295,7 +295,7 @@ impl<T: Readable> ReadableFromLine for T {
     fn read_line(line: &str) -> Result<T::Output, String> {
         let words = split_into_words(line);
         if words.len() != T::words_count() {
-            return Err(format!("line \"{}\" has {} words, expected {}",
+            return Err(format!("line `{}` has {} words, expected {}",
                                line, words.len(), T::words_count()));
         }
 
@@ -316,7 +316,7 @@ macro_rules! impl_readable_from_line_for_tuples_with_from_iterator {
                 let n = $u::words_count();
                 let words = split_into_words(line);
                 if words.len() % n != 0 {
-                    return Err(format!("line \"{}\" has {} words, expected multiple of {}",
+                    return Err(format!("line `{}` has {} words, expected multiple of {}",
                                        line, words.len(), n));
                 }
 
@@ -332,7 +332,7 @@ macro_rules! impl_readable_from_line_for_tuples_with_from_iterator {
                                 format!("words {}-{}", n*l + 1, (n+1) * l)
                             };
                             return Err(format!(
-                                "{} of line \"{}\": {}", flagment_msg, line, msg
+                                "{} of line `{}`: {}", flagment_msg, line, msg
                             ));
                         }
                     }
@@ -355,7 +355,7 @@ macro_rules! impl_readable_from_line_for_tuples_with_from_iterator {
                 let words_and_rest: Vec<&str> = trimmed.splitn(n + 1, ' ').collect();
 
                 if words_and_rest.len() < n {
-                    return Err(format!("line \"{}\" has {} words, expected at least {}",
+                    return Err(format!("line `{}` has {} words, expected at least {}",
                                        line, words_and_rest.len(), n));
                 }
 
@@ -393,7 +393,7 @@ macro_rules! impl_readable_from_line_for_tuples_with_from_iterator {
 
                 if words_and_rest.len() < n {
                     return Err(
-                        format!("line \"{}\" has {} words, expected at least {}",
+                        format!("line `{}` has {} words, expected at least {}",
                                 line, words_and_rest.len(), n)
                     );
                 }
@@ -499,7 +499,7 @@ readable_collection!(
 /// # use atcoder_snippets::read::*;
 /// // Stdin: "1 2 3.45"
 /// read!(a = i32, b = i32, x = i32);
-/// // thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: "word 3 of line \"1 2 3.45\n\": cannot parse \"3.45\" as i32"'
+/// // thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: "word 3 of line `1 2 3.45\n`: cannot parse `3.45` as i32"'
 /// ```
 
 #[snippet = "read"]
