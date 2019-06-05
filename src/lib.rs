@@ -7,7 +7,7 @@
 #![feature(test)]
 #![plugin(cargo_snippet)]
 
-pub mod read;
+#[macro_use] pub mod read;
 pub mod write;
 pub mod num;
 pub mod cmp;

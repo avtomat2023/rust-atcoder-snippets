@@ -16,21 +16,27 @@ pub const MODULUS: ModPBase = 7;
 #[snippet = "modp"]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct ModP {
-    inner: ModPBase
+    repr: ModPBase
 }
 
 #[snippet = "modp"]
 impl ModP {
     /// Create a number.
     pub fn new(n: ModPBase) -> ModP {
-        ModP { inner: n % MODULUS }
+        assert!(MODULUS != 7, "Set const MODULUS to the value provided by the problem.");
+        ModP { repr: n % MODULUS }
     }
 
     /// Create a number without taking remainder by `MODULUS`.
     ///
     /// If `n >= MODULUS`, the correctness of arithmetics is not guaranteed.
     pub unsafe fn new_unchecked(n: ModPBase) -> ModP {
-        ModP { inner: n }
+        ModP { repr: n }
+    }
+
+    /// Returns a `ModPBase` satisfying `0 <= x < MODULUS`.
+    pub fn repr(&self) -> ModPBase {
+        self.repr
     }
 
     /// Calculate power using exponentiation by squaring.
@@ -71,7 +77,7 @@ impl ModP {
     /// assert_eq!(ModP::new(3).inv(), ModP::new(5));
     /// ```
     pub fn inv(self) -> ModP {
-        assert!(self.inner != 0);
+        assert!(self.repr() != 0);
         self.pow(MODULUS - 2)
     }
 }
@@ -79,21 +85,21 @@ impl ModP {
 #[snippet = "modp"]
 impl std::fmt::Display for ModP {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.inner)
+        write!(f, "{}", self.repr())
     }
 }
 
 #[snippet = "modp"]
 impl PartialEq<ModPBase> for ModP {
     fn eq(&self, other: &ModPBase) -> bool {
-        self.inner == other % MODULUS
+        self.repr() == other % MODULUS
     }
 }
 
 #[snippet = "modp"]
 impl PartialEq<ModP> for ModPBase {
     fn eq(&self, other: &ModP) -> bool {
-        self % MODULUS == other.inner % MODULUS
+        self % MODULUS == other.repr() % MODULUS
     }
 }
 
@@ -102,7 +108,7 @@ impl std::ops::Add for ModP {
     type Output = ModP;
 
     fn add(self, rhs: ModP) -> ModP {
-        ModP { inner: (self.inner + rhs.inner % MODULUS) % MODULUS }
+        ModP { repr: (self.repr() + rhs.repr() % MODULUS) % MODULUS }
     }
 }
 
@@ -120,7 +126,7 @@ impl std::ops::Add<ModP> for ModPBase {
     type Output = ModP;
 
     fn add(self, rhs: ModP) -> ModP {
-        ModP::new(self) + rhs.inner
+        ModP::new(self) + rhs.repr()
     }
 }
 
@@ -143,7 +149,7 @@ impl std::ops::Neg for ModP {
     type Output = ModP;
 
     fn neg(self) -> ModP {
-        ModP::new(MODULUS - self.inner)
+        ModP::new(MODULUS - self.repr())
     }
 }
 
@@ -193,7 +199,7 @@ impl std::ops::Mul for ModP {
     type Output = ModP;
 
     fn mul(self, rhs: ModP) -> ModP {
-        ModP { inner: self.inner * (rhs.inner % MODULUS) % MODULUS }
+        ModP { repr: self.repr() * (rhs.repr() % MODULUS) % MODULUS }
     }
 }
 
@@ -211,7 +217,7 @@ impl std::ops::Mul<ModP> for ModPBase {
     type Output = ModP;
 
     fn mul(self, rhs: ModP) -> ModP {
-        ModP::new(self) * rhs.inner
+        ModP::new(self) * rhs.repr()
     }
 }
 
@@ -315,7 +321,7 @@ impl std::iter::Sum for ModP {
     fn sum<I: Iterator<Item=ModP>>(iter: I) -> ModP {
         let mut ans = 0;
         for n in iter {
-            ans += n.inner;
+            ans += n.repr();
         }
         ModP::new(ans)
     }
@@ -326,7 +332,7 @@ impl<'a> std::iter::Sum<&'a ModP> for ModP {
     fn sum<I: Iterator<Item=&'a ModP>>(iter: I) -> ModP {
         let mut ans = 0;
         for n in iter {
-            ans += n.inner;
+            ans += n.repr();
         }
         ModP::new(ans)
     }
@@ -353,6 +359,11 @@ impl<'a> std::iter::Product<&'a ModP> for ModP {
         ans
     }
 }
+
+use read::{Readable, Words};
+
+#[snippet = "modp"]
+readable!(ModP, 1, |ws| ModP::new(ws[0].read::<u64>()));
 
 #[cfg(test)]
 mod tests {
@@ -594,5 +605,10 @@ mod tests {
         let seq: Vec<ModP> = (1..=6).map(|n| ModP::new(n)).collect();
         assert_eq!(seq.iter().product::<ModP>(), ModP::new(6));
         assert_eq!(seq.into_iter().product::<ModP>(), ModP::new(6));
+    }
+
+    #[test]
+    fn test_read() {
+        assert_eq!(ModP::read_words(&["10"]), Ok(ModP::new(3)));
     }
 }
