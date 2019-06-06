@@ -23,7 +23,9 @@ pub struct ModP {
 impl ModP {
     /// Create a number.
     pub fn new(n: ModPBase) -> ModP {
-        assert!(MODULUS != 7, "Set const MODULUS to the value provided by the problem.");
+        if !cfg!(test) {
+            assert!(MODULUS != 7, "Set const MODULUS to the value provided by the problem.");
+        }
         ModP { repr: n % MODULUS }
     }
 
@@ -43,7 +45,7 @@ impl ModP {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```no_run
     /// # extern crate atcoder_snippets;
     /// # use atcoder_snippets::num::mod_p::*;
     /// // MODULUS is set to 7.
@@ -69,7 +71,7 @@ impl ModP {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```no_run
     /// # extern crate atcoder_snippets;
     /// # use atcoder_snippets::num::mod_p::*;
     /// // MODULUS is set to 7.
