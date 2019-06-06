@@ -100,6 +100,34 @@ pub trait PrimitiveUnsigned: PrimitiveInteger {
     /// ```
     fn round_div(self, rhs: Self) -> Self;
 
+    /// Returns maximum `x` such that `2.pow(x) <= self`.
+    ///
+    /// If `self` is zero, returns `None`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::num::primitives::*;
+    /// assert_eq!(0b10000_u32.log2(), Some(4));
+    /// assert_eq!(0b10001_u32.log2(), Some(4));
+    /// ```
+    fn log2(self) -> Option<Self>;
+
+    /// Returns minimum `x` such that `2.pow(x) >= self`.
+    ///
+    /// If `self` is zero, returns `None`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::num::primitives::*;
+    /// assert_eq!(0b10000_u32.ceil_log2(), Some(4));
+    /// assert_eq!(0b10001_u32.ceil_log2(), Some(5));
+    /// ```
+    fn ceil_log2(self) -> Option<Self>;
+
     // fn to_le_big_digits(self) -> Vec<BigDigit>;
 }
 
@@ -113,6 +141,25 @@ macro_rules! impl_primitive_unsigned {
 
             fn round_div(self, rhs: $t) -> $t {
                 (self + rhs/2) / rhs
+            }
+
+            fn log2(mut self) -> Option<$t> {
+                if self == 0 {
+                    None
+                } else {
+                    let mut ans = 0;
+                    while self > 1 {
+                        ans += 1;
+                        self /= 2;
+                    }
+                    Some(ans)
+                }
+            }
+
+            fn ceil_log2(self) -> Option<$t> {
+                self.log2().map(|x| {
+                    (self + ((1<<x) - 1)).log2().unwrap()
+                })
             }
 
             // fn to_le_big_digits(self) -> Vec<BigDigit> {
@@ -152,5 +199,23 @@ mod tests {
                 panic!("{}", i);
             }
         }
+    }
+
+    #[test]
+    fn test_log2() {
+        assert_eq!(0u32.log2(), None);
+        assert_eq!(1u32.log2(), Some(0));
+        assert_eq!(2u32.log2(), Some(1));
+        assert_eq!(3u32.log2(), Some(1));
+        assert_eq!(0b1001011u32.log2(), Some(6));
+    }
+
+    #[test]
+    fn test_ceil_log2() {
+        assert_eq!(0u32.ceil_log2(), None);
+        assert_eq!(1u32.ceil_log2(), Some(0));
+        assert_eq!(2u32.ceil_log2(), Some(1));
+        assert_eq!(3u32.ceil_log2(), Some(2));
+        assert_eq!(0b1001011u32.ceil_log2(), Some(7));
     }
 }
