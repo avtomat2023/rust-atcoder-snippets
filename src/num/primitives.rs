@@ -1,6 +1,6 @@
 //! Extension traits for primitive integer types.
 
-use num::integer::{WithZero, WithOne, Integer};
+use num::{WithZero, WithOne, Numeric, Integer, Float};
 
 /// Enriches signed and unsigned integer types.
 #[snippet = "num"]
@@ -49,6 +49,8 @@ macro_rules! impl_primitive_integer {
         impl WithOne for $t {
             fn one() -> $t { 1 }
         }
+
+        impl Numeric for $t {}
 
         impl Integer for $t {}
 
@@ -171,6 +173,26 @@ macro_rules! impl_primitive_unsigned {
 
 #[snippet = "num"]
 impl_primitive_unsigned!(u8 u16 u32 u64 usize);
+
+#[snippet = "num"]
+macro_rules! impl_primitive_float {
+    ( $($t:ty)* ) => { $(
+        impl WithZero for $t {
+            fn zero() -> $t { 0.0 }
+        }
+
+        impl WithOne for $t {
+            fn one() -> $t { 1.0 }
+        }
+
+        impl Numeric for $t {}
+
+        impl Float for $t {}
+    )* }
+}
+
+#[snippet = "num"]
+impl_primitive_float!(f32 f64);
 
 #[cfg(test)]
 mod tests {

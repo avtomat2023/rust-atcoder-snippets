@@ -1,6 +1,6 @@
 //! Arithmetics modulo a prime number.
 
-use num::integer::{WithZero, WithOne};
+use num::{WithZero, WithOne, Numeric};
 
 #[snippet = "modp"]
 pub type ModPBase = u64;
@@ -323,6 +323,9 @@ impl WithOne for ModP {
         unsafe { ModP::new_unchecked(1) }
     }
 }
+
+#[snippet = "modp"]
+impl Numeric for ModP {}
 
 #[snippet = "modp"]
 impl std::iter::Sum for ModP {

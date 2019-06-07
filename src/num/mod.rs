@@ -3,10 +3,10 @@
 // #[snippet = "num"]
 // pub type BigDigit = u64;
 
-mod integer;
+mod types;
 #[macro_use] mod macros;
 
-pub use self::integer::Integer;
+pub use self::types::{WithZero, WithOne, Numeric, Integer, Float};
 
 mod primitives;
 mod modp;
