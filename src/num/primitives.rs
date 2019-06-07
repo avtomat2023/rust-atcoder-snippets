@@ -13,7 +13,7 @@ pub trait PrimitiveInteger: Integer {
     ///
     /// ```
     /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::num::primitives::*;
+    /// # use atcoder_snippets::num::*;
     /// assert_eq!(5u8.abs_diff(3u8), 2u8);
     /// assert_eq!(3u8.abs_diff(5u8), 2u8);
     /// ```
@@ -27,7 +27,7 @@ pub trait PrimitiveInteger: Integer {
     ///
     /// ```
     /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::num::primitives::*;
+    /// # use atcoder_snippets::num::*;
     /// let a = 7i32;
     /// let b = 4i32;
     ///
@@ -83,7 +83,7 @@ pub trait PrimitiveUnsigned: PrimitiveInteger {
     ///
     /// ```
     /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::num::primitives::*;
+    /// # use atcoder_snippets::num::*;
     /// assert_eq!(13u8.ceil_div(10u8), 2)
     /// ```
     fn ceil_div(self, rhs: Self) -> Self;
@@ -94,7 +94,7 @@ pub trait PrimitiveUnsigned: PrimitiveInteger {
     ///
     /// ```
     /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::num::primitives::*;
+    /// # use atcoder_snippets::num::*;
     /// assert_eq!(4u8.round_div(10u8), 0);
     /// assert_eq!(5u8.round_div(10u8), 1);
     /// ```
@@ -108,7 +108,7 @@ pub trait PrimitiveUnsigned: PrimitiveInteger {
     ///
     /// ```
     /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::num::primitives::*;
+    /// # use atcoder_snippets::num::*;
     /// assert_eq!(0b10000_u32.log2(), Some(4));
     /// assert_eq!(0b10001_u32.log2(), Some(4));
     /// ```
@@ -122,7 +122,7 @@ pub trait PrimitiveUnsigned: PrimitiveInteger {
     ///
     /// ```
     /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::num::primitives::*;
+    /// # use atcoder_snippets::num::*;
     /// assert_eq!(0b10000_u32.ceil_log2(), Some(4));
     /// assert_eq!(0b10001_u32.ceil_log2(), Some(5));
     /// ```

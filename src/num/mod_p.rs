@@ -47,7 +47,7 @@ impl ModP {
     ///
     /// ```no_run
     /// # extern crate atcoder_snippets;
-    /// # use atcoder_snippets::num::mod_p::*;
+    /// # use atcoder_snippets::num::*;
     /// // MODULUS is set to 7.
     /// // 2^5 = 32 = 4 mod 7.
     /// assert_eq!(ModP::new(2).pow(5), ModP::new(4));
@@ -73,7 +73,7 @@ impl ModP {
     ///
     /// ```no_run
     /// # extern crate atcoder_snippets;
-    /// # use atcoder_snippets::num::mod_p::*;
+    /// # use atcoder_snippets::num::*;
     /// // MODULUS is set to 7.
     /// // 3^5 = 15 = 1 mod 7.
     /// assert_eq!(ModP::new(3).inv(), ModP::new(5));
