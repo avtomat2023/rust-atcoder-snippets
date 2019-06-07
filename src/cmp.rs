@@ -20,10 +20,10 @@ use std::cmp::{Ord, Ordering};
 /// ```
 #[snippet = "cmp"]
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Reverse<T>(pub T);
+pub struct Reverse<T: Ord>(pub T);
 
 #[snippet = "cmp"]
-impl<T: PartialOrd> PartialOrd for Reverse<T> {
+impl<T: Ord> PartialOrd for Reverse<T> {
     fn partial_cmp(&self, other: &Reverse<T>) -> Option<Ordering> {
         other.0.partial_cmp(&self.0)
     }
