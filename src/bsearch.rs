@@ -23,7 +23,7 @@
 //! assert_eq!(count_key(&[2,2,2,2,2,2], 2), 6);
 //! ```
 
-use num::Integer;
+use num::PrimitiveInteger;
 
 /// A sequence that binary search is applicable to.
 #[snippet = "bsearch"]
@@ -192,7 +192,7 @@ where
 }
 
 #[snippet = "bsearch"]
-impl<T: Integer + Clone> BSearch for std::ops::Range<T> {
+impl<T: PrimitiveInteger + Clone> BSearch for std::ops::Range<T> {
     type Item = T;
 
     fn is_empty(&self) -> bool {
@@ -204,15 +204,15 @@ impl<T: Integer + Clone> BSearch for std::ops::Range<T> {
     }
 
     fn rightmost_item(&self) -> T {
-        self.end.clone() - &T::one()
+        self.end.clone() - T::one()
     }
 
     fn middle_item(&self) -> T {
-        (self.start.clone() + &self.end) / &(T::one() + &T::one())
+        (self.start.clone() + self.end.clone()) / (T::one() + T::one())
     }
 
     fn left_half(&self) -> std::ops::Range<T> {
-        self.start.clone()..(self.middle_item() + &T::one())
+        self.start.clone()..(self.middle_item() + T::one())
     }
 
     fn right_half(&self) -> std::ops::Range<T> {
@@ -220,7 +220,7 @@ impl<T: Integer + Clone> BSearch for std::ops::Range<T> {
     }
 
     fn is_bsearch_converged(&self) -> bool {
-        BSearch::is_empty(self) || self.end.clone() - &self.start <= T::one() + &T::one()
+        BSearch::is_empty(self) || self.end.clone() - self.start.clone() <= T::one() + T::one()
     }
 }
 

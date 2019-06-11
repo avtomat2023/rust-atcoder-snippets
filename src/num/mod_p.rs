@@ -1,7 +1,5 @@
 //! Arithmetics modulo a prime number.
 
-use num::integer::{WithZero, WithOne};
-
 #[snippet = "modp"]
 pub type ModPBase = u64;
 
@@ -278,46 +276,6 @@ impl std::ops::DivAssign<ModPBase> for ModP {
     }
 }
 
-#[snippet = "modp"] forward_ref_binop!(impl Add, add for ModP, ModP);
-#[snippet = "modp"] forward_ref_binop!(impl Add, add for ModP, ModPBase);
-#[snippet = "modp"] forward_ref_binop!(impl Add, add for ModPBase, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl AddAssign, add_assign for ModP, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl AddAssign, add_assign for ModP, ModPBase);
-
-#[snippet = "modp"] forward_ref_unop!(impl Neg, neg for ModP);
-
-#[snippet = "modp"] forward_ref_binop!(impl Sub, sub for ModP, ModP);
-#[snippet = "modp"] forward_ref_binop!(impl Sub, sub for ModP, ModPBase);
-#[snippet = "modp"] forward_ref_binop!(impl Sub, sub for ModPBase, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl SubAssign, sub_assign for ModP, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl SubAssign, sub_assign for ModP, ModPBase);
-
-#[snippet = "modp"] forward_ref_binop!(impl Mul, mul for ModP, ModP);
-#[snippet = "modp"] forward_ref_binop!(impl Mul, mul for ModP, ModPBase);
-#[snippet = "modp"] forward_ref_binop!(impl Mul, mul for ModPBase, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl MulAssign, mul_assign for ModP, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl MulAssign, mul_assign for ModP, ModPBase);
-
-#[snippet = "modp"] forward_ref_binop!(impl Div, div for ModP, ModP);
-#[snippet = "modp"] forward_ref_binop!(impl Div, div for ModP, ModPBase);
-#[snippet = "modp"] forward_ref_binop!(impl Div, div for ModPBase, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl DivAssign, div_assign for ModP, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl DivAssign, div_assign for ModP, ModPBase);
-
-#[snippet = "modp"]
-impl WithZero for ModP {
-    fn zero() -> ModP {
-        unsafe { ModP::new_unchecked(0) }
-    }
-}
-
-#[snippet = "modp"]
-impl WithOne for ModP {
-    fn one() -> ModP {
-        unsafe { ModP::new_unchecked(1) }
-    }
-}
-
 #[snippet = "modp"]
 impl std::iter::Sum for ModP {
     fn sum<I: Iterator<Item=ModP>>(iter: I) -> ModP {
@@ -343,7 +301,7 @@ impl<'a> std::iter::Sum<&'a ModP> for ModP {
 #[snippet = "modp"]
 impl std::iter::Product for ModP {
     fn product<I: Iterator<Item=ModP>>(iter: I) -> ModP {
-        let mut ans = ModP::one();
+        let mut ans = unsafe { ModP::new_unchecked(1) };
         for n in iter {
             ans *= n;
         }
@@ -354,7 +312,7 @@ impl std::iter::Product for ModP {
 #[snippet = "modp"]
 impl<'a> std::iter::Product<&'a ModP> for ModP {
     fn product<I: Iterator<Item=&'a ModP>>(iter: I) -> ModP {
-        let mut ans = ModP::one();
+        let mut ans = unsafe { ModP::new_unchecked(1) };
         for &n in iter {
             ans *= n;
         }
@@ -412,17 +370,8 @@ mod tests {
     #[test]
     fn test_add() {
         assert_eq!(ModP::new(5) + ModP::new(5), ModP::new(3));
-        assert_eq!(ModP::new(5) + &ModP::new(5), ModP::new(3));
-        assert_eq!(&ModP::new(5) + ModP::new(5), ModP::new(3));
-        assert_eq!(&ModP::new(5) + &ModP::new(5), ModP::new(3));
         assert_eq!(ModP::new(5) + 5, ModP::new(3));
-        assert_eq!(ModP::new(5) + &5, ModP::new(3));
-        assert_eq!(&ModP::new(5) + 5, ModP::new(3));
-        assert_eq!(&ModP::new(5) + &5, ModP::new(3));
         assert_eq!(5 + ModP::new(5), ModP::new(3));
-        assert_eq!(5 + &ModP::new(5), ModP::new(3));
-        assert_eq!(&5 + ModP::new(5), ModP::new(3));
-        assert_eq!(&5 + &ModP::new(5), ModP::new(3));
     }
 
     #[test]
@@ -437,17 +386,9 @@ mod tests {
         n1 += ModP::new(5);
         assert_eq!(n1, ModP::new(3));
 
-        let mut n1_for_ref = ModP::new(5);
-        n1_for_ref += &ModP::new(5);
-        assert_eq!(n1_for_ref, ModP::new(3));
-
         let mut n2 = ModP::new(5);
         n2 += 5;
         assert_eq!(n2, ModP::new(3));
-
-        let mut n2_for_ref = ModP::new(5);
-        n2_for_ref += &5;
-        assert_eq!(n2_for_ref, ModP::new(3));
     }
 
     #[test]
@@ -460,25 +401,14 @@ mod tests {
     #[test]
     fn test_neg() {
         assert_eq!(-ModP::new(3), ModP::new(4));
-        assert_eq!(-(&ModP::new(3)), ModP::new(4));
         assert_eq!(-ModP::new(0), ModP::new(0));
-        assert_eq!(-(&ModP::new(0)), ModP::new(0));
     }
 
     #[test]
     fn test_sub() {
         assert_eq!(ModP::new(3) - ModP::new(4), ModP::new(6));
-        assert_eq!(ModP::new(3) - &ModP::new(4), ModP::new(6));
-        assert_eq!(&ModP::new(3) - ModP::new(4), ModP::new(6));
-        assert_eq!(&ModP::new(3) - &ModP::new(4), ModP::new(6));
         assert_eq!(ModP::new(3) - 4, ModP::new(6));
-        assert_eq!(ModP::new(3) - &4, ModP::new(6));
-        assert_eq!(&ModP::new(3) - 4, ModP::new(6));
-        assert_eq!(&ModP::new(3) - &4, ModP::new(6));
         assert_eq!(3 - ModP::new(4), ModP::new(6));
-        assert_eq!(3 - &ModP::new(4), ModP::new(6));
-        assert_eq!(&3 - ModP::new(4), ModP::new(6));
-        assert_eq!(&3 - &ModP::new(4), ModP::new(6));
     }
 
     #[test]
@@ -492,17 +422,9 @@ mod tests {
         n1 -= ModP::new(4);
         assert_eq!(n1, ModP::new(6));
 
-        let mut n1_for_ref = ModP::new(3);
-        n1_for_ref -= &ModP::new(4);
-        assert_eq!(n1_for_ref, ModP::new(6));
-
         let mut n2 = ModP::new(3);
         n2 -= 4;
         assert_eq!(n2, ModP::new(6));
-
-        let mut n2_for_ref = ModP::new(3);
-        n2_for_ref -= &4;
-        assert_eq!(n2_for_ref, ModP::new(6));
     }
 
     #[test]
@@ -515,17 +437,8 @@ mod tests {
     #[test]
     fn test_mul() {
         assert_eq!(ModP::new(5) * ModP::new(5), ModP::new(4));
-        assert_eq!(ModP::new(5) * &ModP::new(5), ModP::new(4));
-        assert_eq!(&ModP::new(5) * ModP::new(5), ModP::new(4));
-        assert_eq!(&ModP::new(5) * &ModP::new(5), ModP::new(4));
         assert_eq!(ModP::new(5) * 5, ModP::new(4));
-        assert_eq!(ModP::new(5) * &5, ModP::new(4));
-        assert_eq!(&ModP::new(5) * 5, ModP::new(4));
-        assert_eq!(&ModP::new(5) * &5, ModP::new(4));
         assert_eq!(5 * ModP::new(5), ModP::new(4));
-        assert_eq!(5 * &ModP::new(5), ModP::new(4));
-        assert_eq!(&5 * ModP::new(5), ModP::new(4));
-        assert_eq!(&5 * &ModP::new(5), ModP::new(4));
     }
 
     #[test]
@@ -540,17 +453,9 @@ mod tests {
         n1 *= ModP::new(5);
         assert_eq!(n1, ModP::new(4));
 
-        let mut n1_for_ref = ModP::new(5);
-        n1_for_ref *= &ModP::new(5);
-        assert_eq!(n1_for_ref, ModP::new(4));
-
         let mut n2 = ModP::new(5);
         n2 *= 5;
         assert_eq!(n2, ModP::new(4));
-
-        let mut n2_for_ref = ModP::new(5);
-        n2_for_ref *= &5;
-        assert_eq!(n2_for_ref, ModP::new(4));
     }
 
     #[test]
@@ -563,17 +468,8 @@ mod tests {
     #[test]
     fn test_div() {
         assert_eq!(ModP::new(3) / ModP::new(4), ModP::new(6));
-        assert_eq!(ModP::new(3) / &ModP::new(4), ModP::new(6));
-        assert_eq!(&ModP::new(3) / ModP::new(4), ModP::new(6));
-        assert_eq!(&ModP::new(3) / &ModP::new(4), ModP::new(6));
         assert_eq!(ModP::new(3) / 4, ModP::new(6));
-        assert_eq!(ModP::new(3) / &4, ModP::new(6));
-        assert_eq!(&ModP::new(3) / 4, ModP::new(6));
-        assert_eq!(&ModP::new(3) / &4, ModP::new(6));
         assert_eq!(3 / ModP::new(4), ModP::new(6));
-        assert_eq!(3 / &ModP::new(4), ModP::new(6));
-        assert_eq!(&3 / ModP::new(4), ModP::new(6));
-        assert_eq!(&3 / &ModP::new(4), ModP::new(6));
     }
 
     #[test]
@@ -582,17 +478,9 @@ mod tests {
         n1 /= ModP::new(4);
         assert_eq!(n1, ModP::new(6));
 
-        let mut n1_for_ref = ModP::new(3);
-        n1_for_ref /= &ModP::new(4);
-        assert_eq!(n1_for_ref, ModP::new(6));
-
         let mut n2 = ModP::new(3);
         n2 /= 4;
         assert_eq!(n2, ModP::new(6));
-
-        let mut n2_for_ref = ModP::new(3);
-        n2_for_ref /= &4;
-        assert_eq!(n2_for_ref, ModP::new(6));
     }
 
     #[test]

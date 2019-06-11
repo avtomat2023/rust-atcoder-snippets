@@ -1,10 +1,15 @@
 //! Extension traits for primitive integer types.
 
-use num::integer::{WithZero, WithOne, Integer};
-
 /// Enriches signed and unsigned integer types.
 #[snippet = "num"]
-pub trait PrimitiveInteger: Integer {
+pub trait PrimitiveInteger:
+    Sized + Ord +
+    std::ops::Add<Output=Self> +
+    std::ops::Sub<Output=Self> +
+    std::ops::Div<Output=Self>
+{
+    fn one() -> Self;
+
     /// Calculate absolute value of *a* - *b*.
     ///
     /// This is useful for unsigned integers because overflow never happens
@@ -42,17 +47,11 @@ pub trait PrimitiveInteger: Integer {
 #[snippet = "num"]
 macro_rules! impl_primitive_integer {
     ( $($t: ty)* ) => { $(
-        impl WithZero for $t {
-            fn zero() -> $t { 0 }
-        }
-
-        impl WithOne for $t {
-            fn one() -> $t { 1 }
-        }
-
-        impl Integer for $t {}
-
         impl PrimitiveInteger for $t {
+            fn one() -> $t {
+                1
+            }
+
             fn abs_diff(self, rhs: $t) -> $t {
                 if self < rhs { rhs - self } else { self - rhs }
             }
