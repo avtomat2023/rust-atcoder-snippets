@@ -84,6 +84,12 @@ impl ModP {
     }
 }
 
+/// Shorthand of `ModP::new(x)`.
+#[snippet = "modp"]
+pub fn modp(x: u64) -> ModP {
+    ModP::new(x)
+}
+
 #[snippet = "modp"]
 impl std::fmt::Display for ModP {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -374,6 +380,7 @@ mod tests {
     #[test]
     fn test_new() {
         assert_eq!(ModP::new(3), ModP::new(10));
+        assert_eq!(modp(3), modp(10));
     }
 
     #[test]
