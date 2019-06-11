@@ -16,7 +16,7 @@ pub const MODULUS: ModPBase = 7;
 #[snippet = "modp"]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct ModP {
-    repr: ModPBase
+    base: ModPBase
 }
 
 #[snippet = "modp"]
@@ -26,19 +26,19 @@ impl ModP {
         if !cfg!(test) {
             assert!(MODULUS != 7, "Set const MODULUS to the value provided by the problem.");
         }
-        ModP { repr: n % MODULUS }
+        ModP { base: n % MODULUS }
     }
 
     /// Create a number without taking remainder by `MODULUS`.
     ///
     /// If `n >= MODULUS`, the correctness of arithmetics is not guaranteed.
     pub unsafe fn new_unchecked(n: ModPBase) -> ModP {
-        ModP { repr: n }
+        ModP { base: n }
     }
 
     /// Returns a `ModPBase` satisfying `0 <= x < MODULUS`.
-    pub fn repr(&self) -> ModPBase {
-        self.repr
+    pub fn base(&self) -> ModPBase {
+        self.base
     }
 
     /// Calculate power using exponentiation by squaring.
@@ -79,7 +79,7 @@ impl ModP {
     /// assert_eq!(ModP::new(3).inv(), ModP::new(5));
     /// ```
     pub fn inv(self) -> ModP {
-        assert!(self.repr() != 0);
+        assert!(self.base() != 0);
         self.pow(MODULUS - 2)
     }
 }
@@ -93,21 +93,21 @@ pub fn modp(x: u64) -> ModP {
 #[snippet = "modp"]
 impl std::fmt::Display for ModP {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.repr())
+        write!(f, "{}", self.base())
     }
 }
 
 #[snippet = "modp"]
 impl PartialEq<ModPBase> for ModP {
     fn eq(&self, other: &ModPBase) -> bool {
-        self.repr() == other % MODULUS
+        self.base() == other % MODULUS
     }
 }
 
 #[snippet = "modp"]
 impl PartialEq<ModP> for ModPBase {
     fn eq(&self, other: &ModP) -> bool {
-        self % MODULUS == other.repr() % MODULUS
+        self % MODULUS == other.base() % MODULUS
     }
 }
 
@@ -116,7 +116,7 @@ impl std::ops::Add for ModP {
     type Output = ModP;
 
     fn add(self, rhs: ModP) -> ModP {
-        ModP { repr: (self.repr() + rhs.repr() % MODULUS) % MODULUS }
+        ModP { base: (self.base() + rhs.base() % MODULUS) % MODULUS }
     }
 }
 
@@ -134,7 +134,7 @@ impl std::ops::Add<ModP> for ModPBase {
     type Output = ModP;
 
     fn add(self, rhs: ModP) -> ModP {
-        ModP::new(self) + rhs.repr()
+        ModP::new(self) + rhs.base()
     }
 }
 
@@ -157,7 +157,7 @@ impl std::ops::Neg for ModP {
     type Output = ModP;
 
     fn neg(self) -> ModP {
-        ModP::new(MODULUS - self.repr())
+        ModP::new(MODULUS - self.base())
     }
 }
 
@@ -207,7 +207,7 @@ impl std::ops::Mul for ModP {
     type Output = ModP;
 
     fn mul(self, rhs: ModP) -> ModP {
-        ModP { repr: self.repr() * (rhs.repr() % MODULUS) % MODULUS }
+        ModP { base: self.base() * (rhs.base() % MODULUS) % MODULUS }
     }
 }
 
@@ -225,7 +225,7 @@ impl std::ops::Mul<ModP> for ModPBase {
     type Output = ModP;
 
     fn mul(self, rhs: ModP) -> ModP {
-        ModP::new(self) * rhs.repr()
+        ModP::new(self) * rhs.base()
     }
 }
 
@@ -329,7 +329,7 @@ impl std::iter::Sum for ModP {
     fn sum<I: Iterator<Item=ModP>>(iter: I) -> ModP {
         let mut ans = 0;
         for n in iter {
-            ans += n.repr();
+            ans += n.base();
         }
         ModP::new(ans)
     }
@@ -340,7 +340,7 @@ impl<'a> std::iter::Sum<&'a ModP> for ModP {
     fn sum<I: Iterator<Item=&'a ModP>>(iter: I) -> ModP {
         let mut ans = 0;
         for n in iter {
-            ans += n.repr();
+            ans += n.base();
         }
         ModP::new(ans)
     }
