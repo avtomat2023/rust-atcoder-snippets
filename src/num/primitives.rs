@@ -12,7 +12,6 @@ pub trait PrimitiveInteger: Integer {
     /// # Example
     ///
     /// ```
-    /// # #[macro_use] extern crate atcoder_snippets;
     /// # use atcoder_snippets::num::*;
     /// assert_eq!(5u8.abs_diff(3u8), 2u8);
     /// assert_eq!(3u8.abs_diff(5u8), 2u8);
@@ -26,7 +25,6 @@ pub trait PrimitiveInteger: Integer {
     /// # Example
     ///
     /// ```
-    /// # #[macro_use] extern crate atcoder_snippets;
     /// # use atcoder_snippets::num::*;
     /// let a = 7i32;
     /// let b = 4i32;
@@ -84,7 +82,6 @@ pub trait PrimitiveUnsigned: PrimitiveInteger {
     /// # Example
     ///
     /// ```
-    /// # #[macro_use] extern crate atcoder_snippets;
     /// # use atcoder_snippets::num::*;
     /// assert_eq!(13u8.ceil_div(10u8), 2)
     /// ```
@@ -95,7 +92,6 @@ pub trait PrimitiveUnsigned: PrimitiveInteger {
     /// # Example
     ///
     /// ```
-    /// # #[macro_use] extern crate atcoder_snippets;
     /// # use atcoder_snippets::num::*;
     /// assert_eq!(4u8.round_div(10u8), 0);
     /// assert_eq!(5u8.round_div(10u8), 1);
@@ -109,7 +105,6 @@ pub trait PrimitiveUnsigned: PrimitiveInteger {
     /// # Example
     ///
     /// ```
-    /// # #[macro_use] extern crate atcoder_snippets;
     /// # use atcoder_snippets::num::*;
     /// assert_eq!(0b10000_u32.log2(), Some(4));
     /// assert_eq!(0b10001_u32.log2(), Some(4));
@@ -123,12 +118,22 @@ pub trait PrimitiveUnsigned: PrimitiveInteger {
     /// # Example
     ///
     /// ```
-    /// # #[macro_use] extern crate atcoder_snippets;
     /// # use atcoder_snippets::num::*;
     /// assert_eq!(0b10000_u32.ceil_log2(), Some(4));
     /// assert_eq!(0b10001_u32.ceil_log2(), Some(5));
     /// ```
     fn ceil_log2(self) -> Option<Self>;
+
+    /// Returns maximum `x` such that `x*x <= self`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use atcoder_snippets::num::*;
+    /// assert_eq!(15u32.sqrt(), 3);
+    /// assert_eq!(16u32.sqrt(), 4);
+    /// ```
+    fn sqrt(self) -> Self;
 
     // fn to_le_big_digits(self) -> Vec<BigDigit>;
 }
@@ -162,6 +167,10 @@ macro_rules! impl_primitive_unsigned {
                 self.log2().map(|x| {
                     (self + ((1<<x) - 1)).log2().unwrap()
                 })
+            }
+
+            fn sqrt(self) -> $t {
+                (self as f64).sqrt() as $t
             }
 
             // fn to_le_big_digits(self) -> Vec<BigDigit> {
@@ -239,5 +248,16 @@ mod tests {
         assert_eq!(2u32.ceil_log2(), Some(1));
         assert_eq!(3u32.ceil_log2(), Some(2));
         assert_eq!(0b1001011u32.ceil_log2(), Some(7));
+    }
+
+    #[test]
+    fn test_sqrt() {
+        assert_eq!(0u32.sqrt(), 0);
+        assert_eq!(1u32.sqrt(), 1);
+        assert_eq!(2u32.sqrt(), 1);
+        assert_eq!(3u32.sqrt(), 1);
+        assert_eq!(4u32.sqrt(), 2);
+        assert_eq!(9999u32.sqrt(), 99);
+        assert_eq!(10000u32.sqrt(), 100);
     }
 }
