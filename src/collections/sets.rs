@@ -375,16 +375,16 @@ mod tests {
         sets.add(0);
         assert_eq!(sets.count(), 6);
 
-        sets.unite(&0, &1);
+        sets.unite(&0, &1).unwrap();
         assert_eq!(sets.count(), 5);
-        sets.unite(&2, &3);
+        sets.unite(&2, &3).unwrap();
         assert_eq!(sets.count(), 4);
-        sets.unite(&3, &4);
+        sets.unite(&3, &4).unwrap();
         assert_eq!(sets.count(), 3);
-        sets.unite(&0, &2);
+        sets.unite(&0, &2).unwrap();
         assert_eq!(sets.count(), 2);
 
-        sets.unite(&1, &3);
+        sets.unite(&1, &3).unwrap();
         assert_eq!(sets.count(), 2);
 
         sets.add(6);
