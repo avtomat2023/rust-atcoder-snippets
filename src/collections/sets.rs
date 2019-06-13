@@ -1,12 +1,14 @@
 //! Disjoint-set data structure, known as union-find.
 
+// TODO: Create `VecUnionFindSets`.
+
 // Since Rust version of AtCoder is too outdated,
 // `Rc`s cannot be compared by their pointer values.
 // So, every node must have the cloned item for equality check.
 // After language update of AtCoder, merge branch `disjoint-set-for-latest-rust`,
 // and `T` does not require `Clone`.
 
-// TODO: Show solution of ABC120 D as an example
+// TODO: Show solution of ABC120 D and ABC126 E as examples
 /// Disjoint-set data structure, known as union-find.
 ///
 /// `HashUnionFindSets` uses `HashMap` internally to manage items.
@@ -17,6 +19,10 @@
 /// it can be regarded as constant time, although theoretically it is not constant.
 #[snippet = "sets"]
 pub struct HashUnionFindSets<T: Eq + std::hash::Hash + std::fmt::Debug> {
+    // Maintaining `set_count` can be an unnecessary cost,
+    // but that frees users from maintaining it
+    // by checking the returned values for all `add` and `unite` operations.
+    set_count: usize,
     items: std::collections::HashMap<T, UnionFindNode<T>>
 }
 
@@ -67,7 +73,10 @@ impl<T: Eq + std::hash::Hash> std::hash::Hash for UnionFindNode<T> {
 impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
     /// Creates empty sets.
     pub fn new() -> HashUnionFindSets<T> {
-        HashUnionFindSets { items: std::collections::HashMap::new() }
+        HashUnionFindSets {
+            set_count: 0,
+            items: std::collections::HashMap::new()
+        }
     }
 
     fn error_msg(items: &[&T]) -> String {
@@ -98,6 +107,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
         if self.items.contains_key(&item) {
             false
         } else {
+            self.set_count += 1;
             self.items.insert(item.clone(), UnionFindNode::new(item));
             true
         }
@@ -136,8 +146,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
         self.items.get(item).cloned().map(go)
     }
 
-    /* Requires additional infomation in data structure
-    /// Returns how many sets are contained by the sets.
+    /// Returns how many sets `self` contains.
     ///
     /// # Example
     ///
@@ -145,16 +154,15 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
     /// # #[macro_use] extern crate atcoder_snippets;
     /// # use atcoder_snippets::collections::sets::*;
     /// let mut sets: HashUnionFindSets<i32> = vec![1, 2].into_iter().collect();
-    /// assert_eq!(sets.sets_len(), 2);
+    /// assert_eq!(sets.count(), 2);
     /// sets.unite(&1, &2);
-    /// assert_eq!(sets.sets_len(), 1);
+    /// assert_eq!(sets.count(), 1);
     /// ```
-    pub fn sets_len(&self) -> usize {
-        unimplemented!()
+    pub fn count(&self) -> usize {
+        self.set_count
     }
-    */
 
-    /// Returns how many items are contained by the set which contains `item`.
+    /// Returns how many items `self` contains by the set which has `item`.
     ///
     /// If no set contains `item`, returns `Err` with an error message.
     ///
@@ -215,6 +223,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
                 if root1 == root2 {
                     Ok(false)
                 } else {
+                    self.set_count -= 1;
                     let (mut root, mut child, root_node) = if len1 < len2 {
                         (root2.0.borrow_mut(), root1.0.borrow_mut(), &root2)
                     } else {
@@ -275,18 +284,33 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> std::iter::FromIterator<
     /// ```
     ///
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> HashUnionFindSets<T> {
+        let items = iter.into_iter()
+            .map(|x| (x.clone(), UnionFindNode::new(x)))
+            .collect::<std::collections::HashMap<_, _>>();
         HashUnionFindSets {
-            items: iter.into_iter().map(|x| (x.clone(), UnionFindNode::new(x))).collect()
+            set_count: items.len(),
+            items: items
         }
     }
 }
+
+/*
+#[snippet = "sets"]
+impl<T: Eq + std::hash::Hash + std::fmt::Debug> IntoIterator for HashUnionFindSets<T> {
+    type Item = HashSet<T>;
+    type IntoIter = std::collections::hash_map::Values<>;
+
+    fn into_iter(self) -> Self::IntoIter {
+    }
+}
+*/
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_many_items() {
+    fn test_set_eq() {
         let mut sets: HashUnionFindSets<i32> = (0..20).collect();
 
         // unite in sequential order
@@ -328,5 +352,48 @@ mod tests {
                 assert!(!sets.set_eq(&i, &j).unwrap());
             }
         }
+    }
+
+    #[test]
+    fn test_count() {
+        let mut sets = HashUnionFindSets::new();
+        assert_eq!(sets.count(), 0);
+
+        sets.add(0);
+        assert_eq!(sets.count(), 1);
+        sets.add(1);
+        assert_eq!(sets.count(), 2);
+        sets.add(2);
+        assert_eq!(sets.count(), 3);
+        sets.add(3);
+        assert_eq!(sets.count(), 4);
+        sets.add(4);
+        assert_eq!(sets.count(), 5);
+        sets.add(5);
+        assert_eq!(sets.count(), 6);
+
+        sets.add(0);
+        assert_eq!(sets.count(), 6);
+
+        sets.unite(&0, &1);
+        assert_eq!(sets.count(), 5);
+        sets.unite(&2, &3);
+        assert_eq!(sets.count(), 4);
+        sets.unite(&3, &4);
+        assert_eq!(sets.count(), 3);
+        sets.unite(&0, &2);
+        assert_eq!(sets.count(), 2);
+
+        sets.unite(&1, &3);
+        assert_eq!(sets.count(), 2);
+
+        sets.add(6);
+        assert_eq!(sets.count(), 3);
+    }
+
+    #[test]
+    fn test_count_from_iterator() {
+        let sets: HashUnionFindSets<i32> = (0..20).collect();
+        assert_eq!(sets.count(), 20);
     }
 }
