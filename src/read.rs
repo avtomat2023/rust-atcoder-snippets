@@ -7,7 +7,6 @@
 // # Add Implementation
 //
 // - scan関数
-// - readマクロに!があったら、そのwordを捨てる
 //
 // # Problems
 //
@@ -21,7 +20,7 @@
 // scanの呼び出しに続けて行指向の読み込みを行うと、
 // 入力行のうちの読み残した部分を読み込む。
 
-//! スペース区切りの入力を簡単に読み込むための関数・マクロを提供する。
+//! Macros and functions for reading problem input.
 //!
 //! Rustで競技プログラミングを戦うための最初の関門が、入力の読み込みである。
 //! 標準入力から数値を読み込むには、以下のコードを書く必要がある。
@@ -43,36 +42,35 @@
 //! 入力は行単位で読むよう設計されており、一回の関数呼び出しまたはマクロ展開で、
 //! 標準入力の1行または複数行を読み込む。
 //!
-//! - 標準入力の1行を読むには、[`read`](fn.read.html)関数、[`read`](../macro.read.html)マクロを用いる。
-//! - 標準入力の複数行を読むには、[`readls`](../macro.readls.html)マクロを用いる。
-//! - 標準入力の一様な行をすべて読むには、[`readx`](fn.readx.html)関数、[`readx_loop`](../macro.readx_loop.html)マクロを用いる。
-//! - 標準入力の一様な行を指定行数読むには、[`readn`](fn.readn.html)関数、[`readn_loop`](../macro.readn_loop.html)マクロを用いる。
-//!
+//! - 標準入力の1行を読むには、[`read`](../macro.read.html)マクロを用いる。
+//! - 標準入力の複数行を読むには、[`read_chunk`](../macro.read_chunk.html)マクロを用いる。
+//! - 標準入力の一様な行を一定行数、あるいはすべて読むには、[`read_lines`](fn.read_lines.html)関数を用いる。
+//! - 標準入力の複数行に渡る入力を繰り返し読むには、[`read_chunks`](fn.read_chunks.html)関数を用いる。
+//!   Typically useful for reading queries in Codeforces.
 
 use std;
 
 // BEGIN SNIPPET read
 
-/// Readable from stdin.
+/// Readable from a constant number of words.
 ///
-/// Types implementing this trait can be converted from a specific number of *word*s.
 /// A word is a fragment of an input line splitted by whiltespaces.
 ///
-/// 以下の型は、`Readable`をimplしている。
+/// The following types are readable from one word:
 ///
-/// - ユニット型 `()`
+/// - Unit type `()`
 /// - `char`
 /// - `String`
-/// - すべての数値型(`isize`, `usize`, `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`, `f32`, `f64`)
+/// - All primitibe numeric types (`isize`, `usize`, `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`, `f32`, `f64`)
 ///
-/// `Readable`のみからなるタプルは常に`Readable`である。
+/// A tuple of an arbitrary number of `Readable`s is `Readable`.
 ///
 /// `read`モジュールは、1-origin整数を読み込んで0-origin整数にする操作を、
 /// 特殊な`Readable`型を提供することによって可能としている。
 /// cf. [`usize_`](struct.usize_.html)
 ///
 /// To make a custom readable type, use `readable` macro instead of implementing
-/// this trait in most cases.
+/// this trait directly.
 ///
 /// # Example
 ///
@@ -80,9 +78,10 @@ use std;
 pub trait Readable {
     /// Output type.
     ///
-    /// In most cases, `Output` should be `Self`.
-    /// This type field exists for implementing 1-origin to 0-origin conversion
-    /// by `usize_` etc.
+    /// Usually `Output` should be `Self`, but there are some exceptions:
+    ///
+    /// - 1-origin to 0-origin conversion by `usize_`[struct.usize_.html] etc.
+    /// - [`Chars`](struct.Chars.html)
     type Output;
 
     /// Returns how many words are read.
@@ -148,7 +147,7 @@ impl Readable for char {
     }
 }
 
-/// For reading a string as `Vec<char>`.
+/// Reads a string as `Vec<char>`.
 ///
 /// # Example
 ///
@@ -171,7 +170,7 @@ impl Readable for Chars {
 }
 
 // Primitive integers
-// Copy and paste instead of using macro for compilation speedup
+// Implemented by copy and paste instead of macro for compilation speedup
 
 impl Readable for i8 {
     type Output = Self;
@@ -180,7 +179,7 @@ impl Readable for i8 {
     fn read_words(words: &[&str]) -> Result<i8, String> {
         use std::str::FromStr;
         i8::from_str(words[0]).map_err(|_| {
-            format!("cannot parse `{}` as {}", words[0], stringify!(i8))
+            format!("cannot parse `{}` as i8", words[0])
         })
     }
 }
@@ -192,7 +191,7 @@ impl Readable for u8 {
     fn read_words(words: &[&str]) -> Result<u8, String> {
         use std::str::FromStr;
         u8::from_str(words[0]).map_err(|_| {
-            format!("cannot parse `{}` as {}", words[0], stringify!(u8))
+            format!("cannot parse `{}` as u8", words[0])
         })
     }
 }
@@ -204,7 +203,7 @@ impl Readable for i16 {
     fn read_words(words: &[&str]) -> Result<i16, String> {
         use std::str::FromStr;
         i16::from_str(words[0]).map_err(|_| {
-            format!("cannot parse `{}` as {}", words[0], stringify!(i16))
+            format!("cannot parse `{}` as i16", words[0])
         })
     }
 }
@@ -216,7 +215,7 @@ impl Readable for u16 {
     fn read_words(words: &[&str]) -> Result<u16, String> {
         use std::str::FromStr;
         u16::from_str(words[0]).map_err(|_| {
-            format!("cannot parse `{}` as {}", words[0], stringify!(u16))
+            format!("cannot parse `{}` as u16", words[0])
         })
     }
 }
@@ -228,7 +227,7 @@ impl Readable for i32 {
     fn read_words(words: &[&str]) -> Result<i32, String> {
         use std::str::FromStr;
         i32::from_str(words[0]).map_err(|_| {
-            format!("cannot parse `{}` as {}", words[0], stringify!(i32))
+            format!("cannot parse `{}` as i32", words[0])
         })
     }
 }
@@ -240,7 +239,7 @@ impl Readable for u32 {
     fn read_words(words: &[&str]) -> Result<u32, String> {
         use std::str::FromStr;
         u32::from_str(words[0]).map_err(|_| {
-            format!("cannot parse `{}` as {}", words[0], stringify!(u32))
+            format!("cannot parse `{}` as u32", words[0])
         })
     }
 }
@@ -252,7 +251,7 @@ impl Readable for i64 {
     fn read_words(words: &[&str]) -> Result<i64, String> {
         use std::str::FromStr;
         i64::from_str(words[0]).map_err(|_| {
-            format!("cannot parse `{}` as {}", words[0], stringify!(i64))
+            format!("cannot parse `{}` as i64", words[0])
         })
     }
 }
@@ -264,7 +263,7 @@ impl Readable for u64 {
     fn read_words(words: &[&str]) -> Result<u64, String> {
         use std::str::FromStr;
         u64::from_str(words[0]).map_err(|_| {
-            format!("cannot parse `{}` as {}", words[0], stringify!(u64))
+            format!("cannot parse `{}` as u64", words[0])
         })
     }
 }
@@ -276,7 +275,7 @@ impl Readable for isize {
     fn read_words(words: &[&str]) -> Result<isize, String> {
         use std::str::FromStr;
         <isize>::from_str(words[0]).map_err(|_| {
-            format!("cannot parse `{}` as {}", words[0], stringify!(isize))
+            format!("cannot parse `{}` as isize", words[0])
         })
     }
 }
@@ -288,7 +287,7 @@ impl Readable for usize {
     fn read_words(words: &[&str]) -> Result<usize, String> {
         use std::str::FromStr;
         <usize>::from_str(words[0]).map_err(|_| {
-            format!("cannot parse `{}` as {}", words[0], stringify!(usize))
+            format!("cannot parse `{}` as usize", words[0])
         })
     }
 }
@@ -300,7 +299,7 @@ impl Readable for f32 {
     fn read_words(words: &[&str]) -> Result<f32, String> {
         use std::str::FromStr;
         f32::from_str(words[0]).map_err(|_| {
-            format!("cannot parse `{}` as {}", words[0], stringify!(usize))
+            format!("cannot parse `{}` as f32", words[0])
         })
     }
 }
@@ -312,7 +311,7 @@ impl Readable for f64 {
     fn read_words(words: &[&str]) -> Result<f64, String> {
         use std::str::FromStr;
         f64::from_str(words[0]).map_err(|_| {
-            format!("cannot parse `{}` as {}", words[0], stringify!(usize))
+            format!("cannot parse `{}` as f64", words[0])
         })
     }
 }
@@ -590,7 +589,7 @@ impl<T1: Readable, T2: Readable, T3: Readable, T4: Readable, T5: Readable, T6: R
     }
 }
 
-/// Readable by `read` function.
+/// Readable by `read` function/macro.
 pub trait ReadableFromLine {
     type Output;
 
@@ -598,8 +597,7 @@ pub trait ReadableFromLine {
 }
 
 fn split_into_words(line: &str) -> Vec<&str> {
-    #[allow(deprecated)]
-    line.trim_right_matches('\n').split_whitespace().collect()
+    line.trim_end_matches('\n').split_whitespace().collect()
 }
 
 impl<T: Readable> ReadableFromLine for T {
@@ -653,7 +651,7 @@ fn split_into_words_for_collection<T: Readable>(
     }
     if (words.len() - prefix_words_count) % T::words_count() != 0 {
         return Err(
-            format!("line `{}` has {} words, expected {} + {}n",
+            format!("line `{}` has {} words, expected {} + {}",
                     line, words.len(), prefix_words_count, n)
         );
     }
@@ -664,11 +662,16 @@ fn split_into_words_for_collection<T: Readable>(
 ///
 /// The collection type must implement `FromIterator`.
 ///
-/// For example, `Vec` and `HashSet` are readable from inpu line by these declaration:
+/// For example, `Vec` is readable from input line thanks to the following declaration:
 ///
 /// ```ignore
 /// readable_collection!(U => Vec<U>, Vec<U::Output>);
-/// readable_collection!(U: [Eq, Hash] => HashSet<U>, HashSet<U::Output>);
+/// ```
+///
+/// To make `HashSet` readable, declare as:
+///
+/// ```ignore
+/// readable_collection!(U: Eq, Hash => HashSet<U>, HashSet<U::Output>);
 /// ```
 ///
 /// The content of this macro should be either of the followings:
@@ -820,14 +823,13 @@ readable_collection!(U => Vec<U>, Vec<U::Output>);
 //     U: [Ord] => std::collections::BinaryHeap<U>, std::collections::BinaryHeap<U::Output>
 // );
 
-
 /// Returns `Readable`s read from a line of stdin.
 ///
 /// 読み込むことのできる型は、以下の通りである。
 ///
 /// - [`Readable`](trait.Readable.html)をimplした型
-/// - [`Readable`](trait.Readable.html)を要素型とする`Vec`
-/// - タプルで、<code>Vec&lt;<i>Readable</i>&gt;</code>が最後の要素型になっているもの (eg. `(i32, Vec<i32>)`)
+/// - [`Readable`](trait.Readable.html)を要素型とするコレクション
+/// - コレクションが最後の要素型になっているタプル (eg. `(i32, Vec<i32>)`)
 ///
 /// # Example
 ///
@@ -897,17 +899,6 @@ pub fn read<T: ReadableFromLine>() -> T::Output {
 /// 入力の1行から、スペースで区切られたふたつの`i32`数値が読み込まれる。
 /// その結果は、immutable変数`a`, `b`に代入される。
 ///
-/// `=`記号の右側には、[`read`](read/fn.read)関数で読み込むことができる
-/// 任意の型を置くことができる。
-///
-/// ```no_run
-/// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::read::*;
-/// // Stdin: "1 17 8 3 2 6"
-/// read!(mut ns = Vec<usize>);
-/// assert_eq!(ns, vec![1usize, 17, 8, 3, 2, 6]);
-/// ```
-///
 /// `=`記号の左側には、`let`で変数を宣言する際の左辺に書くことのできる
 /// 任意のパターンを置くことができる。
 ///
@@ -920,6 +911,19 @@ pub fn read<T: ReadableFromLine>() -> T::Output {
 /// assert_eq!(n, 60);
 /// ```
 ///
+/// `=`記号の右側には、[`Readable`](trait.Readable.html)をimplした任意の型を置くことができる。
+/// また、最後の型に限り、[`readable_collection`](../macro.readable_collection)マクロで宣言した
+/// コレクション型を置くことができる。
+///
+/// ```no_run
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::read::*;
+/// // Stdin: "5 10 20 30 40 50"
+/// read!(len = usize, mut nums = Vec<usize>);
+/// assert_eq!(len, 5);
+/// assert_eq!(nums, vec![1usize, 17, 8, 3, 2, 6]);
+/// ```
+///
 /// 単に`read!()`と書くと、入力の1行を捨てる。
 ///
 /// ```no_run
@@ -927,8 +931,8 @@ pub fn read<T: ReadableFromLine>() -> T::Output {
 /// # use atcoder_snippets::read::*;
 /// // Stdin: "5\n10 20 30 40 50"
 /// read!();
-/// read!(xs = Vec<i32>);
-/// assert_eq!(xs, vec![10, 20, 30, 40, 50]);
+/// read!(nums = Vec<i32>);
+/// assert_eq!(nums, vec![10, 20, 30, 40, 50]);
 /// ```
 #[macro_export]
 macro_rules! read {
@@ -951,6 +955,75 @@ macro_rules! read {
     };
 }
 
+/// Readable by `read_chunk` function/macro.
+pub trait ReadableFromChunk {
+    type Output;
+
+    fn lines_count() -> usize;
+
+    fn read_chunk(lines: &[String]) -> Result<Self::Output, String>;
+}
+
+impl<T1: ReadableFromLine, T2: ReadableFromLine> ReadableFromChunk for (T1, T2) {
+    type Output = (T1::Output, T2::Output);
+
+    fn lines_count() -> usize { 2 }
+
+    fn read_chunk(lines: &[String]) -> Result<Self::Output, String> {
+        let out1 = T1::read_line(&lines[0])?;
+        let out2 = T2::read_line(&lines[1])?;
+        Ok((out1, out2))
+    }
+}
+
+impl<T1: ReadableFromLine, T2: ReadableFromLine, T3: ReadableFromLine> ReadableFromChunk for (T1, T2, T3) {
+    type Output = (T1::Output, T2::Output, T3::Output);
+
+    fn lines_count() -> usize { 3 }
+
+    fn read_chunk(lines: &[String]) -> Result<Self::Output, String> {
+        let out1 = T1::read_line(&lines[0])?;
+        let out2 = T2::read_line(&lines[1])?;
+        let out3 = T3::read_line(&lines[2])?;
+        Ok((out1, out2, out3))
+    }
+}
+
+impl<T1: ReadableFromLine, T2: ReadableFromLine, T3: ReadableFromLine, T4: ReadableFromLine> ReadableFromChunk for (T1, T2, T3, T4) {
+    type Output = (T1::Output, T2::Output, T3::Output, T4::Output);
+
+    fn lines_count() -> usize { 4 }
+
+    fn read_chunk(lines: &[String]) -> Result<Self::Output, String> {
+        let out1 = T1::read_line(&lines[0])?;
+        let out2 = T2::read_line(&lines[1])?;
+        let out3 = T3::read_line(&lines[2])?;
+        let out4 = T4::read_line(&lines[3])?;
+        Ok((out1, out2, out3, out4))
+    }
+}
+
+/// Reads multiple lines from stdin.
+pub fn read_chunk<T: ReadableFromChunk>() -> T::Output {
+    let stdin = std::io::stdin();
+    let mut handle = stdin.lock();
+    read_chunk_from_handle::<T>(&mut handle).unwrap()
+}
+
+fn read_chunk_from_handle<T: ReadableFromChunk>(handle: &mut std::io::StdinLock) -> Option<T::Output> {
+    use std::io::BufRead;
+
+    let mut lines = vec![String::new(); T::lines_count()];
+    let mut first = true;
+    for line in &mut lines {
+        if handle.read_line(line).unwrap() == 0 && first {
+            return None;
+        }
+        first = false;
+    }
+    Some(T::read_chunk(&lines).unwrap())
+}
+
 // ABC112 A
 /// Reads multiple lines from stdin and create let bindings.
 ///
@@ -966,7 +1039,11 @@ macro_rules! read {
 /// # use atcoder_snippets::read::*;
 /// #
 /// fn main() {
-///     readls!(a = u16, (b, c) = (u16, u16), s = String);
+///     read_chunk!(
+///         a = u16,
+///         (b, c) = (u16, u16),
+///         s = String
+///     );
 ///     println!("{} {}", a+b+c, s);
 /// }
 /// ```
@@ -985,20 +1062,43 @@ macro_rules! read {
 /// }
 /// ```
 ///
-/// but using `readls` makes the code a bit shorter.
+/// but using `read_chunk` has some advantages:
+///
+/// - You don't have to write `read` several times.
+/// - `read_chunk` gets the mutex for stdin only once. It makes inputting a little bit faster.
 #[macro_export]
-macro_rules! readls {
+macro_rules! read_chunk {
     // Gets ReadableFromLine's
     ( $( $pat:pat = $t:ty ),+ ) => {
-        $(
-            // Can be faster by locking stdin only once.
-            read!($pat = $t);
-        )*
+        let ($($pat),+) = read_chunk::<($($t),+)>();
     };
 }
 
+static mut STDIN: Option<std::io::Stdin> = None;
+
+/// Iterator created by [`read_lines`](fn.read_lines.html) function.
+pub struct ReadLines<T: ReadableFromLine> {
+    lock: std::io::StdinLock<'static>,
+    phantom: std::marker::PhantomData<T>
+}
+
+impl<T: ReadableFromLine> Iterator for ReadLines<T> {
+    type Item = T::Output;
+
+    fn next(&mut self) -> Option<T::Output> {
+        use std::io::BufRead;
+
+        let mut line = String::new();
+        if self.lock.read_line(&mut line).unwrap() > 0 {
+            Some(T::read_line(&line).unwrap())
+        } else {
+            None
+        }
+    }
+}
+
 // TODO: Solve ABC118 B
-/// 標準入力の残りの行をすべて読み込み、`Vec`を返す。
+/// Creates an iterator reading stdin line by line.
 ///
 /// # Example
 ///
@@ -1033,136 +1133,68 @@ macro_rules! readls {
 /// fn main() {
 ///     read!();
 ///     // Uses `yn` snippet.
-///     yn(check(&readx::<String>()));
+///     yn(check(&read_lines::<String>().collect::<Vec<_>>()));
 /// }
 /// ```
-pub fn readx<T: ReadableFromLine>() -> Vec<T::Output> {
-    use std::io::{self, BufRead};
-    let stdin = io::stdin();
-    // Can be faster by removing UTF-8 validation,
-    // but enables validation in case of feeding a wrong test case manually.
-    let result = stdin.lock().lines().map(|line_result| {
-        let line = line_result.expect("read from stdin failed");
-        T::read_line(&line).unwrap()
-    }).collect();
-    result
-}
-
-// TODO: Improve documentation
-/// 標準入力の残りの行をすべて読み、一行ずつ処理する。
 ///
-/// # Example
+/// You can read only `n` lines by `take` method on the iterator.
 ///
 /// ```no_run
 /// # #[macro_use] extern crate atcoder_snippets;
 /// # use atcoder_snippets::read::*;
-/// // Stdin: "5 1 2 3 4 5\n1 10\n2 100 200"
-/// readx_loop!(|n = usize, aa = Vec<u8>| println!("{:?}", aa));
-/// // Stdout:
-/// // 1 2 3 4 5
-/// // 10
-/// // 100 200
+/// // Stdin: "3\n1 10\n2 20\n3 30\n2\n1 10 100\n2 20 200"
+/// read!(n = usize);
+/// let nums1: Vec<(u8, u8)> = read_lines::<(u8, u8)>().take(n).collect();
+/// assert_eq!(nums1, vec![(1, 10), (2, 20), (3, 30)]);
+///
+/// read!();
+/// let nums2: Vec<(u8, u8, u8)> = read_lines::<(u8, u8, u8)>().collect();
+/// assert_eq!(nums2, vec![(1, 10, 100), (2, 20, 200)]);
 /// ```
-#[macro_export]
-macro_rules! readx_loop {
-    ( |$pat:pat = $t:ty| $body:expr ) => {
-        {
-            use std::io::BufRead;
-            let stdin = std::io::stdin();
-            // Can be faster by removing UTF-8 validation,
-            // but enables validation in case of feeding a wrong test case manually.
-            for line in stdin.lock().lines() {
-                let line = line.expect("read from stdin failed");
-                let $pat = <$t>::read_line(&line).unwrap();
-                $body
-            }
+///
+/// # Deadlock
+///
+/// `read_lines` gets the mutex for stdin, and release it when the iterator is dropped.
+/// So, it causes deadlock to read stdin before the iterator is dropped.
+pub fn read_lines<T: ReadableFromLine>() -> ReadLines<T> {
+    unsafe {
+        if STDIN.is_none() {
+            STDIN = Some(std::io::stdin());
         }
-    };
-
-    ( |$($pat:pat = $t:ty),*| $body:expr ) => {
-        readx_loop!(|($($pat),*) = ($($t),*)| $body);
-    };
-}
-
-// TODO: Solve ABC119 D
-/// 標準入力の残りの行を`n`行読み込み、`Vec`を返す。
-///
-/// # Panic
-///
-/// 標準入力の残りの行が`n`行未満だった場合、panicする。
-///
-/// # Example
-///
-/// Reads the input of [ABC119 D: Lazy Faith](https://atcoder.jp/contests/abc119/tasks/abc119_d).
-///
-/// ```no_run
-/// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::read::*;
-/// // Stdin: "2 3 4\n100\n600\n400\n900\n1000\n150\n2000\n899\n799"
-/// read!(shrine_count = usize, temple_count = usize, _ = ());
-/// let shrines = readn::<i64>(shrine_count);
-/// let temples = readn::<i64>(temple_count);
-/// let queries = readx::<i64>();
-///
-/// assert_eq!(shrines, vec![100, 600]);
-/// assert_eq!(temples, vec![400, 900, 1000]);
-/// ```
-pub fn readn<T: ReadableFromLine>(n: usize) -> Vec<T::Output> {
-    use std::io::{self, BufRead};
-    let stdin = io::stdin();
-    // Can be faster by removing UTF-8 validation,
-    // but enables validation in case of feeding a wrong test case manually.
-    let result: Vec<T::Output> = stdin.lock().lines().take(n).map(|line_result| {
-        let line = line_result.expect("read from stdin failed");
-        T::read_line(&line).unwrap()
-    }).collect();
-    if result.len() < n {
-        panic!("expected reading {} lines, but only {} lines are read",
-               n, result.len());
     }
-    result
+
+    ReadLines {
+        lock: unsafe { STDIN.as_ref().unwrap().lock() },
+        phantom: std::marker::PhantomData::<T>
+    }
 }
 
-// TODO: Improve documentation
-// TODO: Avoid multiple use of std::io::BufRead
-/// 標準入力の残りの行をn行読み、一行ずつ処理する。
-///
-/// # Panic
-///
-/// 標準入力の残りの行がn行未満だった場合、panicする。
-///
-/// # Example
-///
-/// ```no_run
-/// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::read::*;
-/// // Stdin: "5 1 2 3 4 5\n1 10\n2 100 200"
-/// readn_loop!(2, |num_count = usize, nums = Vec<u8>| println!("{:?}", nums));
-/// // Stdout:
-/// // 1 2 3 4 5
-/// // 10
-/// ```
-#[macro_export]
-macro_rules! readn_loop {
-    ( $n:expr, |$pat:pat = $t:ty| $body:expr ) => {
-        {
-            use std::io::BufRead;
-            let stdin = std::io::stdin();
-            let mut lock = stdin.lock();
-            for _ in 0..$n {
-                let mut line = String::new();
-                // Can be faster by removing UTF-8 validation,
-                // but enables validation in case of feeding a wrong test case manually.
-                lock.read_line(&mut line).expect("read from stdin failed");
-                let $pat = <$t>::read_line(&line).unwrap();
-                $body
-            }
-        }
-    };
+/// Iterator created by [`read_chunks`](fn.read_chunks.html) function.
+pub struct ReadChunks<T: ReadableFromChunk> {
+    lock: std::io::StdinLock<'static>,
+    phantom: std::marker::PhantomData<T>
+}
 
-    ( $n:expr, |$($pat:pat = $t:ty),*| $body:expr ) => {
-        readn_loop!($n, |($($pat),*) = ($($t),*)| $body);
-    };
+impl<T: ReadableFromChunk> Iterator for ReadChunks<T> {
+    type Item = T::Output;
+
+    fn next(&mut self) -> Option<T::Output> {
+        read_chunk_from_handle::<T>(&mut self.lock)
+    }
+}
+
+/// Creates an iterator reading stdin chunk by chunk.
+pub fn read_chunks<T: ReadableFromChunk>() -> ReadChunks<T> {
+    unsafe {
+        if STDIN.is_none() {
+            STDIN = Some(std::io::stdin());
+        }
+    }
+
+    ReadChunks {
+        lock: unsafe { STDIN.as_ref().unwrap().lock() },
+        phantom: std::marker::PhantomData::<T>
+    }
 }
 
 // TODO: parse().unwrap()ではうまくいかない例を示す
