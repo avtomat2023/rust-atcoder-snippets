@@ -1,6 +1,6 @@
 //! 2-dimentional array.
 
-use crate::read::{Readable, readx, readn};
+use crate::read::{Readable, read_lines};
 use crate::option::BoolExt;
 use crate::range::{UsizeRangeBoundsExt, BoundExt};
 
@@ -388,12 +388,18 @@ macro_rules! table {
 }
 
 pub fn read_table<T: Readable>() -> Table<T::Output> {
-    let res = readx::<Vec<T>>();
+    let res: Vec<Vec<T::Output>> = read_lines::<Vec<T>>().collect();
     Table::from_rows(res).unwrap()
 }
 
 pub fn read_table_rows<T: Readable>(height: usize) -> Table<T::Output> {
-    let res = readn::<Vec<T>>(height);
+    let res: Vec<Vec<T::Output>> = read_lines::<Vec<T>>().take(height).collect();
+    if res.len() < height {
+        panic!(
+            "tried reading {} rows for table, but stdin has only {} lines",
+            height, res.len()
+        );
+    }
     Table::from_rows(res).unwrap()
 }
 
