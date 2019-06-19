@@ -2,19 +2,59 @@
 mod max_heap_internal {
     use std::cmp::Ordering::{self, *};
 
-    /// heap_indexは1以上でなければならない
-    pub fn parent_of(pos: usize) -> usize {
+    /// Calculates the parent's index of the node at `pos` in a heap.
+    ///
+    /// If `pos` is 0, returns `None`.
+    pub fn parent_of(pos: usize) -> Option<usize> {
+        if pos == 0 {
+            None
+        } else {
+            Some(parent_of_unchecked(pos))
+        }
+    }
+
+    /// Calculates the parent's index of the node at `pos` in a heap.
+    ///
+    /// `pos` must not be 0.
+    fn parent_of_unchecked(pos: usize) -> usize {
         (pos - 1) / 2
     }
 
-    pub fn left_of(pos: usize) -> usize {
+    /// Calculates the left child's index of the node at `pos` in `heap`.
+    ///
+    /// If `pos` is out of the length of `heap`, returns `None`.
+    pub fn left_of<T>(pos: usize, heap: &Vec<T>) -> Option<usize> {
+        let left = left_of_unchecked(pos);
+        if heap.len() <= left {
+            None
+        } else {
+            Some(left)
+        }
+    }
+
+    /// Calculates the left child's index of the node at `pos` in a heap.
+    fn left_of_unchecked(pos: usize) -> usize {
         pos * 2 + 1
     }
 
-    pub fn right_of(pos: usize) -> usize {
-        left_of(pos) + 1
+    /// Calculates the right child's index of the node at `pos` in `heap`.
+    ///
+    /// If `pos` is out of the length of `heap`, returns `None`.
+    pub fn right_of<T>(pos: usize, heap: &Vec<T>) -> Option<usize> {
+        let right = right_of_unchecked(pos);
+        if heap.len() <= right {
+            None
+        } else {
+            Some(right)
+        }
     }
 
+    /// Calculates the right child's index of the node at `pos` in a heap.
+    fn right_of_unchecked(pos: usize) -> usize {
+        left_of_unchecked(pos) + 1
+    }
+
+    /// Rearranges `vec` into a maximum heap, using `cmp` for comparison.
     pub fn build<T, F: Fn(&T, &T) -> Ordering + Copy>(vec: &mut Vec<T>, cmp: F) {
         for i in (0..vec.len()/2).rev() {
             sift_down(vec, i, cmp)
@@ -27,19 +67,12 @@ mod max_heap_internal {
     ///
     /// pos < self.heap.len()でなければならない
     pub fn sift_down<T, F: Fn(&T, &T) -> Ordering + Copy>(heap: &mut Vec<T>, pos: usize, cmp: F) {
-        let l = left_of(pos);
-        let next = if l < heap.len() && cmp(&heap[pos], &heap[l]) == Less {
-            l
-        } else {
-            pos
-        };
-
-        let r = right_of(pos);
-        let next = if r < heap.len() && cmp(&heap[next], &heap[r]) == Less {
-            r
-        } else {
-            next
-        };
+        let next = left_of(pos, heap).map_or(pos, |l| {
+            if cmp(&heap[pos], &heap[l]) == Less { l } else { pos }
+        });
+        let next = right_of(pos, heap).map_or(next, |r| {
+            if cmp(&heap[next], &heap[r]) == Less { r } else { next }
+        });
 
         if next != pos {
             heap.swap(pos, next);
@@ -48,15 +81,12 @@ mod max_heap_internal {
     }
 
     pub fn sift_up<T, F: Fn(&T, &T) -> Ordering + Copy>(heap: &mut Vec<T>, pos: usize, cmp: F) {
-        if pos == 0 {
-            return;
-        }
-
-        let parent = parent_of(pos);
-        if cmp(&heap[parent], &heap[pos]) == Less {
-            heap.swap(parent, pos);
-            sift_up(heap, parent, cmp);
-        }
+        parent_of(pos).into_iter().for_each(|parent| {
+            if cmp(&heap[parent], &heap[pos]) == Less {
+                heap.swap(parent, pos);
+                sift_up(heap, parent, cmp);
+            }
+        });
     }
 }
 
@@ -329,13 +359,13 @@ mod tests {
         let mut vec10: Vec<i32> = vec![8, 5, 0, 2, 1, 6, 3, 7, 9, 4];
         build(&mut vec10, |x, y| x.cmp(y));
         assert!((1..vec10.len()).all(|i| {
-            vec10[parent_of(i)] >= vec10[i]
+            vec10[parent_of(i).unwrap()] >= vec10[i]
         }));
 
         let mut vec11: Vec<i32> = vec![8, 5, 0, 2, 10, 1, 6, 3, 7, 9, 4];
         build(&mut vec11, |x, y| x.cmp(y));
         assert!((1..vec11.len()).all(|i| {
-            vec11[parent_of(i)] >= vec11[i]
+            vec11[parent_of(i).unwrap()] >= vec11[i]
         }));
     }
 
