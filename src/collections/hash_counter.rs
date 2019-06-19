@@ -3,12 +3,23 @@
 //! AGC031 Aとかが楽に解ける
 
 use std;
+use read::{Readable, ReadableFromLine, read_words_into_vec, split_into_words_for_collection};
 
 // BEGIN SNIPPET hash_counter
 
 /// Counter by a hash map from keys to counter values.
 ///
 /// Similar to Python's `collections.Counter`.
+///
+/// `HashCounter` is readable from a line of stdin.
+///
+/// ```no_run
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::collections::hash_counter::*;
+/// # use atcoder_snippets::read::*;
+/// // stdin: "5 a a b b b"
+/// read!(len = usize, counter = HashCounter<char>);
+/// ```
 #[derive(Clone)]
 pub struct HashCounter<T> {
     counter: std::collections::HashMap<T, usize>
@@ -260,6 +271,8 @@ macro_rules! hash_counter {
         }
     }
 }
+
+readable_collection!(U: [Eq, std::hash::Hash] => HashCounter<U>, HashCounter<U::Output>);
 
 // END SNIPPET
 
