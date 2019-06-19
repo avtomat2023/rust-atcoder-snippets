@@ -1,3 +1,6 @@
+//! Priority queues implemented by binary heaps.
+// TODO: Add examples: EDPC N, Dijkstra problem
+
 #[snippet = "heap"]
 mod max_heap_internal {
     use std::cmp::Ordering::{self, *};
@@ -61,11 +64,14 @@ mod max_heap_internal {
         }
     }
 
-    /// self.heapのpos番目の要素を木の深い方へ滑り落とし、完全なMaxヒープを作る
+    /// Sifts the node at `pos` in `heap` toward its leaves,
+    /// and makes the subtree rooted by the item into a maximum heap.
     ///
-    /// pos番目の要素を根とする部分ヒープは、ヒープ条件を満たしていなければならない
+    /// # Preconditions
     ///
-    /// pos < self.heap.len()でなければならない
+    /// The left and right subtrees of the node must be a maximum heap.
+    ///
+    /// `pos` must be less than `heap.len()`.
     pub fn sift_down<T, F: Fn(&T, &T) -> Ordering + Copy>(heap: &mut Vec<T>, pos: usize, cmp: F) {
         let next = left_of(pos, heap).map_or(pos, |l| {
             if cmp(&heap[pos], &heap[l]) == Less { l } else { pos }
@@ -80,6 +86,12 @@ mod max_heap_internal {
         }
     }
 
+    /// Sifts the node at `pos` in `heap` toward its root,
+    /// and makes the all nodes on the path to the root sorted.
+    ///
+    /// # Precondition
+    ///
+    /// The node on the path except for the node at `pos` must be sorted.
     pub fn sift_up<T, F: Fn(&T, &T) -> Ordering + Copy>(heap: &mut Vec<T>, pos: usize, cmp: F) {
         parent_of(pos).into_iter().for_each(|parent| {
             if cmp(&heap[parent], &heap[pos]) == Less {
@@ -90,6 +102,7 @@ mod max_heap_internal {
     }
 }
 
+/// Priority queue yielding its maximum item.
 #[snippet = "heap"]
 #[derive(Clone)]
 pub struct MaxHeap<T, F> {
@@ -99,6 +112,7 @@ pub struct MaxHeap<T, F> {
 
 #[snippet = "heap"]
 impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> MaxHeap<T, F> {
+    /// Creates an empty priority queue using `cmp` for comparison.
     pub fn new_by(cmp: F) -> MaxHeap<T, F> {
         MaxHeap {
             heap: Vec::new(),
@@ -106,6 +120,7 @@ impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> MaxHeap<T, F> {
         }
     }
 
+    /// Creates a priority queue of all items in `vec`, using `cmp` for comparison.
     pub fn from_vec_by(mut vec: Vec<T>, cmp: F) -> MaxHeap<T, F> {
         use self::max_heap_internal::*;
 
@@ -116,6 +131,7 @@ impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> MaxHeap<T, F> {
         }
     }
 
+    /// Push an item into the priority queue.
     pub fn push(&mut self, x: T) {
         use self::max_heap_internal::*;
 
@@ -124,6 +140,7 @@ impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> MaxHeap<T, F> {
         sift_up(&mut self.heap, last, &self.cmp);
     }
 
+    /// Pop the maximum item from the priority queue.
     pub fn pop(&mut self) -> Option<T> {
         use self::max_heap_internal::*;
 
@@ -139,10 +156,12 @@ impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> MaxHeap<T, F> {
 
 #[snippet = "heap"]
 impl<T: Ord> MaxHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
+    /// Creates an empty priority queue.
     pub fn new() -> MaxHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
         MaxHeap::new_by(Ord::cmp)
     }
 
+    /// Creates a priority queue of all items in `vec`.
     pub fn from_vec(vec: Vec<T>) -> MaxHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
         MaxHeap::from_vec_by(vec, Ord::cmp)
     }
@@ -150,22 +169,31 @@ impl<T: Ord> MaxHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
 
 #[snippet = "heap"]
 impl<T, F> MaxHeap<T, F> {
+    /// Length of the priority queue.
     pub fn len(&self) -> usize {
         self.heap.len()
     }
 
+    /// Returns if the priority queue is empty.
     pub fn is_empty(&self) -> bool {
         self.heap.is_empty()
     }
 
+    /// Gets the maximum item without removing it.
     pub fn peek(&self) -> Option<&T> {
         self.heap.get(0)
     }
 
+    /// Iterator yielding the references to the items.
+    ///
+    /// The references are not necessarily sorted.
     pub fn iter(&self) -> std::slice::Iter<T> {
         self.heap.iter()
     }
 
+    /// Consumes the priority queue and returns the underlying `Vec`.
+    ///
+    /// The vector is not necessarily sorted.
     pub fn into_vec(self) -> Vec<T> {
         self.heap
     }
@@ -198,6 +226,9 @@ impl<T, F> IntoIterator for MaxHeap<T, F> {
     }
 }
 
+/// Priority queue yielding its minimum item.
+///
+/// `MinHeap` provides the same methods as [`MaxHeap`](struct.MaxHeap.html).
 #[snippet = "heap"]
 pub struct MinHeap<T, F> {
     heap: Vec<T>,
