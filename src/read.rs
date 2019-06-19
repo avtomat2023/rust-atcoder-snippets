@@ -612,7 +612,7 @@ impl<T: Readable> ReadableFromLine for T {
     }
 }
 
-fn read_words_into_vec<T: Readable>(words: &[&str], line: &str) -> Result<Vec<T::Output>, String> {
+pub fn read_words_into_vec<T: Readable>(words: &[&str], line: &str) -> Result<Vec<T::Output>, String> {
     let n = T::words_count();
     assert_eq!(words.len() % n, 0);
 
@@ -636,7 +636,7 @@ fn read_words_into_vec<T: Readable>(words: &[&str], line: &str) -> Result<Vec<T:
     Ok(result)
 }
 
-fn split_into_words_for_collection<T: Readable>(
+pub fn split_into_words_for_collection<T: Readable>(
     line: &str, prefix_words_count: usize
 ) -> Result<Vec<&str>, String> {
     let n = T::words_count();
