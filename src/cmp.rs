@@ -41,21 +41,52 @@ pub trait SortDesc<T> {
     // ABC112 D
     fn sort_desc(&mut self) where T: Ord;
 
-    // ABC104 C
-    fn sort_desc_by_key<K: Ord, F: FnMut(&T) -> K>(&mut self, f: F);
+    fn sort_desc_by<F>(&mut self, cmp: F)
+    where
+        F: FnMut(&T, &T) -> std::cmp::Ordering;
 
-    // TODO: sort_unstable_desc_*
+    // ABC104 C
+    fn sort_desc_by_key<K: Ord, F: FnMut(&T) -> K>(&mut self, key: F);
+
+    fn sort_unstable_desc(&mut self) where T: Ord;
+
+    fn sort_unstable_desc_by<F>(&mut self, cmp: F)
+    where
+        F: FnMut(&T, &T) -> std::cmp::Ordering;
+
+    fn sort_unstable_desc_by_key<K: Ord, F: FnMut(&T) -> K>(&mut self, key: F);
 }
 
 #[snippet = "cmp"]
 impl<T> SortDesc<T> for [T] {
     fn sort_desc(&mut self) where T: Ord {
-        self.sort();
-        self.reverse();
+        self.sort_by(|x, y| y.cmp(x));
     }
 
-    fn sort_desc_by_key<K: Ord, F: FnMut(&T) -> K>(&mut self, mut f: F) {
-        self.sort_by_key(|x| Reverse(f(x)));
+    fn sort_desc_by<F>(&mut self, mut cmp: F)
+    where
+        F: FnMut(&T, &T) -> std::cmp::Ordering
+    {
+        self.sort_by(|x, y| cmp(y, x));
+    }
+
+    fn sort_desc_by_key<K: Ord, F: FnMut(&T) -> K>(&mut self, mut key: F) {
+        self.sort_by_key(|x| Reverse(key(x)));
+    }
+
+    fn sort_unstable_desc(&mut self) where T: Ord {
+        self.sort_unstable_by(|x, y| y.cmp(x));
+    }
+
+    fn sort_unstable_desc_by<F>(&mut self, mut cmp: F)
+    where
+        F: FnMut(&T, &T) -> std::cmp::Ordering
+    {
+        self.sort_unstable_by(|x, y| cmp(y, x));
+    }
+
+    fn sort_unstable_desc_by_key<K: Ord, F: FnMut(&T) -> K>(&mut self, mut key: F) {
+        self.sort_unstable_by_key(|x| Reverse(key(x)));
     }
 }
 
