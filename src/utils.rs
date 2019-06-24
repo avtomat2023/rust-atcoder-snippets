@@ -24,10 +24,17 @@ pub fn YN(result: bool) {
 
 /// Make a debug output of the given expression to stderr.
 ///
+/// The output is made only in the local machine, not in the judge server.
+///
 /// Similar to `dbg` macro in Rust 1.32.0.
 #[snippet = "dbg"]
 #[macro_export]
+#[cfg(local)]
 macro_rules! dbg {
+    () => {
+        writeln!(io::stderr(), "{}: dbg", line!()).unwrap();
+    };
+
     ($e: expr) => {
         {
             use std::io::{self, Write};
@@ -38,4 +45,17 @@ macro_rules! dbg {
             result
         }
     }
+}
+
+/// Make a debug output of the given expression to stderr.
+///
+/// The output is made only in the local machine, not in the judge server.
+///
+/// Similar to `dbg` macro in Rust 1.32.0.
+#[snippet = "dbg"]
+#[macro_export]
+#[cfg(not(local))]
+macro_rules! dbg {
+    () => {};
+    ($e: expr) => { $e }
 }
