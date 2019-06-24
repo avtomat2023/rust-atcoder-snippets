@@ -31,6 +31,15 @@ impl<T> Vec2<T> {
     pub fn new(x: T, y: T) -> Vec2<T> {
         Vec2 { x: x, y: y }
     }
+
+    // ABC130
+    /// Inner product of vectors.
+    pub fn inner(self, other: Vec2<T>) -> T
+    where
+        T: std::ops::Add<T, Output=T> + std::ops::Mul<T, Output=T>
+    {
+        self.x * other.x + self.y * other.y
+    }
 }
 
 #[snippet = "vec2"]
@@ -173,6 +182,13 @@ impl<T> Vec3<T> {
     pub fn new(x: T, y: T, z: T) -> Vec3<T> {
         Vec3 { x: x, y: y , z: z }
     }
+
+    pub fn inner(self, other: Vec3<T>) -> T
+    where
+        T: std::ops::Add<T, Output=T> + std::ops::Mul<T, Output=T>
+    {
+        self.x * other.x + self.y * other.y + self.z * other.z
+    }
 }
 
 #[snippet = "vec3"]
@@ -311,6 +327,13 @@ mod test {
     use super::*;
 
     #[test]
+    fn test_vec2_inner() {
+        let v1 = Vec2::new(1, 2);
+        let v2 = Vec2::new(10, 20);
+        assert_eq!(v1.inner(v2), 50);
+    }
+
+    #[test]
     fn test_vec2_add() {
         let v1 = Vec2::new(1, 2);
         let v2 = Vec2::new(10, 20);
@@ -375,6 +398,13 @@ mod test {
     fn test_vec2_read_words() {
         let v = Vec2::<i32>::read_words(&["1", "2"]);
         assert_eq!(v, Ok(Vec2::new(1, 2)));
+    }
+
+    #[test]
+    fn test_vec3_inner() {
+        let v1 = Vec3::new(1, 2, 3);
+        let v2 = Vec3::new(10, 20, 30);
+        assert_eq!(v1.inner(v2), 140);
     }
 
     #[test]
@@ -443,5 +473,4 @@ mod test {
         let v = Vec3::<i32>::read_words(&["1", "2", "3"]);
         assert_eq!(v, Ok(Vec3::new(1, 2, 3)));
     }
-
 }
