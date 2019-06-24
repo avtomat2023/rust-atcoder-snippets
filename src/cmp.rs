@@ -19,7 +19,7 @@ use std::cmp::{Ord, Ordering};
 /// assert_eq!(seq, vec![5, 4, 3, 2, 1]);
 /// ```
 #[snippet = "cmp"]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default, Hash)]
 pub struct Reverse<T: Ord>(pub T);
 
 #[snippet = "cmp"]
@@ -71,7 +71,7 @@ impl<T> SortDesc<T> for [T] {
 /// assert_eq!(seq, vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 /// ```
 #[snippet = "cmp"]
-#[derive(PartialEq, PartialOrd)]
+#[derive(Clone, Copy, PartialEq, PartialOrd, Debug, Default, Hash)]
 pub struct Total<T: PartialOrd + PartialEq>(pub T);
 
 #[snippet = "cmp"]
