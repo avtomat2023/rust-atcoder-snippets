@@ -1,3 +1,4 @@
+// TODO: document bsearch_index_***
 //! Generalized binary search.
 //!
 //! # Example
@@ -265,7 +266,15 @@ pub trait SliceBSearch {
     where
         F: FnMut(&Self::Item) -> bool;
 
+    fn bsearch_index_left_max<F>(&self, is_left: F) -> Option<usize>
+    where
+        F: FnMut(&Self::Item) -> bool;
+
     fn bsearch_right_min<F>(&self, is_right: F) -> Option<&Self::Item>
+    where
+        F: FnMut(&Self::Item) -> bool;
+
+    fn bsearch_index_right_min<F>(&self, is_right: F) -> Option<usize>
     where
         F: FnMut(&Self::Item) -> bool;
 }
@@ -281,11 +290,31 @@ impl<T> SliceBSearch for [T] {
         BSearch::bsearch_left_max(&self, |&x| is_left(x))
     }
 
+    fn bsearch_index_left_max<F>(&self, mut is_left: F) -> Option<usize>
+    where
+        F: FnMut(&T) -> bool
+    {
+        (0..self.len()).bsearch_left_max(|&i| {
+            let x = unsafe { self.get_unchecked(i) };
+            is_left(x)
+        })
+    }
+
     fn bsearch_right_min<F>(&self, mut is_right: F) -> Option<&T>
     where
         F: FnMut(&T) -> bool
     {
         BSearch::bsearch_right_min(&self, |&x| is_right(x))
+    }
+
+    fn bsearch_index_right_min<F>(&self, mut is_right: F) -> Option<usize>
+    where
+        F: FnMut(&T) -> bool
+    {
+        (0..self.len()).bsearch_right_min(|&i| {
+            let x = unsafe { self.get_unchecked(i) };
+            is_right(x)
+        })
     }
 }
 
@@ -306,6 +335,18 @@ mod tests {
     }
 
     #[test]
+    fn test_slice_bsearch_index_left_max() {
+        use super::SliceBSearch;
+
+        let empty: Vec<i32> = Vec::new();
+        assert_eq!(empty.bsearch_index_left_max(|&x| x <= 0), None);
+        let seq = vec![3, 6, 9, 12, 15];
+        assert_eq!(seq.bsearch_index_left_max(|&x| x <= 0), None);
+        assert_eq!(seq.bsearch_index_left_max(|&x| x <= 10), Some(2));
+        assert_eq!(seq.bsearch_index_left_max(|&x| x <= 20), Some(4));
+    }
+
+    #[test]
     fn test_slice_bsearch_right_min() {
         use super::SliceBSearch;
 
@@ -315,6 +356,18 @@ mod tests {
         assert_eq!(seq.bsearch_right_min(|&x| x >= 0), Some(&3));
         assert_eq!(seq.bsearch_right_min(|&x| x >= 10), Some(&12));
         assert_eq!(seq.bsearch_right_min(|&x| x >= 20), None);
+    }
+
+    #[test]
+    fn test_slice_bsearch_index_right_min() {
+        use super::SliceBSearch;
+
+        let empty: Vec<i32> = Vec::new();
+        assert_eq!(empty.bsearch_index_right_min(|&x| x <= 0), None);
+        let seq = vec![3, 6, 9, 12, 15];
+        assert_eq!(seq.bsearch_index_right_min(|&x| x >= 0), Some(0));
+        assert_eq!(seq.bsearch_index_right_min(|&x| x >= 10), Some(3));
+        assert_eq!(seq.bsearch_index_right_min(|&x| x >= 20), None);
     }
 
     #[test]
