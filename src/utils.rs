@@ -32,7 +32,10 @@ pub fn YN(result: bool) {
 #[cfg(local)]
 macro_rules! dbg {
     () => {
-        writeln!(io::stderr(), "{}: dbg", line!()).unwrap();
+        {
+            use std::io::{self, Write};
+            writeln!(io::stderr(), "{}: dbg", line!()).unwrap();
+        }
     };
 
     ($e: expr) => {
