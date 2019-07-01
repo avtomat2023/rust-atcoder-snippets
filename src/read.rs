@@ -413,7 +413,7 @@ macro_rules! impl_readable_from_line_for_tuples_with_from_iterator {
 ///
 /// The collection type must implement `FromIterator`.
 ///
-/// For example, `Vec` and `HashSet` are readable from inpu line by these declaration:
+/// For example, `Vec` and `HashSet` are readable from input line by these declaration:
 ///
 /// ```ignore
 /// readable_collection!(U => Vec<U>, Vec<U::Output>);
@@ -696,11 +696,11 @@ pub fn readx<T: ReadableFromLine>() -> Vec<T::Output> {
 /// # #[macro_use] extern crate atcoder_snippets;
 /// # use atcoder_snippets::read::*;
 /// // Stdin: "5 1 2 3 4 5\n1 10\n2 100 200"
-/// readx_loop!(|n = usize, aa = Vec<u8>| println!("{:?}", aa));
+/// readx_loop!(|num_count = usize, nums = Vec<u8>| println!("{:?}", nums));
 /// // Stdout:
-/// // 1 2 3 4 5
-/// // 10
-/// // 100 200
+/// // [1, 2, 3, 4, 5]
+/// // [10]
+/// // [100, 200]
 /// ```
 #[macro_export]
 #[snippet = "read"]
@@ -778,8 +778,8 @@ pub fn readn<T: ReadableFromLine>(n: usize) -> Vec<T::Output> {
 /// // Stdin: "5 1 2 3 4 5\n1 10\n2 100 200"
 /// readn_loop!(2, |num_count = usize, nums = Vec<u8>| println!("{:?}", nums));
 /// // Stdout:
-/// // 1 2 3 4 5
-/// // 10
+/// // [1, 2, 3, 4, 5]
+/// // [10]
 /// ```
 #[macro_export]
 #[snippet = "read"]
