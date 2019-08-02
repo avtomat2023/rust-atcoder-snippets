@@ -12,7 +12,7 @@ pub const MODULUS: ModPBase = 7;
 
 /// A number whose arithmetics is carried modulo `MODULUS`.
 #[snippet = "modp"]
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct ModP {
     base: ModPBase
 }
@@ -92,6 +92,13 @@ pub fn modp(x: u64) -> ModP {
 impl std::fmt::Display for ModP {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self.base())
+    }
+}
+
+#[snippet = "modp"]
+impl std::fmt::Debug for ModP {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{} mod P", self.base())
     }
 }
 
