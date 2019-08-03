@@ -16,4 +16,5 @@ pub mod slice;
 pub mod collections;
 pub mod vec;
 pub mod bsearch;
+pub mod rolling_hash;
 pub mod utils;
