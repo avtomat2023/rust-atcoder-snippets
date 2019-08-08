@@ -159,6 +159,9 @@ impl<T: ?Sized + RollingHash> PrefixRollingHash<T> {
     /// let matches: Vec<usize> = haystack.matches(needle).collect();
     /// assert_eq!(matches, vec![0, 3]);
     /// ```
+    // `pattern`を`&T`型にするインターフェースも考えられるが、
+    // ローリングハッシュを計算するθ(n)のコストをユーザーに意識させたいので、
+    // `RollingHashValue<T>`を取るようにした。
     pub fn matches<'a>(&'a self, pattern: RollingHashValue<T>) ->
         RollingHashMatches<'a, T>
     {
