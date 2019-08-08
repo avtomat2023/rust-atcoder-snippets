@@ -23,6 +23,35 @@ impl<I: Iterator> Iterator for StepBy<I> {
     }
 }
 
+/// An iterator created by [`chunks`](trait.IteratorExt.html#method.chunks) method on iterators.
+#[snippet = "iter"]
+pub struct Chunks<I: Iterator> {
+    iter: I,
+    size: usize
+}
+
+#[snippet = "iter"]
+impl<I: Iterator> Iterator for Chunks<I> {
+    type Item = Vec<I::Item>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let first = self.iter.next();
+        if first.is_none() {
+            return None;
+        }
+
+        let mut chunk = Vec::with_capacity(self.size);
+        chunk.push(first.unwrap());
+        for _ in 0..self.size-1 {
+            match self.iter.next() {
+                Some(x) => chunk.push(x),
+                None => break
+            }
+        }
+        Some(chunk)
+    }
+}
+
 /// An iterator created by [`lscan`](trait.IteratorExt.html#method.lscan) method
 /// on iterators.
 #[snippet = "iter"]
@@ -217,6 +246,29 @@ pub trait IteratorExt: Iterator {
     fn for_each<F: FnMut(Self::Item)>(self, mut f: F) where Self: Sized {
         for item in self {
             f(item);
+        }
+    }
+
+    /// Returns an iterator yielding chunks.
+    ///
+    /// # Panic
+    ///
+    /// Panics if `size` is 0;
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::iter::*;
+    /// let seq = vec![1, 2, 3, 4, 5, 6, 7, 8];
+    /// let chunks: Vec<Vec<i32>> = seq.into_iter().chunks(3).collect();
+    /// assert_eq!(chunks, vec![vec![1, 2, 3], vec![4, 5, 6], vec![7, 8]]);
+    /// ```
+    fn chunks(self, size: usize) -> Chunks<Self> where Self: Sized {
+        assert!(size > 0);
+        Chunks {
+            iter: self,
+            size: size
         }
     }
 
