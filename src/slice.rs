@@ -75,6 +75,7 @@ fn next_permutation(mut indices: Vec<usize>) -> Option<Vec<usize>> {
         })
 }
 
+#[snippet = "slice"]
 fn count_inversions_sub<T: Clone + Ord>(seq: &[T]) -> (Vec<T>, usize) {
     if seq.len() <= 1 {
         (seq.to_vec(), 0)
