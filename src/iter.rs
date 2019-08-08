@@ -135,6 +135,44 @@ impl<K: Eq, I: Iterator, F: FnMut(&I::Item) -> K> Iterator for GroupBy<K, I, F> 
     }
 }
 
+/// An iterator created by [`run_length`](trait.IteratorExt#method.run_length) method
+/// on iterators.
+#[snippet = "iter"]
+pub struct RunLength<I: Iterator> {
+    cur: Option<I::Item>,
+    iter: I
+}
+
+#[snippet = "iter"]
+impl<I: Iterator> Iterator for RunLength<I> where I::Item: Eq {
+    type Item = (I::Item, usize);
+
+    fn next(&mut self) -> Option<(I::Item, usize)> {
+        let cur = self.cur.take();
+        cur.map(|value| {
+            let mut length = 1;
+            loop {
+                let next = self.iter.next();
+                match next {
+                    Some(next_value) => {
+                        if value == next_value {
+                            length += 1;
+                        } else {
+                            self.cur = Some(next_value);
+                            break;
+                        }
+                    }
+                    None => {
+                        self.cur = None;
+                        break;
+                    }
+                }
+            }
+            (value, length)
+        })
+    }
+}
+
 /// Enriches iterators by adding various methods.
 #[snippet = "iter"]
 pub trait IteratorExt: Iterator {
@@ -269,6 +307,27 @@ pub trait IteratorExt: Iterator {
             }),
             iter: self,
             key_fn: f
+        }
+    }
+
+    /// Returns an iterator yielding groups of same values as tuples of `(value, length)`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::iter::*;
+    /// let seq = vec!['a', 'a', 'a', 'b', 'a', 'a'];
+    /// let grouped: Vec<(char, usize)> = seq
+    ///     .into_iter()
+    ///     .run_length()
+    ///     .collect();
+    /// assert_eq!(grouped, vec![('a', 3), ('b', 1), ('a', 2)]);
+    /// ```
+    fn run_length(mut self) -> RunLength<Self> where Self: Sized, Self::Item: Eq {
+        RunLength {
+            cur: self.next(),
+            iter: self
         }
     }
 
