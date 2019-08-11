@@ -121,28 +121,17 @@ impl<T: Clone, F: Fn(&T, &T) -> T> SegmentTree<T, F> {
     /// assert_eq!(segment_tree.query(3..), Some(42));
     /// assert_eq!(segment_tree.query(3..=10), None);
     /// ```
-    pub fn query<R: std::ops::RangeBounds<usize>>(&self, range: R) -> Option<T> {
-        let start = match range.start_bound() {
-            std::ops::Bound::Included(&i) => i,
-            std::ops::Bound::Excluded(&i) => i+1,
-            std::ops::Bound::Unbounded => 0
-        };
-        if self.len() <= start {
+    pub fn query(&self, range: std::ops::Range<usize>) -> Option<T> {
+        if self.len() <= range.start {
+            return None;
+        }
+        if self.len() < range.end {
             return None;
         }
 
-        let end = match range.end_bound() {
-            std::ops::Bound::Included(&i) => i+1,
-            std::ops::Bound::Excluded(&i) => i,
-            std::ops::Bound::Unbounded => self.len(),
-        };
-        if self.len() < end {
-            return None;
-        }
-
-        if start <= end {
+        if range.start <= range.end {
             Some(self.aggregate_interval(
-                self.node_count() + start, self.node_count() + end,
+                self.node_count() + range.start, self.node_count() + range.end,
                 self.identity.clone(), self.identity.clone()
             ))
         } else {
@@ -226,13 +215,13 @@ impl<T: Clone, F: Fn(&T, &T) -> T> SegmentTree<T, F> {
 }
 
 #[snippet = "segtree"]
-pub struct SegmentTreeItemRef<'a, T: Clone, F: Fn(&T, &T) -> T> {
+pub struct SegmentTreeItemRef<'a, T: 'a + Clone, F: 'a + Fn(&T, &T) -> T> {
     tree: &'a mut SegmentTree<T, F>,
     heap_index: usize
 }
 
 #[snippet = "segtree"]
-impl<T, F> std::ops::Deref for SegmentTreeItemRef<'_, T, F>
+impl<'a, T, F> std::ops::Deref for SegmentTreeItemRef<'a, T, F>
 where
     T: Clone,
     F: Fn(&T, &T) -> T
@@ -245,7 +234,7 @@ where
 }
 
 #[snippet = "segtree"]
-impl<T, F> std::ops::DerefMut for SegmentTreeItemRef<'_, T, F>
+impl<'a, T, F> std::ops::DerefMut for SegmentTreeItemRef<'a, T, F>
 where
     T: Clone,
     F: Fn(&T, &T) -> T
@@ -256,7 +245,7 @@ where
 }
 
 #[snippet = "segtree"]
-impl<T, F> Drop for SegmentTreeItemRef<'_, T, F>
+impl<'a, T, F> Drop for SegmentTreeItemRef<'a, T, F>
 where
     T: Clone,
     F: Fn(&T, &T) -> T
@@ -289,7 +278,7 @@ where
 }
 
 #[snippet = "segtree"]
-impl<I: Iterator> IteratorExtForSegmentTree for I where Self::Item: Clone {}
+impl<I: Iterator> IteratorExtForSegmentTree for I where <I as Iterator>::Item: Clone {}
 
 #[cfg(test)]
 mod test {
@@ -422,6 +411,7 @@ mod test {
         *range_sum.at(4) = 4;
         *range_sum.at(5) = 5;
 
+        /*
         assert_eq!(range_sum.query(0..=0), Some(0));
         assert_eq!(range_sum.query(0..=1), Some(1));
         assert_eq!(range_sum.query(0..=2), Some(3));
@@ -429,6 +419,7 @@ mod test {
         assert_eq!(range_sum.query(0..=4), Some(10));
         assert_eq!(range_sum.query(0..=5), Some(15));
         assert_eq!(range_sum.query(0..=6), None);
+        */
 
         assert_eq!(range_sum.query(1..1), Some(0));
         assert_eq!(range_sum.query(1..2), Some(1));
@@ -438,9 +429,11 @@ mod test {
         assert_eq!(range_sum.query(1..6), Some(15));
         assert_eq!(range_sum.query(1..7), None);
 
+        /*
         assert_eq!(range_sum.query(2..), Some(14));
         assert_eq!(range_sum.query(..3), Some(3));
         assert_eq!(range_sum.query(..=3), Some(6));
+        */
 
         assert_eq!(range_sum.query(3..2), None);
     }
