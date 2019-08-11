@@ -139,7 +139,7 @@ impl ModP {
 
 /// Shorthand of `ModP::new(x)`.
 #[snippet = "modp"]
-pub fn modp(x: u64) -> ModP {
+pub fn modp(x: ModPBase) -> ModP {
     ModP::new(x)
 }
 
@@ -393,7 +393,7 @@ impl<'a> std::iter::Product<&'a ModP> for ModP {
 use read::{Readable, Words};
 
 #[snippet = "modp"]
-readable!(ModP, 1, |ws| ModP::new(ws[0].read::<u64>()));
+readable!(ModP, 1, |ws| ModP::new(ws[0].read::<ModPBase>()));
 
 #[cfg(test)]
 mod tests {
@@ -451,14 +451,14 @@ mod tests {
         let zero = ModP::new(0);
         assert_eq!(zero.pow(0), ModP::new(1));
         assert_eq!(zero.pow(1), ModP::new(0));
-        assert_eq!(zero.pow(u64::max_value()), ModP::new(0));
+        assert_eq!(zero.pow(ModPBase::max_value()), ModP::new(0));
 
         let n = ModP::new(3);
         assert_eq!(n.pow(0), ModP::new(1));
         assert_eq!(n.pow(1), ModP::new(3));
         assert_eq!(n.pow(2), ModP::new(2));
         assert_eq!(n.pow(3), ModP::new(6));
-        assert_eq!(n.pow(u64::max_value()), ModP::new(6));
+        assert_eq!(n.pow(ModPBase::max_value()), ModP::new(6));
     }
 
     #[test]
@@ -492,8 +492,8 @@ mod tests {
     #[test]
     fn test_add_avoiding_overflow() {
         unsafe { ModP::set_mod(7).unwrap(); }
-        assert_eq!(ModP::new(5) + u64::max_value(), ModP::new(6));
-        assert_eq!(u64::max_value() + ModP::new(5), ModP::new(6))
+        assert_eq!(ModP::new(5) + ModPBase::max_value(), ModP::new(6));
+        assert_eq!(ModPBase::max_value() + ModP::new(5), ModP::new(6))
     }
 
     #[test]
