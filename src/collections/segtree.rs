@@ -122,19 +122,24 @@ impl<T: Clone, F: Fn(&T, &T) -> T> SegmentTree<T, F> {
     /// assert_eq!(segment_tree.query(3..=10), None);
     /// ```
     pub fn query<R: std::ops::RangeBounds<usize>>(&self, range: R) -> Option<T> {
+        use std::ops::Bound::*;
+
         let start = match range.start_bound() {
-            std::ops::Bound::Included(&i) => i,
-            std::ops::Bound::Excluded(&i) => i+1,
-            std::ops::Bound::Unbounded => 0
+            Included(&i) => i,
+            Excluded(&i) => i+1,
+            Unbounded => 0
         };
+        if start == self.len() && range.end_bound() == Unbounded {
+            return Some(self.identity.clone());
+        }
         if self.len() <= start {
             return None;
         }
 
         let end = match range.end_bound() {
-            std::ops::Bound::Included(&i) => i+1,
-            std::ops::Bound::Excluded(&i) => i,
-            std::ops::Bound::Unbounded => self.len(),
+            Included(&i) => i+1,
+            Excluded(&i) => i,
+            Unbounded => self.len(),
         };
         if self.len() < end {
             return None;
@@ -443,5 +448,16 @@ mod test {
         assert_eq!(range_sum.query(..=3), Some(6));
 
         assert_eq!(range_sum.query(3..2), None);
+    }
+
+    #[test]
+    fn test_query_from_end() {
+        let mut range_sum = SegmentTree::new(3, 0, sum);
+        *range_sum.at(0) = 0;
+        *range_sum.at(1) = 0;
+        *range_sum.at(2) = 0;
+
+        assert_eq!(range_sum.query(3..), Some(0));
+        assert_eq!(range_sum.query(3..3), None);
     }
 }
