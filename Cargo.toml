@@ -5,3 +5,10 @@ authors = ["yoshrc"]
 
 [dependencies]
 cargo-snippet = "0.2"
+
+[dev-dependencies]
+criterion = "0.2.11"
+
+[[bench]]
+name = "z"
+harness = false
