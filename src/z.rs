@@ -46,19 +46,19 @@ mod z_internal {
         }
 
         if z_box.end <= index {
-            let len = exact_match_len(text, &text[index..]);
+            let len = exact_match_len(text, unsafe { text.get_unchecked(index..) });
             *z_box = index..index+len;
             z_table.push(len);
         } else {
             let z_box_right_len = z_box.end - index;
             let prefix_index = index - z_box.start;
-            let prefix_right_len = z_table[prefix_index];
+            let prefix_right_len = *unsafe { z_table.get_unchecked(prefix_index) };
             if prefix_right_len < z_box_right_len {
                 z_table.push(prefix_right_len);
             } else {
                 let additional_len = exact_match_len(
-                    &text[z_box_right_len..],
-                    &text[z_box.end..]
+                    unsafe { text.get_unchecked(z_box_right_len..) },
+                    unsafe { text.get_unchecked(z_box.end..) }
                 );
                 *z_box = index .. z_box.end + additional_len;
                 z_table.push(z_box_right_len + additional_len);
