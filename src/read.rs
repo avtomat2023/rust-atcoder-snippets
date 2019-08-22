@@ -706,14 +706,16 @@ pub fn readx<T: ReadableFromLine>() -> Vec<T::Output> {
 #[snippet = "read"]
 macro_rules! readx_loop {
     ( |$pat:pat = $t:ty| $body:expr ) => {
-        use std::io::BufRead;
-        let stdin = std::io::stdin();
-        // Can be faster by removing UTF-8 validation,
-        // but enables validation in case of feeding a wrong test case manually.
-        for line in stdin.lock().lines() {
-            let line = line.expect("read from stdin failed");
-            let $pat = <$t>::read_line(&line).unwrap();
-            $body
+        {
+            use std::io::BufRead;
+            let stdin = std::io::stdin();
+            // Can be faster by removing UTF-8 validation,
+            // but enables validation in case of feeding a wrong test case manually.
+            for line in stdin.lock().lines() {
+                let line = line.expect("read from stdin failed");
+                let $pat = <$t>::read_line(&line).unwrap();
+                $body
+            }
         }
     };
 
@@ -785,9 +787,9 @@ pub fn readn<T: ReadableFromLine>(n: usize) -> Vec<T::Output> {
 #[snippet = "read"]
 macro_rules! readn_loop {
     ( $n:expr, |$pat:pat = $t:ty| $body:expr ) => {
-        use std::io::BufRead;
-        let stdin = std::io::stdin();
         {
+            use std::io::BufRead;
+            let stdin = std::io::stdin();
             let mut lock = stdin.lock();
             for _ in 0..$n {
                 let mut line = String::new();
