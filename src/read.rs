@@ -452,7 +452,22 @@ readable_collection!(U => Vec<U>, Vec<U::Output>);
 
 #[snippet = "read"]
 readable_collection!(
+    U => std::collections::VecDeque<U>, std::collections::VecDeque<U::Output>
+);
+
+#[snippet = "read"]
+readable_collection!(
     U: Eq, std::hash::Hash => std::collections::HashSet<U>, std::collections::HashSet<U::Output>
+);
+
+#[snippet = "read"]
+readable_collection!(
+    U: Ord => std::collections::BTreeSet<U>, std::collections::BTreeSet<U::Output>
+);
+
+#[snippet = "read"]
+readable_collection!(
+    U: Ord => std::collections::BinaryHeap<U>, std::collections::BinaryHeap<U::Output>
 );
 
 
@@ -833,7 +848,7 @@ impl<'a> Words for &'a str {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::collections::HashSet;
+    use std::collections::{VecDeque, HashSet, BTreeSet, BinaryHeap};
 
     #[derive(Debug, PartialEq, Eq)]
     struct Pair(i32, i32);
@@ -906,6 +921,22 @@ mod test {
         assert_eq!(<(i32, i32, i32, Vec<i32>)>::read_line("1 2 3"),
                    Ok((1, 2, 3, vec![])));
         assert!(<(i32, i32, i32, Vec<i32>)>::read_line("1 2").is_err());
+    }
+
+    #[test]
+    fn test_read_collections() {
+        assert_eq!(VecDeque::<u32_>::read_line("1 2 3 4 5"),
+                   Ok((0..5).collect::<VecDeque<_>>()));
+        assert_eq!(HashSet::<u32_>::read_line("1 2 3 4 5"),
+                   Ok((0..5).collect::<HashSet<_>>()));
+        assert_eq!(BTreeSet::<u32_>::read_line("1 2 3 4 5"),
+                   Ok((0..5).collect::<BTreeSet<_>>()));
+        let mut heap = BinaryHeap::<u32_>::read_line("1 5 2 4 3").unwrap();
+        let mut heap_items = Vec::new();
+        while let Some(item) = heap.pop() {
+            heap_items.push(item);
+        }
+        assert_eq!(heap_items, (0..5).rev().collect::<Vec<_>>());
     }
 
     #[test]
