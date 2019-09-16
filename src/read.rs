@@ -435,14 +435,14 @@ macro_rules! readable_collection {
     ($u:ident => $collection_in:ty, $collection_out:ty) => {
         impl_readable_from_line_for_tuples_with_from_iterator!(
             $u: => $collection_in, $collection_out;
-            T8 x8, T7 x7, T6 x6, T5 x5, T4 t4, T3 t3, T2 t2, T1 t1
+            T8 x8, T7 x7, T6 x6, T5 x5, T4 x4, T3 x3, T2 x2, T1 x1
         );
     };
 
     ($u:ident : $( $bound:path ),* => $collection_in:ty, $collection_out:ty) => {
         impl_readable_from_line_for_tuples_with_from_iterator!(
             $u: $(+ $bound)* => $collection_in, $collection_out;
-            T8 x8, T7 x7, T6 x6, T5 x5, T4 t4, T3 t3, T2 t2, T1 t1
+            T8 x8, T7 x7, T6 x6, T5 x5, T4 x4, T3 x3, T2 x2, T1 x1
         );
     }
 }
