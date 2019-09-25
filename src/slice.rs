@@ -254,6 +254,7 @@ impl<T> SliceExt<T> for [T] {
 /// Enriches slices of `Vec`s by adding various methods.
 #[snippet = "slice"]
 pub trait SliceOfVecsExt<T> {
+    // TODO: ABC129 D
     /// Converts `[Vec<T>]` into `Vec<Vec<T>>` permuting its X and Y axes.
     ///
     /// The slice must satisfy that:
@@ -313,6 +314,29 @@ mod test {
     use super::*;
 
     #[test]
+    fn test_split_by_gap() {
+        let f = |&a: &i32, &b: &i32| a > b;
+        assert!(Vec::<i32>::new().split_by_gap(|&a, &b| a > b).next().is_none());
+        assert_eq!([0].split_by_gap(f).collect::<Vec<_>>(),
+                   vec![vec![0].as_slice()]);
+        assert_eq!([0, 1].split_by_gap(f).collect::<Vec<_>>(),
+                   vec![vec![0, 1].as_slice()]);
+        assert_eq!([1, 0].split_by_gap(f).collect::<Vec<_>>(),
+                   vec![vec![1].as_slice(), vec![0].as_slice()]);
+        assert_eq!([1, 2, 3].split_by_gap(f).collect::<Vec<_>>(),
+                   vec![vec![1, 2, 3].as_slice()]);
+        assert_eq!([1, 3, 2].split_by_gap(f).collect::<Vec<_>>(),
+                   vec![vec![1, 3].as_slice(), vec![2].as_slice()]);
+        assert_eq!([7, 2, 1, 9, 3, 0, 5, 8, 4, 6].split_by_gap(f).collect::<Vec<_>>(),
+                   vec![vec![7].as_slice(),
+                        vec![2].as_slice(),
+                        vec![1, 9].as_slice(),
+                        vec![3].as_slice(),
+                        vec![0, 5, 8].as_slice(),
+                        vec![4, 6].as_slice()]);
+    }
+
+    #[test]
     fn test_next_permutations() {
         fn to_vec<'a, I: Iterator<Item = Vec<&'a i32>>>(permutations: I) -> Vec<Vec<i32>> {
             permutations.map(|xs| xs.into_iter().cloned().collect()).collect()
@@ -336,29 +360,6 @@ mod test {
         assert_eq!([0, 0, 0, 0, 0, 0, 0, 0, 0].count_inversions(), 0);
         assert_eq!([0, 1, 2, 3, 4, 5, 6, 7, 8].count_inversions(), 0);
         assert_eq!([2, 2, 2, 1, 1, 1, 0, 0, 0].count_inversions(), 27);
-    }
-
-    #[test]
-    fn test_split_by_gap() {
-        let f = |&a: &i32, &b: &i32| a > b;
-        assert!(Vec::<i32>::new().split_by_gap(|&a, &b| a > b).next().is_none());
-        assert_eq!([0].split_by_gap(f).collect::<Vec<_>>(),
-                   vec![vec![0].as_slice()]);
-        assert_eq!([0, 1].split_by_gap(f).collect::<Vec<_>>(),
-                   vec![vec![0, 1].as_slice()]);
-        assert_eq!([1, 0].split_by_gap(f).collect::<Vec<_>>(),
-                   vec![vec![1].as_slice(), vec![0].as_slice()]);
-        assert_eq!([1, 2, 3].split_by_gap(f).collect::<Vec<_>>(),
-                   vec![vec![1, 2, 3].as_slice()]);
-        assert_eq!([1, 3, 2].split_by_gap(f).collect::<Vec<_>>(),
-                   vec![vec![1, 3].as_slice(), vec![2].as_slice()]);
-        assert_eq!([7, 2, 1, 9, 3, 0, 5, 8, 4, 6].split_by_gap(f).collect::<Vec<_>>(),
-                   vec![vec![7].as_slice(),
-                        vec![2].as_slice(),
-                        vec![1, 9].as_slice(),
-                        vec![3].as_slice(),
-                        vec![0, 5, 8].as_slice(),
-                        vec![4, 6].as_slice()]);
     }
 
     #[test]
