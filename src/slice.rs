@@ -251,6 +251,63 @@ impl<T> SliceExt<T> for [T] {
     }
 }
 
+/// Enriches slices of `Vec`s by adding various methods.
+#[snippet = "slice"]
+pub trait SliceOfVecsExt<T> {
+    /// Converts `[Vec<T>]` into `Vec<Vec<T>>` permuting its X and Y axes.
+    ///
+    /// The slice must satisfy that:
+    ///
+    /// - the lengths of rows are nonstrictly decreasing
+    /// - all rows are not empty
+    ///
+    /// Otherwise, returns `None`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # extern crate atcoder_snippets;
+    /// # use atcoder_snippets::slice::*;
+    /// let board = vec![
+    ///     vec!['.', '#', '.'],
+    ///     vec!['.', '.', '#'],
+    ///     vec!['.', '.', '.']
+    /// ];
+    /// let transposed = board.transpose_clone().unwrap();
+    /// assert_eq!(transposed, vec![
+    ///     vec!['.', '.', '.'],
+    ///     vec!['#', '.', '.'],
+    ///     vec!['.', '#', '.']
+    /// ]);
+    fn transpose_clone(&self) -> Option<Vec<Vec<T>>> where T: Clone;
+}
+
+#[snippet = "slice"]
+impl<T> SliceOfVecsExt<T> for [Vec<T>] {
+    fn transpose_clone(&self) -> Option<Vec<Vec<T>>> where T: Clone {
+        if self.iter().any(|row| row.is_empty()) {
+            return None;
+        }
+        if self.windows(2).any(|rows| rows[0].len() < rows[1].len()) {
+            return None;
+        }
+
+        let mut result = Vec::new();
+        let n = self.get(0).map_or(0, |first| first.len());
+        for i in 0..n {
+            let mut result_row = Vec::new();
+            for j in 0..self.len() {
+                if self[j].len() <= i {
+                    break;
+                }
+                result_row.push(self[j][i].clone());
+            }
+            result.push(result_row);
+        }
+        Some(result)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -302,5 +359,38 @@ mod test {
                         vec![3].as_slice(),
                         vec![0, 5, 8].as_slice(),
                         vec![4, 6].as_slice()]);
+    }
+
+    #[test]
+    fn test_transpose_clone() {
+        let empty = Vec::<Vec<i32>>::new();
+        assert_eq!(empty.transpose_clone(), Some(vec![]));
+        assert_eq!(vec![vec![0]].transpose_clone(), Some(vec![vec![0]]));
+        assert_eq!(vec![vec![0, 1]].transpose_clone(),
+                   Some(vec![vec![0], vec![1]]));
+        assert_eq!(vec![vec![0], vec![1]].transpose_clone(),
+                   Some(vec![vec![0, 1]]));
+        assert_eq!(vec![vec![0, 1], vec![2]].transpose_clone(),
+                   Some(vec![vec![0, 2], vec![1]]));
+        assert_eq!(vec![vec![0, 1], vec![2, 3]].transpose_clone(),
+                   Some(vec![vec![0, 2], vec![1, 3]]));
+        let board = vec![
+            vec![0, 1, 2, 3],
+            vec![4, 5, 6],
+            vec![7, 8, 9],
+            vec![10],
+            vec![11]
+        ];
+        let expected = vec![
+            vec![0, 4, 7, 10, 11],
+            vec![1, 5, 8],
+            vec![2, 6, 9],
+            vec![3]
+        ];
+        assert_eq!(board.transpose_clone(), Some(expected));
+
+        assert!(vec![Vec::<i32>::new()].transpose_clone().is_none());
+        assert!(vec![vec![0], vec![]].transpose_clone().is_none());
+        assert!(vec![vec![0], vec![1, 2]].transpose_clone().is_none());
     }
 }
