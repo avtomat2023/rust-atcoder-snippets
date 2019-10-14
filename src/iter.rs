@@ -392,7 +392,10 @@ pub trait IteratorExt: Iterator {
     /// # use atcoder_snippets::iter::*;
     /// assert_eq!(&vec![1, 2, 3].into_iter().join(", "), "1, 2, 3");
     /// ```
-    fn join(mut self, sep: &str) -> String where Self: Sized, Self::Item: std::fmt::Display {
+    fn join<T: std::fmt::Display>(mut self, sep: T) -> String
+    where
+        Self: Sized, Self::Item: std::fmt::Display
+    {
         let mut result = String::new();
         if let Some(first) = self.next() {
             result.push_str(&format!("{}", first));
@@ -875,6 +878,7 @@ mod test {
         assert_eq!(iter::empty::<i32>().join(" "), "");
         assert_eq!(iter::once(1).join(" "), "1");
         assert_eq!([1,2,3].iter().join(" "), "1 2 3");
+        assert_eq!([1,2,3].iter().join(0), "10203");
     }
 }
 
