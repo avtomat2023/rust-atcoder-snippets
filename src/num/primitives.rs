@@ -183,6 +183,42 @@ macro_rules! impl_primitive_unsigned {
 #[snippet = "num"]
 impl_primitive_unsigned!(u8 u16 u32 u64 usize);
 
+// TODO: Make generic
+/// Greatest common divisor.
+///
+/// If both `a` and `b` are 0, returns 0.
+/// That's because 0 is the identity element as we see (ℕ, gcd) as a monoid.
+#[snippet = "num"]
+pub fn gcd(a: u64, b: u64) -> u64 {
+    if b == 0 { a } else { gcd(b, a%b) }
+}
+
+// TODO: Make generic
+/// Calculates Bézout coefficients, that's (*x*, *y*) satisfying *ax* + *by* = gcd(*a*, *b*).
+///
+/// Returned value is a 3-tuple `(x, y, g)`.
+///
+/// `g` is `gcd(a.abs(), b.abs())`. The right hand side of the equation is `g`.
+///
+/// `x` and `y` are Bézout coefficients. When both `a.abs()` and `b.abs()` are positive,
+/// the coefficients satisfy `x.abs() <= b.abs()` and `y.abs() <= a.abs()`.
+/// When one of `a` and `b` is 0, either `x.abs()` or `y.abs()` is 1 and the other is 0.
+/// Otherwise, both `x` and `y` are 0.
+#[snippet = "num"]
+pub fn bezout(a: i64, b: i64) -> (i64, i64, u64) {
+    let (x, y, g) = bezout_sub((a * a.signum()) as u64, (b * b.signum()) as u64);
+    (x * a.signum(), y * b.signum(), g)
+}
+
+#[snippet = "num"]
+fn bezout_sub(a: u64, b: u64) -> (i64, i64, u64) {
+    if b == 0 { (1, 0, a) } else {
+        let m = (a / b) as i64;
+        let (x, y, g) = bezout_sub(b, a%b);
+        (y, x - m*y, g)
+    }
+}
+
 #[snippet = "num"]
 macro_rules! impl_primitive_float {
     ( $($t:ty)* ) => { $(
@@ -259,5 +295,50 @@ mod tests {
         assert_eq!(4u32.sqrt(), 2);
         assert_eq!(9999u32.sqrt(), 99);
         assert_eq!(10000u32.sqrt(), 100);
+    }
+
+    #[test]
+    fn test_gcd() {
+        assert_eq!(gcd(0, 0), 0);
+        assert_eq!(gcd(1, 0), 1);
+        assert_eq!(gcd(123, 0), 123);
+        assert_eq!(gcd(0, 1), 1);
+        assert_eq!(gcd(0, 123), 123);
+        assert_eq!(gcd(1, 1), 1);
+        assert_eq!(gcd(31, 31), 31);
+        assert_eq!(gcd(56, 56), 56);
+        assert_eq!(gcd(31, 47), 1);
+        assert_eq!(gcd(47, 31), 1);
+        assert_eq!(gcd(56, 42), 14);
+        assert_eq!(gcd(42, 56), 14);
+    }
+
+    #[test]
+    fn test_bezout() {
+        assert_eq!(bezout(0, 0), (0, 0, 0));
+        assert_eq!(bezout(1, 0), (1, 0, 1));
+        assert_eq!(bezout(0, 1), (0, 1, 1));
+        assert_eq!(bezout(-1, 0), (-1, 0, 1));
+        assert_eq!(bezout(0, -1), (0, -1, 1));
+
+        let (x1, y1, g1) = bezout(31, 47);
+        assert_eq!(g1, 1);
+        assert_eq!(31*x1 + 47*y1, g1 as i64);
+        assert!(x1.abs() <= 47 && y1.abs() <= 31);
+
+        let (x2, y2, g2) = bezout(56, 42);
+        assert_eq!(g2, 14);
+        assert_eq!(56*x2 + 42*y2, g2 as i64);
+        assert!(x2.abs() <= 42 && y2.abs() <= 56);
+
+        let (x3, y3, g3) = bezout(-31, 47);
+        assert_eq!(g3, 1);
+        assert_eq!(-31*x3 + 47*y3, g3 as i64);
+        assert!(x3.abs() <= 47 && y3.abs() <= 31);
+
+        let (x4, y4, g4) = bezout(-56, -42);
+        assert_eq!(g4, 14);
+        assert_eq!(-56*x4 - 42*y4, g4 as i64);
+        assert!(x4.abs() <= 42 && y4.abs() <= 56);
     }
 }
