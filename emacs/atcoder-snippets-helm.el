@@ -1,3 +1,4 @@
+(require 'atcoder-snippets)
 (require 'helm)
 
 (defun atcoder-snippets-helm-insert ()
@@ -12,4 +13,4 @@
                       (action . atcoder-snippets-insert))))
         (helm :sources '(source) :buffer "*Helm atcoder-snippets*")))))
 
-(provide atcoder-snippets-helm)
+(provide 'atcoder-snippets-helm)
