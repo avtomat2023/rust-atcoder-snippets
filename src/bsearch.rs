@@ -26,8 +26,9 @@
 
 use num::PrimitiveInteger;
 
+// BEGIN SNIPPET bsearch DEPENDS ON num
+
 /// A sequence that binary search is applicable to.
-#[snippet = "bsearch"]
 pub trait BSearch: Sized {
     /// Item type of the sequence.
     type Item;
@@ -158,7 +159,6 @@ pub trait BSearch: Sized {
     }
 }
 
-#[snippet = "bsearch"]
 fn bsearch_left_max_sub<Items, T, F>(items: &Items, mut is_left: F) -> T
 where
     Items: BSearch<Item=T>,
@@ -175,7 +175,6 @@ where
     }
 }
 
-#[snippet = "bsearch"]
 fn bsearch_right_min_sub<Items, T, F>(items: &Items, mut is_right: F) -> T
 where
     Items: BSearch<Item=T>,
@@ -192,7 +191,6 @@ where
     }
 }
 
-#[snippet = "bsearch"]
 impl<T: PrimitiveInteger + Clone> BSearch for std::ops::Range<T> {
     type Item = T;
 
@@ -225,7 +223,6 @@ impl<T: PrimitiveInteger + Clone> BSearch for std::ops::Range<T> {
     }
 }
 
-#[snippet = "bsearch"]
 impl<'a, T> BSearch for &'a [T] {
     type Item = &'a T;
 
@@ -258,7 +255,6 @@ impl<'a, T> BSearch for &'a [T] {
     }
 }
 
-#[snippet = "bsearch"]
 pub trait SliceBSearch {
     type Item;
 
@@ -279,7 +275,6 @@ pub trait SliceBSearch {
         F: FnMut(&Self::Item) -> bool;
 }
 
-#[snippet = "bsearch"]
 impl<T> SliceBSearch for [T] {
     type Item = T;
 
@@ -317,6 +312,8 @@ impl<T> SliceBSearch for [T] {
         })
     }
 }
+
+// END SNIPPET
 
 #[cfg(test)]
 mod tests {

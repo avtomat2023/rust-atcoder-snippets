@@ -1,0 +1,15 @@
+(require 'helm)
+
+(defun atcoder-snippets-helm-insert ()
+  (interactive)
+  (let* ((names (atcoder-snippets-names))
+         (inserted (atcoder-snippets-list-inserted-snippets))
+         (candidates (-filter (lambda (name) (not (gethash name inserted))) names)))
+    (if (not candidates)
+        (message "All snippets are already inserted.")
+      (let ((source `((name . "Snippets not yet pasted")
+                      (candidates . ,candidates)
+                      (action . atcoder-snippets-insert))))
+        (helm :sources '(source) :buffer "*Helm atcoder-snippets*")))))
+
+(provide atcoder-snippets-helm)

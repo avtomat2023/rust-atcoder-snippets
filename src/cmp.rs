@@ -2,7 +2,8 @@
 
 // ABC 038 D
 
-#[snippet = "cmp"]
+// BEGIN SNIPPET cmp
+
 use std::cmp::{Ord, Ordering};
 
 /// For reversed ordering.
@@ -18,25 +19,21 @@ use std::cmp::{Ord, Ordering};
 /// seq.sort_by_key(|&x| Reverse(x));
 /// assert_eq!(seq, vec![5, 4, 3, 2, 1]);
 /// ```
-#[snippet = "cmp"]
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default, Hash)]
 pub struct Reverse<T: Ord>(pub T);
 
-#[snippet = "cmp"]
 impl<T: Ord> PartialOrd for Reverse<T> {
     fn partial_cmp(&self, other: &Reverse<T>) -> Option<Ordering> {
         other.0.partial_cmp(&self.0)
     }
 }
 
-#[snippet = "cmp"]
 impl<T: Ord> Ord for Reverse<T> {
     fn cmp(&self, other: &Reverse<T>) -> Ordering {
         other.0.cmp(&self.0)
     }
 }
 
-#[snippet = "cmp"]
 pub trait SortDesc<T> {
     // ABC112 D
     fn sort_desc(&mut self) where T: Ord;
@@ -47,7 +44,6 @@ pub trait SortDesc<T> {
     // TODO: sort_unstable_desc_*
 }
 
-#[snippet = "cmp"]
 impl<T> SortDesc<T> for [T] {
     fn sort_desc(&mut self) where T: Ord {
         self.sort();
@@ -70,19 +66,18 @@ impl<T> SortDesc<T> for [T] {
 /// seq.sort_by_key(|&x| Total(x));
 /// assert_eq!(seq, vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 /// ```
-#[snippet = "cmp"]
 #[derive(Clone, Copy, PartialEq, PartialOrd, Debug, Default, Hash)]
 pub struct Total<T: PartialOrd + PartialEq>(pub T);
 
-#[snippet = "cmp"]
 impl<T: PartialOrd + PartialEq> Eq for Total<T> {}
 
-#[snippet = "cmp"]
 impl<T: PartialOrd + PartialEq> Ord for Total<T> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.partial_cmp(other).unwrap()
     }
 }
+
+// END SNIPPET
 
 #[cfg(test)]
 mod tests {

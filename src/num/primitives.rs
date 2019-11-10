@@ -1,7 +1,8 @@
 //! Extension traits for primitive integer types.
 
+// BEGIN SNIPPET num
+
 /// Enriches signed and unsigned integer types.
-#[snippet = "num"]
 pub trait PrimitiveInteger:
     Sized + Ord +
     std::ops::Add<Output=Self> +
@@ -9,7 +10,6 @@ pub trait PrimitiveInteger:
     std::ops::Div<Output=Self>
 {
     fn one() -> Self;
-
     /// Calculate absolute value of *a* - *b*.
     ///
     /// This is useful for unsigned integers because overflow never happens
@@ -42,7 +42,6 @@ pub trait PrimitiveInteger:
     fn rem_euclid(self, rhs: Self) -> Self;
 }
 
-#[snippet = "num"]
 macro_rules! impl_primitive_integer {
     ( $($t: ty)* ) => { $(
         impl PrimitiveInteger for $t {
@@ -68,11 +67,9 @@ macro_rules! impl_primitive_integer {
     )* }
 }
 
-#[snippet = "num"]
 impl_primitive_integer!(u8 u16 u32 u64 usize i8 i16 i32 i64 isize);
 
 /// Enriches unsigned integer types.
-#[snippet = "num"]
 pub trait PrimitiveUnsigned: PrimitiveInteger {
     /// Division with ceiling.
     ///
@@ -135,7 +132,6 @@ pub trait PrimitiveUnsigned: PrimitiveInteger {
     // fn to_le_big_digits(self) -> Vec<BigDigit>;
 }
 
-#[snippet = "num"]
 macro_rules! impl_primitive_unsigned {
     ( $($t: ty)* ) => { $(
         impl PrimitiveUnsigned for $t {
@@ -177,7 +173,6 @@ macro_rules! impl_primitive_unsigned {
     )* }
 }
 
-#[snippet = "num"]
 impl_primitive_unsigned!(u8 u16 u32 u64 usize);
 
 // TODO: Make generic
@@ -185,7 +180,6 @@ impl_primitive_unsigned!(u8 u16 u32 u64 usize);
 ///
 /// If both `a` and `b` are 0, returns 0.
 /// That's because 0 is the identity element as we see (ℕ, gcd) as a monoid.
-#[snippet = "num"]
 pub fn gcd(a: u64, b: u64) -> u64 {
     if b == 0 { a } else { gcd(b, a%b) }
 }
@@ -201,13 +195,11 @@ pub fn gcd(a: u64, b: u64) -> u64 {
 /// the coefficients satisfy `x.abs() <= b.abs()` and `y.abs() <= a.abs()`.
 /// When one of `a` and `b` is 0, either `x.abs()` or `y.abs()` is 1 and the other is 0.
 /// Otherwise, both `x` and `y` are 0.
-#[snippet = "num"]
 pub fn bezout(a: i64, b: i64) -> (i64, i64, u64) {
     let (x, y, g) = bezout_sub((a * a.signum()) as u64, (b * b.signum()) as u64);
     (x * a.signum(), y * b.signum(), g)
 }
 
-#[snippet = "num"]
 fn bezout_sub(a: u64, b: u64) -> (i64, i64, u64) {
     if b == 0 { (1, 0, a) } else {
         let m = (a / b) as i64;
@@ -215,6 +207,8 @@ fn bezout_sub(a: u64, b: u64) -> (i64, i64, u64) {
         (y, x - m*y, g)
     }
 }
+
+// END SNIPPET
 
 #[cfg(test)]
 mod tests {

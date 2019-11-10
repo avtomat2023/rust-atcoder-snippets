@@ -1,7 +1,8 @@
 //! Utilities.
 
+// BEGIN SNIPPET yn
+
 /// Prints "Yes" or "No" according to `result`.
-#[snippet = "yn"]
 pub fn yn(result: bool) {
     if result {
         println!("Yes");
@@ -12,7 +13,6 @@ pub fn yn(result: bool) {
 
 // ABC038 A, ABC038 B, ABC114 A
 /// Prints "YES" or "NO" according to `result`.
-#[snippet = "yn"]
 #[allow(non_snake_case)]
 pub fn YN(result: bool) {
     if result {
@@ -22,12 +22,15 @@ pub fn YN(result: bool) {
     }
 }
 
+// END SNIPPET
+
+// BEGIN SNIPPET dbg
+
 /// Make a debug output of the given expression to stderr.
 ///
 /// The output is made only in the local machine, not in the judge server.
 ///
 /// Similar to `dbg` macro in Rust 1.32.0.
-#[snippet = "dbg"]
 #[macro_export]
 #[cfg(local)]
 macro_rules! dbg {
@@ -55,10 +58,11 @@ macro_rules! dbg {
 /// The output is made only in the local machine, not in the judge server.
 ///
 /// Similar to `dbg` macro in Rust 1.32.0.
-#[snippet = "dbg"]
 #[macro_export]
 #[cfg(not(local))]
 macro_rules! dbg {
     () => {};
     ($e: expr) => { $e }
 }
+
+// END SNIPPET

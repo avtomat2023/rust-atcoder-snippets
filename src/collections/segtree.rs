@@ -2,6 +2,8 @@
 //!
 //! For implementation details, see [this article](https://codeforces.com/blog/entry/18051).
 
+// BEGIN SNIPPET segtree
+
 // use num::Numeric;
 
 /// Seqence updateble by point and aggregatable by interval.
@@ -18,14 +20,12 @@
 ///
 /// Any update and aggregation is performed in Θ(log(*n*)) time,
 /// as *n* is the number of items in the sequence.
-#[snippet = "segtree"]
 pub struct SegmentTree<T: Clone, F: Fn(&T, &T) -> T> {
     heap: Vec<T>,
     identity: T,
     aggregate: F
 }
 
-#[snippet = "segtree"]
 mod segment_tree_internal {
     pub fn parent_of(heap_index: usize) -> usize {
         (heap_index - 1) / 2
@@ -44,7 +44,6 @@ mod segment_tree_internal {
     }
 }
 
-#[snippet = "segtree"]
 impl<T: Clone, F: Fn(&T, &T) -> T> SegmentTree<T, F> {
     /// Create a new segment tree with `len` items.
     ///
@@ -214,13 +213,11 @@ impl<T: Clone, F: Fn(&T, &T) -> T> SegmentTree<T, F> {
     }
 }
 
-#[snippet = "segtree"]
 pub struct SegmentTreeItemRef<'a, T: 'a + Clone, F: 'a + Fn(&T, &T) -> T> {
     tree: &'a mut SegmentTree<T, F>,
     heap_index: usize
 }
 
-#[snippet = "segtree"]
 impl<'a, T, F> std::ops::Deref for SegmentTreeItemRef<'a, T, F>
 where
     T: Clone,
@@ -233,7 +230,6 @@ where
     }
 }
 
-#[snippet = "segtree"]
 impl<'a, T, F> std::ops::DerefMut for SegmentTreeItemRef<'a, T, F>
 where
     T: Clone,
@@ -244,7 +240,6 @@ where
     }
 }
 
-#[snippet = "segtree"]
 impl<'a, T, F> Drop for SegmentTreeItemRef<'a, T, F>
 where
     T: Clone,
@@ -264,7 +259,6 @@ where
 }
 */
 
-#[snippet = "segtree"]
 pub trait IteratorExtForSegmentTree: Sized + Iterator
 where
     Self::Item: Clone
@@ -277,8 +271,9 @@ where
     }
 }
 
-#[snippet = "segtree"]
 impl<I: Iterator> IteratorExtForSegmentTree for I where <I as Iterator>::Item: Clone {}
+
+// END SNIPPET
 
 #[cfg(test)]
 mod test {

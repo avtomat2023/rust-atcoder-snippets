@@ -1,6 +1,5 @@
 //! Numeric types and traits.
 
-// #[snippet = "num"]
 // pub type BigDigit = u64;
 
 mod primitives;

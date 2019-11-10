@@ -19,14 +19,14 @@
 //! }
 //! ```
 
-#[snippet = "vec2"]
+// BEGIN SNIPPET vec
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Vec2<T> {
     pub x: T,
     pub y: T
 }
 
-#[snippet = "vec2"]
 impl<T> Vec2<T> {
     pub fn new(x: T, y: T) -> Vec2<T> {
         Vec2 { x: x, y: y }
@@ -42,14 +42,12 @@ impl<T> Vec2<T> {
     }
 }
 
-#[snippet = "vec2"]
 impl<T: std::fmt::Display> std::fmt::Display for Vec2<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{} {}", self.x, self.y)
     }
 }
 
-#[snippet = "vec2"]
 impl<S, T: std::ops::Add<S>> std::ops::Add<Vec2<S>> for Vec2<T> {
     type Output = Vec2<T::Output>;
 
@@ -58,7 +56,6 @@ impl<S, T: std::ops::Add<S>> std::ops::Add<Vec2<S>> for Vec2<T> {
     }
 }
 
-#[snippet = "vec2"]
 impl<S, T: std::ops::AddAssign<S>> std::ops::AddAssign<Vec2<S>> for Vec2<T> {
     fn add_assign(&mut self, rhs: Vec2<S>) {
         self.x += rhs.x;
@@ -66,7 +63,6 @@ impl<S, T: std::ops::AddAssign<S>> std::ops::AddAssign<Vec2<S>> for Vec2<T> {
     }
 }
 
-#[snippet = "vec2"]
 impl<S, T: std::ops::Sub<S>> std::ops::Sub<Vec2<S>> for Vec2<T> {
     type Output = Vec2<T::Output>;
 
@@ -75,7 +71,6 @@ impl<S, T: std::ops::Sub<S>> std::ops::Sub<Vec2<S>> for Vec2<T> {
     }
 }
 
-#[snippet = "vec2"]
 impl<S, T: std::ops::SubAssign<S>> std::ops::SubAssign<Vec2<S>> for Vec2<T> {
     fn sub_assign(&mut self, rhs: Vec2<S>) {
         self.x -= rhs.x;
@@ -83,7 +78,6 @@ impl<S, T: std::ops::SubAssign<S>> std::ops::SubAssign<Vec2<S>> for Vec2<T> {
     }
 }
 
-#[snippet = "vec2"]
 impl<T: std::ops::Neg> std::ops::Neg for Vec2<T> {
     type Output = Vec2<T::Output>;
 
@@ -92,7 +86,6 @@ impl<T: std::ops::Neg> std::ops::Neg for Vec2<T> {
     }
 }
 
-#[snippet = "vec2"]
 macro_rules! impl_mul_vec2 {
     ( $($t: ty)* ) => { $(
         impl std::ops::Mul<Vec2<$t>> for $t {
@@ -105,7 +98,6 @@ macro_rules! impl_mul_vec2 {
     )* }
 }
 
-#[snippet = "vec2"]
 impl_mul_vec2!(i8 u8 i16 u16 i32 u32 i64 u64 f32 f64);
 
 // Somehow this code doesn't compile
@@ -118,7 +110,6 @@ impl_mul_vec2!(i8 u8 i16 u16 i32 u32 i64 u64 f32 f64);
 //     }
 // }
 
-#[snippet = "vec2"]
 impl<S: Copy, T: std::ops::Mul<S>> std::ops::Mul<S> for Vec2<T> {
     type Output = Vec2<T::Output>;
 
@@ -127,7 +118,6 @@ impl<S: Copy, T: std::ops::Mul<S>> std::ops::Mul<S> for Vec2<T> {
     }
 }
 
-#[snippet = "vec2"]
 impl<S: Copy, T: std::ops::MulAssign<S>> std::ops::MulAssign<S> for Vec2<T> {
     fn mul_assign(&mut self, rhs: S) {
         self.x *= rhs;
@@ -135,7 +125,6 @@ impl<S: Copy, T: std::ops::MulAssign<S>> std::ops::MulAssign<S> for Vec2<T> {
     }
 }
 
-#[snippet = "vec2"]
 impl<S: Copy, T: std::ops::Div<S>> std::ops::Div<S> for Vec2<T> {
     type Output = Vec2<T::Output>;
 
@@ -144,7 +133,6 @@ impl<S: Copy, T: std::ops::Div<S>> std::ops::Div<S> for Vec2<T> {
     }
 }
 
-#[snippet = "vec2"]
 impl<S: Copy, T: std::ops::DivAssign<S>> std::ops::DivAssign<S> for Vec2<T> {
     fn div_assign(&mut self, rhs: S) {
         self.x /= rhs;
@@ -154,7 +142,6 @@ impl<S: Copy, T: std::ops::DivAssign<S>> std::ops::DivAssign<S> for Vec2<T> {
 
 use read::Readable;
 
-#[snippet = "vec2"]
 impl<T: Readable> Readable for Vec2<T> {
     type Output = Vec2<T::Output>;
 
@@ -169,7 +156,6 @@ impl<T: Readable> Readable for Vec2<T> {
     }
 }
 
-#[snippet = "vec3"]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Vec3<T> {
     pub x: T,
@@ -177,7 +163,6 @@ pub struct Vec3<T> {
     pub z: T
 }
 
-#[snippet = "vec3"]
 impl<T> Vec3<T> {
     pub fn new(x: T, y: T, z: T) -> Vec3<T> {
         Vec3 { x: x, y: y , z: z }
@@ -191,14 +176,12 @@ impl<T> Vec3<T> {
     }
 }
 
-#[snippet = "vec3"]
 impl<T: std::fmt::Display> std::fmt::Display for Vec3<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{} {} {}", self.x, self.y, self.z)
     }
 }
 
-#[snippet = "vec3"]
 impl<S, T: std::ops::Add<S>> std::ops::Add<Vec3<S>> for Vec3<T> {
     type Output = Vec3<T::Output>;
 
@@ -207,7 +190,6 @@ impl<S, T: std::ops::Add<S>> std::ops::Add<Vec3<S>> for Vec3<T> {
     }
 }
 
-#[snippet = "vec3"]
 impl<S, T: std::ops::AddAssign<S>> std::ops::AddAssign<Vec3<S>> for Vec3<T> {
     fn add_assign(&mut self, rhs: Vec3<S>) {
         self.x += rhs.x;
@@ -216,7 +198,6 @@ impl<S, T: std::ops::AddAssign<S>> std::ops::AddAssign<Vec3<S>> for Vec3<T> {
     }
 }
 
-#[snippet = "vec3"]
 impl<S, T: std::ops::Sub<S>> std::ops::Sub<Vec3<S>> for Vec3<T> {
     type Output = Vec3<T::Output>;
 
@@ -225,7 +206,6 @@ impl<S, T: std::ops::Sub<S>> std::ops::Sub<Vec3<S>> for Vec3<T> {
     }
 }
 
-#[snippet = "vec3"]
 impl<S, T: std::ops::SubAssign<S>> std::ops::SubAssign<Vec3<S>> for Vec3<T> {
     fn sub_assign(&mut self, rhs: Vec3<S>) {
         self.x -= rhs.x;
@@ -234,7 +214,6 @@ impl<S, T: std::ops::SubAssign<S>> std::ops::SubAssign<Vec3<S>> for Vec3<T> {
     }
 }
 
-#[snippet = "vec3"]
 impl<T: std::ops::Neg> std::ops::Neg for Vec3<T> {
     type Output = Vec3<T::Output>;
 
@@ -243,7 +222,6 @@ impl<T: std::ops::Neg> std::ops::Neg for Vec3<T> {
     }
 }
 
-#[snippet = "vec3"]
 macro_rules! impl_mul_vec3 {
     ( $($t: ty)* ) => { $(
         impl std::ops::Mul<Vec3<$t>> for $t {
@@ -256,7 +234,6 @@ macro_rules! impl_mul_vec3 {
     )* }
 }
 
-#[snippet = "vec3"]
 impl_mul_vec3!(i8 u8 i16 u16 i32 u32 i64 u64 f32 f64);
 
 // Somehow this code doesn't compile
@@ -269,7 +246,6 @@ impl_mul_vec3!(i8 u8 i16 u16 i32 u32 i64 u64 f32 f64);
 //     }
 // }
 
-#[snippet = "vec3"]
 impl<S: Copy, T: std::ops::Mul<S>> std::ops::Mul<S> for Vec3<T> {
     type Output = Vec3<T::Output>;
 
@@ -278,7 +254,6 @@ impl<S: Copy, T: std::ops::Mul<S>> std::ops::Mul<S> for Vec3<T> {
     }
 }
 
-#[snippet = "vec3"]
 impl<S: Copy, T: std::ops::MulAssign<S>> std::ops::MulAssign<S> for Vec3<T> {
     fn mul_assign(&mut self, rhs: S) {
         self.x *= rhs;
@@ -287,7 +262,6 @@ impl<S: Copy, T: std::ops::MulAssign<S>> std::ops::MulAssign<S> for Vec3<T> {
     }
 }
 
-#[snippet = "vec3"]
 impl<S: Copy, T: std::ops::Div<S>> std::ops::Div<S> for Vec3<T> {
     type Output = Vec3<T::Output>;
 
@@ -296,7 +270,6 @@ impl<S: Copy, T: std::ops::Div<S>> std::ops::Div<S> for Vec3<T> {
     }
 }
 
-#[snippet = "vec3"]
 impl<S: Copy, T: std::ops::DivAssign<S>> std::ops::DivAssign<S> for Vec3<T> {
     fn div_assign(&mut self, rhs: S) {
         self.x /= rhs;
@@ -305,7 +278,6 @@ impl<S: Copy, T: std::ops::DivAssign<S>> std::ops::DivAssign<S> for Vec3<T> {
     }
 }
 
-#[snippet = "vec3"]
 impl<T: Readable> Readable for Vec3<T> {
     type Output = Vec3<T::Output>;
 
@@ -321,6 +293,7 @@ impl<T: Readable> Readable for Vec3<T> {
     }
 }
 
+// END SNIPPET
 
 #[cfg(test)]
 mod test {

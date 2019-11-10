@@ -49,6 +49,8 @@
 //! - 標準入力の一様な行を指定行数読むには、[`readn`](fn.readn.html)関数、[`readn_loop`](../macro.readn_loop.html)マクロを用いる。
 //!
 
+// BEGIN SNIPPET read
+
 /// Readable from stdin.
 ///
 /// Types implementing this trait can be converted from a specific number of *word*s.
@@ -73,7 +75,6 @@
 /// # Example
 ///
 /// See implementation of [`Vec2`](../vec2/struct.Vec2.html).
-#[snippet = "read"]
 pub trait Readable {
     /// Output type.
     ///
@@ -112,7 +113,6 @@ pub trait Readable {
 ///
 /// This is OK because reading a `String` from a word never fails.
 #[macro_export]
-#[snippet = "read"]
 macro_rules! readable {
     ( $t:ty, $words_count:expr, |$words:ident| $read_words:expr ) => {
         impl Readable for $t {
@@ -126,15 +126,12 @@ macro_rules! readable {
     };
 }
 
-#[snippet = "read"]
 readable!((), 1, |_ss| ());
 
-#[snippet = "read"]
 readable!(String, 1, |ss| ss[0].to_string());
 
 // Is `impl Readable for bool` necessary?
 
-#[snippet = "read"]
 impl Readable for char {
     type Output = char;
 
@@ -160,10 +157,8 @@ impl Readable for char {
 /// read!(s = Chars);
 /// assert_eq!(s, vec!['C', 'H', 'A', 'R', 'A', 'C', 'T', 'E', 'R', 'S']);
 /// ```
-#[snippet = "read"]
 pub struct Chars();
 
-#[snippet = "read"]
 impl Readable for Chars {
     type Output = Vec<char>;
 
@@ -173,7 +168,6 @@ impl Readable for Chars {
     }
 }
 
-#[snippet = "read"]
 macro_rules! impl_readable_for_ints {
     ( $( $t:ty )* ) => { $(
         impl Readable for $t {
@@ -190,10 +184,8 @@ macro_rules! impl_readable_for_ints {
     )* };
 }
 
-#[snippet = "read"]
 impl_readable_for_ints!(i8 u8 i16 u16 i32 u32 i64 u64 isize usize f32 f64);
 
-#[snippet = "read"]
 macro_rules! define_one_origin_int_types {
     ( $new_t:ident $int_t:ty ) => {
         // TODO: 実際の問題を使った例にする
@@ -227,10 +219,8 @@ macro_rules! define_one_origin_int_types {
     };
 }
 
-#[snippet = "read"]
 define_one_origin_int_types!(u8_ u8; u16_ u16; u32_ u32; u64_ u64; usize_ usize);
 
-#[snippet = "read"]
 macro_rules! impl_readable_for_tuples {
     ( $t:ident $var:ident ) => ();
     ( $t:ident $var:ident; $( $inner_t:ident $inner_var:ident );* ) => {
@@ -271,24 +261,20 @@ macro_rules! impl_readable_for_tuples {
     };
 }
 
-#[snippet = "read"]
 impl_readable_for_tuples!(T8 x8; T7 x7; T6 x6; T5 x5; T4 x4; T3 x3; T2 x2; T1 x1);
 
 /// Readable by `read` function.
-#[snippet = "read"]
 pub trait ReadableFromLine {
     type Output;
 
     fn read_line(line: &str) -> Result<Self::Output, String>;
 }
 
-#[snippet = "read"]
 fn split_into_words(line: &str) -> Vec<&str> {
     #[allow(deprecated)]
     line.trim_right_matches('\n').split_whitespace().collect()
 }
 
-#[snippet = "read"]
 impl<T: Readable> ReadableFromLine for T {
     type Output = T::Output;
 
@@ -303,7 +289,6 @@ impl<T: Readable> ReadableFromLine for T {
     }
 }
 
-#[snippet = "read"]
 macro_rules! impl_readable_from_line_for_tuples_with_from_iterator {
     ( $u:ident : $( + $bound:path )* => $seq_in:ty, $seq_out:ty; $t:ident $var:ident ) => {
         impl<$u: Readable> ReadableFromLine for $seq_in
@@ -429,7 +414,6 @@ macro_rules! impl_readable_from_line_for_tuples_with_from_iterator {
 ///
 /// Be careful that the separator of type bounds is `,` not `+`.
 /// This is because of a restriction of Rust's macro system.
-#[snippet = "read"]
 #[macro_export]
 macro_rules! readable_collection {
     ($u:ident => $collection_in:ty, $collection_out:ty) => {
@@ -447,25 +431,20 @@ macro_rules! readable_collection {
     }
 }
 
-#[snippet = "read"]
 readable_collection!(U => Vec<U>, Vec<U::Output>);
 
-#[snippet = "read"]
 readable_collection!(
     U => std::collections::VecDeque<U>, std::collections::VecDeque<U::Output>
 );
 
-#[snippet = "read"]
 readable_collection!(
     U: Eq, std::hash::Hash => std::collections::HashSet<U>, std::collections::HashSet<U::Output>
 );
 
-#[snippet = "read"]
 readable_collection!(
     U: Ord => std::collections::BTreeSet<U>, std::collections::BTreeSet<U::Output>
 );
 
-#[snippet = "read"]
 readable_collection!(
     U: Ord => std::collections::BinaryHeap<U>, std::collections::BinaryHeap<U::Output>
 );
@@ -517,7 +496,6 @@ readable_collection!(
 /// // thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: "word 3 of line `1 2 3.45\n`: cannot parse `3.45` as i32"'
 /// ```
 
-#[snippet = "read"]
 pub fn read<T: ReadableFromLine>() -> T::Output {
     let mut line = String::new();
     // Can be faster by removing UTF-8 validation,
@@ -582,7 +560,6 @@ pub fn read<T: ReadableFromLine>() -> T::Output {
 /// assert_eq!(xs, vec![10, 20, 30, 40, 50]);
 /// ```
 #[macro_export]
-#[snippet = "read"]
 macro_rules! read {
     // Discards a line
     () => {
@@ -639,7 +616,6 @@ macro_rules! read {
 ///
 /// but using `readls` makes the code a bit shorter.
 #[macro_export]
-#[snippet = "read"]
 macro_rules! readls {
     // Gets ReadableFromLine's
     ( $( $pat:pat = $t:ty ),+ ) => {
@@ -689,7 +665,6 @@ macro_rules! readls {
 ///     yn(check(&readx::<String>()));
 /// }
 /// ```
-#[snippet = "read"]
 pub fn readx<T: ReadableFromLine>() -> Vec<T::Output> {
     use std::io::{self, BufRead};
     let stdin = io::stdin();
@@ -718,7 +693,6 @@ pub fn readx<T: ReadableFromLine>() -> Vec<T::Output> {
 /// // 100 200
 /// ```
 #[macro_export]
-#[snippet = "read"]
 macro_rules! readx_loop {
     ( |$pat:pat = $t:ty| $body:expr ) => {
         {
@@ -762,7 +736,6 @@ macro_rules! readx_loop {
 /// assert_eq!(shrines, vec![100, 600]);
 /// assert_eq!(temples, vec![400, 900, 1000]);
 /// ```
-#[snippet = "read"]
 pub fn readn<T: ReadableFromLine>(n: usize) -> Vec<T::Output> {
     use std::io::{self, BufRead};
     let stdin = io::stdin();
@@ -799,7 +772,6 @@ pub fn readn<T: ReadableFromLine>(n: usize) -> Vec<T::Output> {
 /// // 10
 /// ```
 #[macro_export]
-#[snippet = "read"]
 macro_rules! readn_loop {
     ( $n:expr, |$pat:pat = $t:ty| $body:expr ) => {
         {
@@ -826,24 +798,23 @@ macro_rules! readn_loop {
 /// `Readable`を読み出すことができる型。
 ///
 /// このトレイトにより、`Readable`の実装が簡単になる場合がある。
-#[snippet = "read"]
 pub trait Words {
     fn read<T: Readable>(&self) -> T::Output;
 }
 
-#[snippet = "read"]
 impl<'a> Words for [&'a str] {
     fn read<T: Readable>(&self) -> T::Output {
         T::read_words(self).unwrap()
     }
 }
 
-#[snippet = "read"]
 impl<'a> Words for &'a str {
     fn read<T: Readable>(&self) -> T::Output {
         T::read_words(&[self]).unwrap()
     }
 }
+
+// END SNIPPET
 
 #[cfg(test)]
 mod test {

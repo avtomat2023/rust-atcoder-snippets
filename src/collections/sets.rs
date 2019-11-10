@@ -8,6 +8,8 @@
 // After language update of AtCoder, merge branch `disjoint-set-for-latest-rust`,
 // and `T` does not require `Clone`.
 
+// BEGIN SNIPPET sets
+
 // TODO: Show solution of ABC120 D and ABC126 E as examples
 /// Disjoint-set data structure, known as union-find.
 ///
@@ -17,7 +19,6 @@
 /// Thanks to union-by-size and path-compression strategy,
 /// average cost of each operation is so much low that
 /// it can be regarded as constant time, although theoretically it is not constant.
-#[snippet = "sets"]
 pub struct HashUnionFindSets<T: Eq + std::hash::Hash + std::fmt::Debug> {
     // Maintaining `set_count` can be an unnecessary cost,
     // but that frees users from maintaining it
@@ -26,7 +27,6 @@ pub struct HashUnionFindSets<T: Eq + std::hash::Hash + std::fmt::Debug> {
     items: std::collections::HashMap<T, UnionFindNode<T>>
 }
 
-#[snippet = "sets"]
 #[derive(Clone)]
 enum UnionFindNodeInner<T: Eq + std::hash::Hash> {
     Root {
@@ -37,13 +37,11 @@ enum UnionFindNodeInner<T: Eq + std::hash::Hash> {
     }
 }
 
-#[snippet = "sets"]
 #[derive(Clone)]
 struct UnionFindNode<T: Eq + std::hash::Hash>(
     std::rc::Rc<std::cell::RefCell<UnionFindNodeInner<T>>>, T
 );
 
-#[snippet = "sets"]
 impl<T: Eq + std::hash::Hash + Clone> UnionFindNode<T> {
     fn new(item: T) -> UnionFindNode<T> {
         UnionFindNode(std::rc::Rc::new(std::cell::RefCell::new(
@@ -52,24 +50,20 @@ impl<T: Eq + std::hash::Hash + Clone> UnionFindNode<T> {
     }
 }
 
-#[snippet = "sets"]
 impl<T: Eq + std::hash::Hash> std::cmp::PartialEq for UnionFindNode<T> {
     fn eq(&self, other: &UnionFindNode<T>) -> bool {
         self.1 == other.1
     }
 }
 
-#[snippet = "sets"]
 impl<T: Eq + std::hash::Hash> std::cmp::Eq for UnionFindNode<T> {}
 
-#[snippet = "sets"]
 impl<T: Eq + std::hash::Hash> std::hash::Hash for UnionFindNode<T> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.1.hash(state);
     }
 }
 
-#[snippet = "sets"]
 impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
     /// Creates empty sets.
     pub fn new() -> HashUnionFindSets<T> {
@@ -241,7 +235,6 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
     }
 }
 
-#[snippet = "sets"]
 impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> std::fmt::Debug for HashUnionFindSets<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         use std::collections::{HashMap, HashSet};
@@ -266,7 +259,6 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> std::fmt::Debug for Hash
     }
 }
 
-#[snippet = "sets"]
 impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> std::iter::FromIterator<T>
     for HashUnionFindSets<T>
 {
@@ -295,7 +287,6 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> std::iter::FromIterator<
 }
 
 /*
-#[snippet = "sets"]
 impl<T: Eq + std::hash::Hash + std::fmt::Debug> IntoIterator for HashUnionFindSets<T> {
     type Item = HashSet<T>;
     type IntoIter = std::collections::hash_map::Values<>;
@@ -304,6 +295,8 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug> IntoIterator for HashUnionFindSe
     }
 }
 */
+
+// END SNIPPET
 
 #[cfg(test)]
 mod tests {
