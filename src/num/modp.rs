@@ -4,12 +4,11 @@
 // 動的なmod設定が必要な問題: ABC137 F
 // 複数のmodを使い分けなければならない問題には対応できない
 
+// BEGIN SNIPPET modp
+
 use num::{WithZero, WithOne, Numeric};
 
-#[snippet = "modp"]
 pub type ModPBase = u64;
-
-#[snippet = "modp"]
 pub type ModPModulus = u32;
 
 /// The modulus which is a prime number.
@@ -17,17 +16,14 @@ pub type ModPModulus = u32;
 /// In the contest, change the value by `ModP::set_mod` method
 /// before any use of `ModP`.
 /// Typically, the value is `1_000_000_007`.
-#[snippet = "modp"]
 static mut MODULUS: ModPBase = 0;
 
 /// A number whose arithmetics is carried modulo a prime number.
-#[snippet = "modp"]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct ModP {
     base: ModPBase
 }
 
-#[snippet = "modp"]
 impl ModP {
     /// Sets the modulus.
     ///
@@ -140,40 +136,34 @@ impl ModP {
 }
 
 /// Shorthand of `ModP::new(x)`.
-#[snippet = "modp"]
 pub fn modp(x: ModPBase) -> ModP {
     ModP::new(x)
 }
 
-#[snippet = "modp"]
 impl std::fmt::Display for ModP {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self.base())
     }
 }
 
-#[snippet = "modp"]
 impl std::fmt::Debug for ModP {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{} mod P", self.base())
     }
 }
 
-#[snippet = "modp"]
 impl PartialEq<ModPBase> for ModP {
     fn eq(&self, other: &ModPBase) -> bool {
         self.base() == other % unsafe { MODULUS }
     }
 }
 
-#[snippet = "modp"]
 impl PartialEq<ModP> for ModPBase {
     fn eq(&self, other: &ModP) -> bool {
         self % unsafe { MODULUS } == other.base() % unsafe { MODULUS }
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::Add for ModP {
     type Output = ModP;
 
@@ -183,7 +173,6 @@ impl std::ops::Add for ModP {
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::Add<ModPBase> for ModP {
     type Output = ModP;
 
@@ -192,7 +181,6 @@ impl std::ops::Add<ModPBase> for ModP {
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::Add<ModP> for ModPBase {
     type Output = ModP;
 
@@ -201,21 +189,18 @@ impl std::ops::Add<ModP> for ModPBase {
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::AddAssign for ModP {
     fn add_assign(&mut self, rhs: ModP) {
         *self = *self + rhs
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::AddAssign<ModPBase> for ModP {
     fn add_assign(&mut self, rhs: ModPBase) {
         *self = *self + ModP::new(rhs)
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::Neg for ModP {
     type Output = ModP;
 
@@ -224,7 +209,6 @@ impl std::ops::Neg for ModP {
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::Sub for ModP {
     type Output = ModP;
 
@@ -233,7 +217,6 @@ impl std::ops::Sub for ModP {
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::Sub<ModPBase> for ModP {
     type Output = ModP;
 
@@ -242,7 +225,6 @@ impl std::ops::Sub<ModPBase> for ModP {
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::Sub<ModP> for ModPBase {
     type Output = ModP;
 
@@ -251,21 +233,18 @@ impl std::ops::Sub<ModP> for ModPBase {
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::SubAssign for ModP {
     fn sub_assign(&mut self, rhs: ModP) {
         *self = *self - rhs;
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::SubAssign<ModPBase> for ModP {
     fn sub_assign(&mut self, rhs: ModPBase) {
         *self = *self - ModP::new(rhs)
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::Mul for ModP {
     type Output = ModP;
 
@@ -275,7 +254,6 @@ impl std::ops::Mul for ModP {
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::Mul<ModPBase> for ModP {
     type Output = ModP;
 
@@ -284,7 +262,6 @@ impl std::ops::Mul<ModPBase> for ModP {
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::Mul<ModP> for ModPBase {
     type Output = ModP;
 
@@ -293,21 +270,18 @@ impl std::ops::Mul<ModP> for ModPBase {
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::MulAssign for ModP {
     fn mul_assign(&mut self, rhs: ModP) {
         *self = *self * rhs
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::MulAssign<ModPBase> for ModP {
     fn mul_assign(&mut self, rhs: ModPBase) {
         *self = *self * ModP::new(rhs)
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::Div for ModP {
     type Output = ModP;
 
@@ -316,7 +290,6 @@ impl std::ops::Div for ModP {
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::Div<ModPBase> for ModP {
     type Output = ModP;
 
@@ -325,7 +298,6 @@ impl std::ops::Div<ModPBase> for ModP {
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::Div<ModP> for ModPBase {
     type Output = ModP;
 
@@ -334,64 +306,58 @@ impl std::ops::Div<ModP> for ModPBase {
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::DivAssign for ModP {
     fn div_assign(&mut self, rhs: ModP) {
         *self = *self / rhs;
     }
 }
 
-#[snippet = "modp"]
 impl std::ops::DivAssign<ModPBase> for ModP {
     fn div_assign(&mut self, rhs: ModPBase) {
         *self = *self / ModP::new(rhs)
     }
 }
 
-#[snippet = "modp"] forward_ref_binop!(impl Add, add for ModP, ModP);
-#[snippet = "modp"] forward_ref_binop!(impl Add, add for ModP, ModPBase);
-#[snippet = "modp"] forward_ref_binop!(impl Add, add for ModPBase, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl AddAssign, add_assign for ModP, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl AddAssign, add_assign for ModP, ModPBase);
+forward_ref_binop!(impl Add, add for ModP, ModP);
+forward_ref_binop!(impl Add, add for ModP, ModPBase);
+forward_ref_binop!(impl Add, add for ModPBase, ModP);
+forward_ref_op_assign!(impl AddAssign, add_assign for ModP, ModP);
+forward_ref_op_assign!(impl AddAssign, add_assign for ModP, ModPBase);
 
-#[snippet = "modp"] forward_ref_unop!(impl Neg, neg for ModP);
+forward_ref_unop!(impl Neg, neg for ModP);
 
-#[snippet = "modp"] forward_ref_binop!(impl Sub, sub for ModP, ModP);
-#[snippet = "modp"] forward_ref_binop!(impl Sub, sub for ModP, ModPBase);
-#[snippet = "modp"] forward_ref_binop!(impl Sub, sub for ModPBase, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl SubAssign, sub_assign for ModP, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl SubAssign, sub_assign for ModP, ModPBase);
+forward_ref_binop!(impl Sub, sub for ModP, ModP);
+forward_ref_binop!(impl Sub, sub for ModP, ModPBase);
+forward_ref_binop!(impl Sub, sub for ModPBase, ModP);
+forward_ref_op_assign!(impl SubAssign, sub_assign for ModP, ModP);
+forward_ref_op_assign!(impl SubAssign, sub_assign for ModP, ModPBase);
 
-#[snippet = "modp"] forward_ref_binop!(impl Mul, mul for ModP, ModP);
-#[snippet = "modp"] forward_ref_binop!(impl Mul, mul for ModP, ModPBase);
-#[snippet = "modp"] forward_ref_binop!(impl Mul, mul for ModPBase, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl MulAssign, mul_assign for ModP, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl MulAssign, mul_assign for ModP, ModPBase);
+forward_ref_binop!(impl Mul, mul for ModP, ModP);
+forward_ref_binop!(impl Mul, mul for ModP, ModPBase);
+forward_ref_binop!(impl Mul, mul for ModPBase, ModP);
+forward_ref_op_assign!(impl MulAssign, mul_assign for ModP, ModP);
+forward_ref_op_assign!(impl MulAssign, mul_assign for ModP, ModPBase);
 
-#[snippet = "modp"] forward_ref_binop!(impl Div, div for ModP, ModP);
-#[snippet = "modp"] forward_ref_binop!(impl Div, div for ModP, ModPBase);
-#[snippet = "modp"] forward_ref_binop!(impl Div, div for ModPBase, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl DivAssign, div_assign for ModP, ModP);
-#[snippet = "modp"] forward_ref_op_assign!(impl DivAssign, div_assign for ModP, ModPBase);
+forward_ref_binop!(impl Div, div for ModP, ModP);
+forward_ref_binop!(impl Div, div for ModP, ModPBase);
+forward_ref_binop!(impl Div, div for ModPBase, ModP);
+forward_ref_op_assign!(impl DivAssign, div_assign for ModP, ModP);
+forward_ref_op_assign!(impl DivAssign, div_assign for ModP, ModPBase);
 
-#[snippet = "modp"]
 impl WithZero for ModP {
     fn zero() -> ModP {
         unsafe { ModP::new_unchecked(0) }
     }
 }
 
-#[snippet = "modp"]
 impl WithOne for ModP {
     fn one() -> ModP {
         unsafe { ModP::new_unchecked(1) }
     }
 }
 
-#[snippet = "modp"]
 impl Numeric for ModP {}
 
-#[snippet = "modp"]
 impl std::iter::Sum for ModP {
     fn sum<I: Iterator<Item=ModP>>(iter: I) -> ModP {
         let mut ans = 0;
@@ -402,7 +368,6 @@ impl std::iter::Sum for ModP {
     }
 }
 
-#[snippet = "modp"]
 impl<'a> std::iter::Sum<&'a ModP> for ModP {
     fn sum<I: Iterator<Item=&'a ModP>>(iter: I) -> ModP {
         let mut ans = 0;
@@ -413,7 +378,6 @@ impl<'a> std::iter::Sum<&'a ModP> for ModP {
     }
 }
 
-#[snippet = "modp"]
 impl std::iter::Product for ModP {
     fn product<I: Iterator<Item=ModP>>(iter: I) -> ModP {
         let mut ans = ModP::one();
@@ -424,7 +388,6 @@ impl std::iter::Product for ModP {
     }
 }
 
-#[snippet = "modp"]
 impl<'a> std::iter::Product<&'a ModP> for ModP {
     fn product<I: Iterator<Item=&'a ModP>>(iter: I) -> ModP {
         let mut ans = ModP::one();
@@ -437,8 +400,9 @@ impl<'a> std::iter::Product<&'a ModP> for ModP {
 
 use read::{Readable, Words};
 
-#[snippet = "modp"]
 readable!(ModP, 1, |ws| ModP::new(ws[0].read::<ModPBase>()));
+
+// END SNIPPET
 
 #[cfg(test)]
 mod tests {

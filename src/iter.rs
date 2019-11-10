@@ -1,7 +1,8 @@
 //! Enriches iterators.
 
+// BEGIN SNIPPET iter
+
 /// An iterator created by [`step_by_`](trait.IteratorExt.html#method.step_by_) method on iterators.
-#[snippet = "iter"]
 #[derive(Clone)]
 pub struct StepBy<I> {
     iter: I,
@@ -9,7 +10,6 @@ pub struct StepBy<I> {
     first_take: bool
 }
 
-#[snippet = "iter"]
 impl<I: Iterator> Iterator for StepBy<I> {
     type Item = I::Item;
 
@@ -24,13 +24,11 @@ impl<I: Iterator> Iterator for StepBy<I> {
 }
 
 /// An iterator created by [`chunks`](trait.IteratorExt.html#method.chunks) method on iterators.
-#[snippet = "iter"]
 pub struct Chunks<I: Iterator> {
     iter: I,
     size: usize
 }
 
-#[snippet = "iter"]
 impl<I: Iterator> Iterator for Chunks<I> {
     type Item = Vec<I::Item>;
 
@@ -54,7 +52,6 @@ impl<I: Iterator> Iterator for Chunks<I> {
 
 /// An iterator created by [`lscan`](trait.IteratorExt.html#method.lscan) method
 /// on iterators.
-#[snippet = "iter"]
 #[derive(Clone)]
 pub struct LScan<I: Iterator, S: Clone, F: FnMut(&S, I::Item) -> S> {
     iter: I,
@@ -62,7 +59,6 @@ pub struct LScan<I: Iterator, S: Clone, F: FnMut(&S, I::Item) -> S> {
     f: F,
 }
 
-#[snippet = "iter"]
 impl<I: Iterator, S: Clone, F> Iterator for LScan<I, S, F>
 where
     F: FnMut(&S, I::Item) -> S,
@@ -82,7 +78,6 @@ where
 
 /// An iterator created by [`flatten`](trait.IteratorExt.html#method.flatten) method
 /// on iterators.
-#[snippet = "iter"]
 // #[derive(Clone)]
 pub struct Flatten<I: Iterator>
 where
@@ -92,7 +87,6 @@ where
     inner_iter: Option<<<I as Iterator>::Item as IntoIterator>::IntoIter>
 }
 
-#[snippet = "iter"]
 impl<I, J> Iterator for Flatten<I>
 where
     I: Iterator<Item = J>,
@@ -126,14 +120,12 @@ where
 
 /// An iterator created by [`group_by`](trait.IteratorExt#method.group_by) method
 /// on iterators.
-#[snippet = "iter"]
 pub struct GroupBy<K: Eq, I: Iterator, F: FnMut(&I::Item) -> K> {
     cur: Option<(I::Item, K)>,
     iter: I,
     key_fn: F
 }
 
-#[snippet = "iter"]
 impl<K: Eq, I: Iterator, F: FnMut(&I::Item) -> K> Iterator for GroupBy<K, I, F> {
     type Item = (K, Vec<I::Item>);
 
@@ -166,13 +158,11 @@ impl<K: Eq, I: Iterator, F: FnMut(&I::Item) -> K> Iterator for GroupBy<K, I, F> 
 
 /// An iterator created by [`run_length`](trait.IteratorExt#method.run_length) method
 /// on iterators.
-#[snippet = "iter"]
 pub struct RunLength<I: Iterator> {
     cur: Option<I::Item>,
     iter: I
 }
 
-#[snippet = "iter"]
 impl<I: Iterator> Iterator for RunLength<I> where I::Item: Eq {
     type Item = (I::Item, usize);
 
@@ -203,7 +193,6 @@ impl<I: Iterator> Iterator for RunLength<I> where I::Item: Eq {
 }
 
 /// Enriches iterators by adding various methods.
-#[snippet = "iter"]
 pub trait IteratorExt: Iterator {
     /// Returns an iterator skipping a constant number of items in each iteration.
     ///
@@ -418,17 +407,14 @@ pub trait IteratorExt: Iterator {
     fn cat(self) -> String where Self: Sized, Self::Item: std::fmt::Display { self.join("") }
 }
 
-#[snippet = "iter"]
 impl<I: Iterator> IteratorExt for I {}
 
 /// An iterator created by [`unfold`](fn.unfold.html) function.
-#[snippet = "iter"]
 pub struct Unfold<T, F> where F: FnMut(&T) -> Option<T> {
     state: Option<T>,
     f: F
 }
 
-#[snippet = "iter"]
 impl<T, F> Iterator for Unfold<T, F> where F: FnMut(&T) -> Option<T> {
     type Item = T;
 
@@ -459,19 +445,16 @@ impl<T, F> Iterator for Unfold<T, F> where F: FnMut(&T) -> Option<T> {
 ///
 /// assert_eq!(unfold(1, twice_until_10).collect::<Vec<_>>(), vec![1, 2, 4, 8]);
 /// ```
-#[snippet = "iter"]
 pub fn unfold<T, F>(init: T, f: F) -> Unfold<T, F> where F: FnMut(&T) -> Option<T> {
     Unfold { state: Some(init), f: f }
 }
 
 /// An iterator created by [`iterate`](fn.iterate.html) function.
-#[snippet = "iter"]
 pub struct Iterate<T, F> where F: FnMut(&T) -> T {
     state: T,
     f: F
 }
 
-#[snippet = "iter"]
 impl<T, F> Iterator for Iterate<T, F> where F: FnMut(&T) -> T {
     type Item = T;
 
@@ -496,7 +479,6 @@ impl<T, F> Iterator for Iterate<T, F> where F: FnMut(&T) -> T {
 ///     vec![1, 2, 4, 8]
 /// );
 /// ```
-#[snippet = "iter"]
 pub fn iterate<T, F>(init: T, f: F) -> Iterate<T, F>
 where
     F: FnMut(&T) -> T,
@@ -504,7 +486,9 @@ where
     Iterate { state: init, f: f }
 }
 
+// END SNIPPET
 
+/*
 #[snippet = "product"]
 #[derive(Clone)]
 struct Product2<I, J>
@@ -810,6 +794,7 @@ macro_rules! combinations_repl {
         Combinations::new($iter, 4, true).map(|v| (v[0], v[1], v[2], v[3]))
     };
 }
+*/
 
 #[cfg(test)]
 mod test {
@@ -882,6 +867,7 @@ mod test {
     }
 }
 
+/*
 #[cfg(bench)]
 mod bench {
     extern crate test;
@@ -938,3 +924,4 @@ mod bench {
         });
     }
 }
+*/

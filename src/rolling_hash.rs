@@ -3,11 +3,11 @@
 
 use iter::IteratorExt;
 
+// BEGIN SNIPPET rolling_hash DEPENDS ON iter
+
 /// Unsigned integer type for rolling hash.
-#[snippet = "rolling_hash"]
 pub type RollingHashBase = u64;
 
-#[snippet = "rolling_hash"]
 mod rolling_hash_internal {
     use super::RollingHashBase;
 
@@ -28,13 +28,11 @@ mod rolling_hash_internal {
 }
 
 /// A rolling-hashable sequence.
-#[snippet = "rolling_hash"]
 pub trait RollingHash {
     fn rolling_hash(&self) -> RollingHashValue<Self>;
     fn prefix_rolling_hash(&self) -> PrefixRollingHash<Self>;
 }
 
-#[snippet = "rolling_hash"]
 impl RollingHash for [u8] {
     fn rolling_hash(&self) -> RollingHashValue<[u8]> {
         use self::rolling_hash_internal::*;
@@ -63,7 +61,6 @@ impl RollingHash for [u8] {
 }
 
 /// A rolling hash of a sequence.
-#[snippet = "rolling_hash"]
 pub struct RollingHashValue<T: ?Sized + RollingHash> {
     len: usize,
     value: RollingHashBase,
@@ -71,7 +68,6 @@ pub struct RollingHashValue<T: ?Sized + RollingHash> {
 }
 
 // Cannot derive for unsized `T`.
-#[snippet = "rolling_hash"]
 impl<T: ?Sized + RollingHash> Clone for RollingHashValue<T> {
     fn clone(&self) -> Self {
         RollingHashValue {
@@ -83,10 +79,8 @@ impl<T: ?Sized + RollingHash> Clone for RollingHashValue<T> {
 }
 
 // Cannot derive for unsized `T`.
-#[snippet = "rolling_hash"]
 impl<T: ?Sized + RollingHash> Copy for RollingHashValue<T> {}
 
-#[snippet = "rolling_hash"]
 impl<T: ?Sized + RollingHash> RollingHashValue<T> {
     /// Length of the original sequence.
     pub fn len(&self) -> usize {
@@ -100,13 +94,11 @@ impl<T: ?Sized + RollingHash> RollingHashValue<T> {
 }
 
 /// Sliding rolling hashes of a sequence.
-#[snippet = "rolling_hash"]
 pub struct PrefixRollingHash<T: ?Sized + RollingHash> {
     prefix_hash: Vec<RollingHashBase>,
     seq_type: std::marker::PhantomData<T>
 }
 
-#[snippet = "rolling_hash"]
 impl<T: ?Sized + RollingHash> PrefixRollingHash<T> {
     /// Length of original sequence.
     pub fn len(&self) -> usize {
@@ -176,7 +168,6 @@ impl<T: ?Sized + RollingHash> PrefixRollingHash<T> {
     }
 }
 
-#[snippet = "rolling_hash"]
 pub struct RollingHashMatches<'a, T: 'a + ?Sized + RollingHash> {
     prefix_hash: &'a PrefixRollingHash<T>,
     pattern: RollingHashValue<T>,
@@ -184,7 +175,6 @@ pub struct RollingHashMatches<'a, T: 'a + ?Sized + RollingHash> {
     index: usize,
 }
 
-#[snippet = "rolling_hash"]
 impl<'a, T: ?Sized + RollingHash> Iterator for RollingHashMatches<'a, T> {
     type Item = usize;
 
@@ -207,6 +197,8 @@ impl<'a, T: ?Sized + RollingHash> Iterator for RollingHashMatches<'a, T> {
         None
     }
 }
+
+// END SNIPPET
 
 #[cfg(test)]
 mod tests {

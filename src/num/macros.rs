@@ -1,8 +1,9 @@
+// BEGIN SNIPPET num
+
 /// Implements the unary operator "op &T"
 /// based on "op T" where T is expected to be `Copy`able.
 ///
 /// Based on [https://doc.rust-lang.org/src/core/internal_macros.rs.html].
-#[snippet = "num"]
 macro_rules! forward_ref_unop {
     (impl $op:ident, $method:ident for $t:ty) => {
         impl std::ops::$op for &$t {
@@ -19,7 +20,6 @@ macro_rules! forward_ref_unop {
 /// based on "T op U" where T and U are expected to be `Copy`able.
 ///
 /// Based on [https://doc.rust-lang.org/src/core/internal_macros.rs.html].
-#[snippet = "num"]
 macro_rules! forward_ref_binop {
     (impl $op:ident, $method:ident for $t:ty, $u:ty) => {
         impl<'a> std::ops::$op<$u> for &'a $t {
@@ -51,7 +51,6 @@ macro_rules! forward_ref_binop {
 /// Implements "T op= &U", based on "T op= U" where U is expected to be `Copy`able.
 ///
 /// Based on [https://doc.rust-lang.org/src/core/internal_macros.rs.html].
-#[snippet = "num"]
 macro_rules! forward_ref_op_assign {
     (impl $op:ident, $method:ident for $t:ty, $u:ty) => {
         impl std::ops::$op<&$u> for $t {
@@ -61,3 +60,5 @@ macro_rules! forward_ref_op_assign {
         }
     }
 }
+
+// END SNIPPET

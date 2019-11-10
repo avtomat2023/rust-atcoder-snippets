@@ -1,14 +1,14 @@
 //! Enriches slices.
 
+// BEGIN SNIPPET slice
+
 // TODO: ABC038 D, AGC026 A
 /// An iterator created by [`group_by`](trait.SliceExt.html#tymethod.group_by) method on slices.
-#[snippet = "slice"]
 pub struct SliceGroupBy<'a, T: 'a, K: Eq, F: Fn(&T) -> K> {
     key_fn: F,
     rest: &'a [T],
 }
 
-#[snippet = "slice"]
 impl<'a, T, K: Eq, F: Fn(&T) -> K> Iterator for SliceGroupBy<'a, T, K, F> {
     type Item = (K, &'a [T]);
 
@@ -31,13 +31,11 @@ impl<'a, T, K: Eq, F: Fn(&T) -> K> Iterator for SliceGroupBy<'a, T, K, F> {
 
 // TODO: AGC038 B
 /// An iterator created by [`split_by_gap`](trait.SliceExt.html#tymethod.split_by_gap) method on slices.
-#[snippet = "slice"]
 pub struct SplitByGap<'a, T: 'a, F: Fn(&T, &T) -> bool> {
     gap_fn: F,
     rest: &'a [T]
 }
 
-#[snippet = "slice"]
 impl<'a, T, F: Fn(&T, &T) -> bool> Iterator for SplitByGap<'a, T, F> {
     type Item = &'a [T];
 
@@ -58,7 +56,6 @@ impl<'a, T, F: Fn(&T, &T) -> bool> Iterator for SplitByGap<'a, T, F> {
 
 /// An iterator created by [`permutations`](trait.SliceExt.html#tymethod.permutations)
 /// method on slices.
-#[snippet = "slice"]
 pub struct Permutations<'a, T: 'a> {
     items: &'a [T],
     indices: Option<Vec<usize>>,
@@ -66,7 +63,6 @@ pub struct Permutations<'a, T: 'a> {
 }
 
 // I don't understand why T: 'a works.
-#[snippet = "slice"]
 impl<'a, T: 'a> Iterator for Permutations<'a, T> {
     type Item = Vec<&'a T>;
 
@@ -87,7 +83,6 @@ impl<'a, T: 'a> Iterator for Permutations<'a, T> {
 }
 
 // https://stackoverflow.com/questions/11483060/stdnext-permutation-implementation-explanation
-#[snippet = "slice"]
 fn next_permutation(mut indices: Vec<usize>) -> Option<Vec<usize>> {
     (0 .. indices.len().saturating_sub(1)).rev()
         .find(|&left| indices[left] < indices[left+1])
@@ -101,7 +96,6 @@ fn next_permutation(mut indices: Vec<usize>) -> Option<Vec<usize>> {
         })
 }
 
-#[snippet = "slice"]
 fn count_inversions_sub<T: Clone + Ord>(seq: &[T]) -> (Vec<T>, usize) {
     if seq.len() <= 1 {
         (seq.to_vec(), 0)
@@ -145,7 +139,6 @@ fn count_inversions_sub<T: Clone + Ord>(seq: &[T]) -> (Vec<T>, usize) {
 }
 
 /// Enriches slices by adding various methods.
-#[snippet = "slice"]
 pub trait SliceExt<T> {
     /// Returns an iterator yielding groups.
     ///
@@ -222,7 +215,6 @@ pub trait SliceExt<T> {
     fn count_inversions(&self) -> usize where T: Clone + Ord;
 }
 
-#[snippet = "slice"]
 impl<T> SliceExt<T> for [T] {
     fn group_by<K: Eq, F: Fn(&T) -> K>(&self, key_fn: F) -> SliceGroupBy<T, K, F> {
         SliceGroupBy { key_fn: key_fn, rest: self }
@@ -252,7 +244,6 @@ impl<T> SliceExt<T> for [T] {
 }
 
 /// Enriches slices of `Vec`s by adding various methods.
-#[snippet = "slice"]
 pub trait SliceOfVecsExt<T> {
     // TODO: ABC129 D
     /// Converts `[Vec<T>]` into `Vec<Vec<T>>` permuting its X and Y axes.
@@ -283,7 +274,6 @@ pub trait SliceOfVecsExt<T> {
     fn transpose_clone(&self) -> Option<Vec<Vec<T>>> where T: Clone;
 }
 
-#[snippet = "slice"]
 impl<T> SliceOfVecsExt<T> for [Vec<T>] {
     fn transpose_clone(&self) -> Option<Vec<Vec<T>>> where T: Clone {
         if self.iter().any(|row| row.is_empty()) {
@@ -308,6 +298,8 @@ impl<T> SliceOfVecsExt<T> for [Vec<T>] {
         Some(result)
     }
 }
+
+// END SNIPPET
 
 #[cfg(test)]
 mod test {

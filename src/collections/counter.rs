@@ -2,20 +2,19 @@
 //!
 //! AGC031 Aとかが楽に解ける
 
+// BEGIN SNIPPET counter
+
 /// An multiset similar to Python's collections.Counter.
-#[snippet = "counter"]
 #[derive(Clone)]
 pub struct HashCounter<T: Eq + std::hash::Hash> {
     counter: std::collections::HashMap<T, usize>
 }
 
 /// An iterator created by [`iter`](struct.HashCounter.html#method.iter) method on counters.
-#[snippet = "counter"]
 pub struct HashCounterIter<'a, T: 'a> {
     iter: std::collections::hash_map::Iter<'a, T, usize>
 }
 
-#[snippet = "counter"]
 impl<'a, T> Iterator for HashCounterIter<'a, T> {
     type Item = (&'a T, usize);
 
@@ -30,12 +29,10 @@ impl<'a, T> Iterator for HashCounterIter<'a, T> {
 }
 
 /// An iterator created by `into_iter` method on counters.
-#[snippet = "counter"]
 pub struct HashCounterIntoIter<T> {
     iter: std::collections::hash_map::IntoIter<T, usize>
 }
 
-#[snippet = "counter"]
 impl<'a, T> Iterator for HashCounterIntoIter<T> {
     type Item = (T, usize);
 
@@ -50,12 +47,10 @@ impl<'a, T> Iterator for HashCounterIntoIter<T> {
 }
 
 /// An iterator created by [`values`](struct.HashCounter.html#method.values) method on counters.
-#[snippet = "counter"]
 pub struct HashCounterValues<'a, T: 'a> {
     iter: std::collections::hash_map::Values<'a, T, usize>
 }
 
-#[snippet = "counter"]
 impl<'a, T> Iterator for HashCounterValues<'a, T> {
     type Item = usize;
 
@@ -69,7 +64,6 @@ impl<'a, T> Iterator for HashCounterValues<'a, T> {
     }
 }
 
-#[snippet = "counter"]
 impl<T: Eq + std::hash::Hash> HashCounter<T> {
     /// Creates a new counter.
     pub fn new() -> HashCounter<T> {
@@ -112,10 +106,8 @@ impl<T: Eq + std::hash::Hash> HashCounter<T> {
     }
 }
 
-#[snippet = "counter"]
 static HASH_COUNTER_ZERO: usize = 0;
 
-#[snippet = "counter"]
 impl<'a, T, Q: ?Sized> std::ops::Index<&'a Q> for HashCounter<T>
 where
     T: Eq + std::hash::Hash + std::borrow::Borrow<Q>,
@@ -131,7 +123,6 @@ where
     }
 }
 
-#[snippet = "counter"]
 impl<'a, T, Q: ?Sized> std::ops::IndexMut<&'a Q> for HashCounter<T>
 where
     T: Eq + std::hash::Hash + std::borrow::Borrow<Q>,
@@ -144,7 +135,6 @@ where
     }
 }
 
-#[snippet = "counter"]
 impl<T: std::hash::Hash + Eq> std::iter::FromIterator<T> for HashCounter<T> {
     fn from_iter<I>(iter: I) -> HashCounter<T> where I: IntoIterator<Item=T> {
         let mut counter = HashCounter::new();
@@ -155,7 +145,6 @@ impl<T: std::hash::Hash + Eq> std::iter::FromIterator<T> for HashCounter<T> {
     }
 }
 
-#[snippet = "counter"]
 impl<T: std::hash::Hash + Eq> std::iter::IntoIterator for HashCounter<T> {
     type Item = (T, usize);
     type IntoIter = HashCounterIntoIter<T>;
@@ -166,7 +155,6 @@ impl<T: std::hash::Hash + Eq> std::iter::IntoIterator for HashCounter<T> {
 }
 
 #[macro_export]
-#[snippet = "counter"]
 macro_rules! hash_counter {
     ($($item:expr),*) => {
         {
@@ -176,6 +164,8 @@ macro_rules! hash_counter {
         }
     }
 }
+
+// END SNIPPET
 
 #[cfg(test)]
 mod tests {

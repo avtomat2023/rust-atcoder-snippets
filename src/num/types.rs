@@ -1,5 +1,6 @@
+// BEGIN SNIPPET num
+
 /// Having identity element for addition.
-#[snippet = "num"]
 pub trait WithZero: Sized +
     // Higher Ranked Trait Bound
     // https://stackoverflow.com/questions/34630695
@@ -10,7 +11,6 @@ pub trait WithZero: Sized +
 }
 
 /// Having identity element for multiplication.
-#[snippet = "num"]
 pub trait WithOne: Sized +
     for<'a> std::ops::Mul<&'a Self, Output=Self> +
     for<'a> std::ops::MulAssign<&'a Self>
@@ -19,7 +19,6 @@ pub trait WithOne: Sized +
 }
 
 /// Number supporting basic operations and constants.
-#[snippet = "num"]
 pub trait Numeric: WithZero + WithOne + PartialEq<Self> +
     for<'a> std::ops::Sub<&'a Self, Output=Self> +
     for<'a> std::ops::SubAssign<&'a Self> +
@@ -28,9 +27,9 @@ pub trait Numeric: WithZero + WithOne + PartialEq<Self> +
 {}
 
 /// Integer.
-#[snippet = "num"]
 pub trait Integer: Numeric + Eq + Ord {}
 
 /// Floating point number.
-#[snippet = "num"]
 pub trait Float: Numeric {}
+
+// END SNIPPET

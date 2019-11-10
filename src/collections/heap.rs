@@ -1,7 +1,8 @@
 //! Priority queues implemented by binary heaps.
 // TODO: Add examples: EDPC N, Dijkstra problem
 
-#[snippet = "heap"]
+// BEGIN SNIPPET heap
+
 mod max_heap_internal {
     use std::cmp::Ordering::{self, *};
 
@@ -103,14 +104,12 @@ mod max_heap_internal {
 }
 
 /// Priority queue yielding its maximum item.
-#[snippet = "heap"]
 #[derive(Clone)]
 pub struct MaxHeap<T, F> {
     heap: Vec<T>,
     cmp: F
 }
 
-#[snippet = "heap"]
 impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> MaxHeap<T, F> {
     /// Creates an empty priority queue using `cmp` for comparison.
     pub fn new_by(cmp: F) -> MaxHeap<T, F> {
@@ -154,7 +153,6 @@ impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> MaxHeap<T, F> {
     }
 }
 
-#[snippet = "heap"]
 impl<T: Ord> MaxHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
     /// Creates an empty priority queue.
     pub fn new() -> MaxHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
@@ -167,7 +165,6 @@ impl<T: Ord> MaxHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
     }
 }
 
-#[snippet = "heap"]
 impl<T, F> MaxHeap<T, F> {
     /// Length of the priority queue.
     pub fn len(&self) -> usize {
@@ -199,14 +196,12 @@ impl<T, F> MaxHeap<T, F> {
     }
 }
 
-#[snippet = "heap"]
 impl<T: std::fmt::Debug, F> std::fmt::Debug for MaxHeap<T, F> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         f.debug_list().entries(self.iter()).finish()
     }
 }
 
-#[snippet = "heap"]
 impl<'a, T, F> IntoIterator for &'a MaxHeap<T, F> {
     type Item = &'a T;
     type IntoIter = std::slice::Iter<'a, T>;
@@ -216,7 +211,6 @@ impl<'a, T, F> IntoIterator for &'a MaxHeap<T, F> {
     }
 }
 
-#[snippet = "heap"]
 impl<T, F> IntoIterator for MaxHeap<T, F> {
     type Item = T;
     type IntoIter = std::vec::IntoIter<T>;
@@ -229,13 +223,11 @@ impl<T, F> IntoIterator for MaxHeap<T, F> {
 /// Priority queue yielding its minimum item.
 ///
 /// `MinHeap` provides the same methods as [`MaxHeap`](struct.MaxHeap.html).
-#[snippet = "heap"]
 pub struct MinHeap<T, F> {
     heap: Vec<T>,
     cmp: F
 }
 
-#[snippet = "heap"]
 impl<T, F: Fn(&T, &T) -> std::cmp::Ordering + Clone> MinHeap<T, F> {
     pub fn new_by(cmp: F) -> MinHeap<T, F> {
         MinHeap {
@@ -277,7 +269,6 @@ impl<T, F: Fn(&T, &T) -> std::cmp::Ordering + Clone> MinHeap<T, F> {
     }
 }
 
-#[snippet = "heap"]
 impl<T: Ord> MinHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
     pub fn new() -> MinHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
         MinHeap::new_by(Ord::cmp)
@@ -288,7 +279,6 @@ impl<T: Ord> MinHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
     }
 }
 
-#[snippet = "heap"]
 impl<T, F> MinHeap<T, F> {
     pub fn len(&self) -> usize {
         self.heap.len()
@@ -311,14 +301,12 @@ impl<T, F> MinHeap<T, F> {
     }
 }
 
-#[snippet = "heap"]
 impl<T: std::fmt::Debug, F> std::fmt::Debug for MinHeap<T, F> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         f.debug_list().entries(self.iter()).finish()
     }
 }
 
-#[snippet = "heap"]
 impl<'a, T, F> IntoIterator for &'a MinHeap<T, F> {
     type Item = &'a T;
     type IntoIter = std::slice::Iter<'a, T>;
@@ -328,7 +316,6 @@ impl<'a, T, F> IntoIterator for &'a MinHeap<T, F> {
     }
 }
 
-#[snippet = "heap"]
 impl<T, F> IntoIterator for MinHeap<T, F> {
     type Item = T;
     type IntoIter = std::vec::IntoIter<T>;
@@ -337,6 +324,8 @@ impl<T, F> IntoIterator for MinHeap<T, F> {
         self.heap.into_iter()
     }
 }
+
+// END SNIPPET
 
 #[cfg(test)]
 mod tests {

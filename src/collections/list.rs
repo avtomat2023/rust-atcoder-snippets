@@ -1,18 +1,18 @@
 //! Functional list.
 
+// BEGIN SNIPPET list
+
 /// For pattern match.
 ///
 /// It is not necessary to use this enum directly.
 /// See [Example section of `List`](struct.List.html#example)
 /// for usage in pattern matching.
-#[snippet = "list"]
 #[derive(Clone, PartialEq, Eq)]
 pub enum ListInner<T: Clone> {
     Nil,
     Cons(T, List<T>)
 }
 
-#[snippet = "list"]
 pub use self::ListInner::{Nil, Cons};
 
 // The example is ignored because `flatten` method by `iter` snippet collide
@@ -129,14 +129,12 @@ pub use self::ListInner::{Nil, Cons};
 ///     println!("{}", dfs(n, &digits, &mut HashMap::new()).unwrap().cat());
 /// }
 /// ```
-#[snippet = "list"]
 #[derive(Clone, PartialEq, Eq)]
 pub struct List<T: Clone> {
     inner: std::rc::Rc<ListInner<T>>,
     len: usize
 }
 
-#[snippet = "list"]
 impl<T: Clone> List<T> {
     pub fn nil() -> List<T> { List { inner: std::rc::Rc::new(Nil), len: 0 } }
 
@@ -302,7 +300,6 @@ impl<T: Clone> List<T> {
 /// // `list` is not moved, still usable.
 /// println!("length of list = {}", list.len());
 /// ```
-#[snippet = "list"]
 impl<T: Clone> AsRef<ListInner<T>> for List<T> {
     fn as_ref(&self) -> &ListInner<T> {
         self.inner.as_ref()
@@ -333,7 +330,6 @@ impl<T: Clone> AsRef<ListInner<T>> for List<T> {
  * ///
  * /// // `list` is moved, cannot use it anymore.
  * /// ```
- * #[snippet = "list"]
  * impl<T: Clone> From<List<T>> for ListInner<T> {
  *     fn from(list: List<T>) -> ListInner<T> {
  *         match std::rc::Rc::try_unwrap(list.inner) {
@@ -353,7 +349,6 @@ impl<T: Clone> AsRef<ListInner<T>> for List<T> {
 /// # use atcoder_snippets::collections::list::*;
 /// assert_eq!(format!("{:?}", list!["a", "b"]), r#""a" :: "b" :: nil"#);
 /// ```
-#[snippet = "list"]
 impl<T: Clone + std::fmt::Debug> std::fmt::Debug for List<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self.inner.as_ref() {
@@ -364,7 +359,6 @@ impl<T: Clone + std::fmt::Debug> std::fmt::Debug for List<T> {
 }
 
 /// Comparation by dictionary order.
-#[snippet = "list"]
 impl<T: Clone + PartialOrd> PartialOrd for List<T> {
     fn partial_cmp(&self, other: &List<T>) -> Option<std::cmp::Ordering> {
         use std::cmp::Ordering::*;
@@ -385,7 +379,6 @@ impl<T: Clone + PartialOrd> PartialOrd for List<T> {
 }
 
 /// Comparation by dictionary order.
-#[snippet = "list"]
 impl<T: Clone + Ord> Ord for List<T> {
     fn cmp(&self, other: &List<T>) -> std::cmp::Ordering {
         use std::cmp::Ordering::*;
@@ -404,12 +397,10 @@ impl<T: Clone + Ord> Ord for List<T> {
 }
 
 /// An iterator over the items of a `List`.
-#[snippet = "list"]
 pub struct ListIter<T: Clone> {
     iter: List<T>
 }
 
-#[snippet = "list"]
 impl<T: Clone> Iterator for ListIter<T> {
     type Item = T;
 
@@ -432,10 +423,8 @@ impl<T: Clone> Iterator for ListIter<T> {
     }
 }
 
-#[snippet = "list"]
 impl<T: Clone> ExactSizeIterator for ListIter<T> {}
 
-#[snippet = "list"]
 impl<T: Clone> IntoIterator for List<T> {
     type Item = T;
     type IntoIter = ListIter<T>;
@@ -445,7 +434,6 @@ impl<T: Clone> IntoIterator for List<T> {
     }
 }
 
-#[snippet = "list"]
 impl<'a, T: Clone> IntoIterator for &'a List<T> {
     type Item = T;
     type IntoIter = ListIter<T>;
@@ -466,7 +454,6 @@ impl<'a, T: Clone> IntoIterator for &'a List<T> {
 /// # use atcoder_snippets::collections::list::*;
 /// assert_eq!(vec![1, 2, 3].into_iter().collect::<List<_>>(), list![1, 2, 3]);
 /// ```
-#[snippet = "list"]
 impl<T: Clone> std::iter::FromIterator<T> for List<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> List<T> {
         let xs: Vec<T> = iter.into_iter().collect();
@@ -487,12 +474,10 @@ impl<T: Clone> std::iter::FromIterator<T> for List<T> {
 /// # use atcoder_snippets::collections::list::*;
 /// assert_eq!(1.cons(2.cons(List::nil())), list![1, 2]);
 /// ```
-#[snippet = "list"]
 pub trait IntoCons<T: Clone, L: std::borrow::Borrow<List<T>>> {
     fn cons(self, tail: L) -> List<T>;
 }
 
-#[snippet = "list"]
 impl<T: Clone, L: std::borrow::Borrow<List<T>>> IntoCons<T, L> for T {
     fn cons(self, tail: L) -> List<T> {
         let tail_cloned: List<T> = tail.borrow().clone().into();
@@ -522,7 +507,6 @@ impl<T: Clone> IntoConsByMove<T> for T {
 /// Makes a list by enumerating its contents.
 ///
 /// See [Example section of `List`](collections/struct.List.html#example) for usage.
-#[snippet = "list"]
 #[macro_export]
 macro_rules! list {
     [] => { List::nil() };
@@ -530,6 +514,8 @@ macro_rules! list {
     [$head:expr, $($tail:expr),*] => { $head.cons(list![$($tail),*]) };
     [$head:expr, $($tail:expr),+ ,] => { list![$head, $($tail),*] };
 }
+
+// END SNIPPET list
 
 #[cfg(test)]
 mod tests {

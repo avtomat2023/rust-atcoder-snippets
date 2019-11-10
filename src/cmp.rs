@@ -2,7 +2,8 @@
 
 // ABC 038 D
 
-#[snippet = "cmp"]
+// BEGIN SNIPPET cmp
+
 use std::cmp::{Ord, Ordering};
 
 /// For reversed ordering.
@@ -18,25 +19,21 @@ use std::cmp::{Ord, Ordering};
 /// seq.sort_by_key(|&x| Reverse(x));
 /// assert_eq!(seq, vec![5, 4, 3, 2, 1]);
 /// ```
-#[snippet = "cmp"]
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default, Hash)]
 pub struct Reverse<T: Ord>(pub T);
 
-#[snippet = "cmp"]
 impl<T: Ord> PartialOrd for Reverse<T> {
     fn partial_cmp(&self, other: &Reverse<T>) -> Option<Ordering> {
         other.0.partial_cmp(&self.0)
     }
 }
 
-#[snippet = "cmp"]
 impl<T: Ord> Ord for Reverse<T> {
     fn cmp(&self, other: &Reverse<T>) -> Ordering {
         other.0.cmp(&self.0)
     }
 }
 
-#[snippet = "cmp"]
 pub trait SortDesc<T> {
     // ABC112 D
     fn sort_desc(&mut self) where T: Ord;
@@ -57,7 +54,6 @@ pub trait SortDesc<T> {
     fn sort_unstable_desc_by_key<K: Ord, F: FnMut(&T) -> K>(&mut self, key: F);
 }
 
-#[snippet = "cmp"]
 impl<T> SortDesc<T> for [T] {
     fn sort_desc(&mut self) where T: Ord {
         self.sort_by(|x, y| y.cmp(x));
@@ -101,14 +97,11 @@ impl<T> SortDesc<T> for [T] {
 /// seq.sort_by_key(|&x| Total(x));
 /// assert_eq!(seq, vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 /// ```
-#[snippet = "cmp"]
 #[derive(Clone, Copy, PartialEq, PartialOrd, Debug, Default, Hash)]
 pub struct Total<T: PartialOrd + PartialEq>(pub T);
 
-#[snippet = "cmp"]
 impl<T: PartialOrd + PartialEq> Eq for Total<T> {}
 
-#[snippet = "cmp"]
 impl<T: PartialOrd + PartialEq> Ord for Total<T> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.partial_cmp(other).unwrap()
@@ -119,7 +112,6 @@ impl<T: PartialOrd + PartialEq> Ord for Total<T> {
 ///
 /// Typical implementors are [`MaybeNeginf`](enum.MaybeNegInf.html)
 /// and [`MaybeInf`](enum.MaybeInf.html).
-#[snippet = "cmp"]
 pub trait WithCmpIdentity<T>: Sized {
     fn new(x: T) -> Self;
 
@@ -171,7 +163,6 @@ pub trait WithCmpIdentity<T>: Sized {
 /// Negative infinite or finite value.
 ///
 /// Typical application is `SegmentTree`.
-#[snippet = "cmp"]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum MaybeNegInf<T> {
     Inf,
@@ -182,11 +173,9 @@ pub enum MaybeNegInf<T> {
 /// Alias of `MaybeNegInf`.
 ///
 /// `MaybeNegInf` makes `Ord` into a monoid over maximum.
-#[snippet = "cmp"]
 pub type Max<T> = MaybeNegInf<T>;
 
 /// Positive infinite or finite value.
-#[snippet = "cmp"]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum MaybeInf<T> {
     Fin(T),
@@ -196,10 +185,8 @@ pub enum MaybeInf<T> {
 /// Alias of `MaybeInf`.
 ///
 /// `MaybeInf` makes `Ord` into a monoid over minimum.
-#[snippet = "cmp"]
 pub type Min<T> = MaybeInf<T>;
 
-#[snippet = "cmp"]
 macro_rules! impl_with_cmp_identity {
     ($t:ident) => {
         // Maybe it's good to have `Functor` trait. See this article:
@@ -242,8 +229,10 @@ macro_rules! impl_with_cmp_identity {
     }
 }
 
-#[snippet = "cmp"] impl_with_cmp_identity!(MaybeNegInf);
-#[snippet = "cmp"] impl_with_cmp_identity!(MaybeInf);
+impl_with_cmp_identity!(MaybeNegInf);
+impl_with_cmp_identity!(MaybeInf);
+
+// END SNIPPET
 
 #[cfg(test)]
 mod tests {
