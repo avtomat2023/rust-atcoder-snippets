@@ -25,7 +25,7 @@ def format_snippet(lines):
 
 def process(path):
     snippets = defaultdict(lambda: {"text": "", "dependencies": set()})
-    for filename in pathlib.Path(os.path.join(path, 'src')).rglob('*.rs'):
+    for filename in pathlib.Path(path).rglob('*.rs'):
         with open(filename) as f:
             lines = f.readlines()
             i = 0
