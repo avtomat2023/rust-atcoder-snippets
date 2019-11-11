@@ -1,5 +1,7 @@
 //! Enriches iterators.
 
+use std;
+
 // BEGIN SNIPPET iter
 
 /// An iterator created by [`step_by_`](trait.IteratorExt.html#method.step_by_) method on iterators.

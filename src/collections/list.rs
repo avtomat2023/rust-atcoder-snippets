@@ -1,5 +1,7 @@
 //! Functional list.
 
+use std;
+
 // BEGIN SNIPPET list
 
 /// For pattern match.

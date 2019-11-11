@@ -25,6 +25,8 @@
 //!
 //! So the algorithm find 2 occurrences of `P` in `T`.
 
+use std;
+
 // BEGIN SNIPPET z
 
 mod z_internal {

@@ -24,6 +24,7 @@
 //! assert_eq!(count_key(&[2,2,2,2,2,2], 2), 6);
 //! ```
 
+use std;
 use num::PrimitiveInteger;
 
 // BEGIN SNIPPET bsearch DEPENDS ON num

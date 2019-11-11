@@ -2,6 +2,8 @@
 //!
 //! For implementation details, see [this article](https://codeforces.com/blog/entry/18051).
 
+use std;
+
 // BEGIN SNIPPET segtree
 
 // use num::Numeric;

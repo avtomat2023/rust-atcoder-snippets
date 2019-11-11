@@ -1,5 +1,7 @@
 //! Disjoint-set data structure, known as union-find.
 
+use std;
+
 // TODO: Create `VecUnionFindSets`.
 
 // Since Rust version of AtCoder is too outdated,

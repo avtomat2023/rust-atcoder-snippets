@@ -19,6 +19,8 @@
 //! }
 //! ```
 
+use std;
+
 // BEGIN SNIPPET vec
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

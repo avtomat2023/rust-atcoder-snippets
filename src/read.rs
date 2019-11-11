@@ -49,6 +49,8 @@
 //! - 標準入力の一様な行を指定行数読むには、[`readn`](fn.readn.html)関数、[`readn_loop`](../macro.readn_loop.html)マクロを用いる。
 //!
 
+use std;
+
 // BEGIN SNIPPET read
 
 /// Readable from stdin.
@@ -917,7 +919,7 @@ mod test {
 
     #[test]
     fn test_read_line_hash_set() {
-        let expected: HashSet<u32> = (1..=3).collect();
+        let expected: HashSet<u32> = (1..4).collect();
         assert_eq!(HashSet::<u32>::read_line("1 2 1 3"), Ok(expected));
     }
 

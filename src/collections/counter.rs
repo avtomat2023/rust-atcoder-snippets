@@ -2,6 +2,8 @@
 //!
 //! AGC031 Aとかが楽に解ける
 
+use std;
+
 // BEGIN SNIPPET counter
 
 /// An multiset similar to Python's collections.Counter.

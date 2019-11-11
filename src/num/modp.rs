@@ -4,6 +4,8 @@
 // 動的なmod設定が必要な問題: ABC137 F
 // 複数のmodを使い分けなければならない問題には対応できない
 
+use std;
+
 // BEGIN SNIPPET modp
 
 pub type ModPBase = u64;
@@ -586,7 +588,7 @@ mod tests {
     #[test]
     fn test_sum() {
         unsafe { ModP::set_mod(7).unwrap(); }
-        let seq: Vec<ModP> = (1..=6).map(|n| ModP::new(n)).collect();
+        let seq: Vec<ModP> = (1..7).map(|n| ModP::new(n)).collect();
         assert_eq!(seq.iter().sum::<ModP>(), ModP::new(0));
         assert_eq!(seq.into_iter().sum::<ModP>(), ModP::new(0));
     }
@@ -594,7 +596,7 @@ mod tests {
     #[test]
     fn test_product() {
         unsafe { ModP::set_mod(7).unwrap(); }
-        let seq: Vec<ModP> = (1..=6).map(|n| ModP::new(n)).collect();
+        let seq: Vec<ModP> = (1..7).map(|n| ModP::new(n)).collect();
         assert_eq!(seq.iter().product::<ModP>(), ModP::new(6));
         assert_eq!(seq.into_iter().product::<ModP>(), ModP::new(6));
     }

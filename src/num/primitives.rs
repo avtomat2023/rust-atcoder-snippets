@@ -1,5 +1,7 @@
 //! Extension traits for primitive integer types.
 
+use std;
+
 // BEGIN SNIPPET num
 
 /// Enriches signed and unsigned integer types.
