@@ -5,6 +5,7 @@
 // 複数のmodを使い分けなければならない問題には対応できない
 
 use std;
+use read::{Readable, Words};
 
 // BEGIN SNIPPET modp
 
@@ -357,8 +358,6 @@ impl<'a> std::iter::Product<&'a ModP> for ModP {
         ans
     }
 }
-
-use read::{Readable, Words};
 
 readable!(ModP, 1, |ws| ModP::new(ws[0].read::<ModPBase>()));
 
