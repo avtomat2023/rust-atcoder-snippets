@@ -444,6 +444,9 @@ impl ModPTables {
 
     /// `n` choose `m`.
     pub fn choose(&mut self, n: ModPBase, m: ModPBase) -> ModP {
+        if n < m {
+            return ModP::new(0);
+        }
         self.extend_facts(n as usize);
         self.extend_invs(n as usize);
         self.extend_finvs(n as usize);
@@ -452,7 +455,11 @@ impl ModPTables {
 
     /// `n` multi-choose `m`.
     pub fn homo(&mut self, n: ModPBase, m: ModPBase) -> ModP {
-        self.choose(n+m-1, m)
+        if m == 0 {
+            ModP::new(1)
+        } else {
+            self.choose(n+m-1, m)
+        }
     }
 
     fn extend_facts(&mut self, max: usize) {
@@ -465,6 +472,7 @@ impl ModPTables {
     fn extend_invs(&mut self, max: usize) {
         for i in self.invs.len()..max+1 {
             let m = unsafe { MODULUS };
+            // cf. http://drken1215.hatenablog.com/entry/2018/06/08/210000
             let prev = self.invs[m as usize % i];
             self.invs.push(m / i as ModPBase * (-prev));
         }
