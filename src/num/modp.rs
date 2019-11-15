@@ -135,14 +135,33 @@ impl ModP {
         self.pow(unsafe { MODULUS } - 2)
     }
 
+    pub fn fact_cache() -> FactCache {
+        FactCache {
+            table: vec![ModP::new(1)]
+        }
+    }
+
+    pub fn inv_cache() -> InvCache {
+        InvCache {
+            table: vec![ModP::new(0), ModP::new(1)]
+        }
+    }
+
+    pub fn pow_cache(base: ModPBase) -> PowCache {
+        PowCache {
+            base: base,
+            table: vec![ModP::new(1)]
+        }
+    }
+
     /// Cache for faster calculation.
     ///
-    /// See [`ModPTables`](struct.ModPTables.html).
-    pub fn tables() -> ModPTables {
-        ModPTables {
-            facts: vec![ModP::new(1), ModP::new(1)],
-            invs: vec![ModP::new(0), ModP::new(1)],
-            finvs: vec![ModP::new(1), ModP::new(1)],
+    /// See [`CombinatoricsCache`](struct.CombinatoricsCache.html).
+    pub fn combinatorics_cache() -> CombinatoricsCache {
+        CombinatoricsCache {
+            facts: ModP::fact_cache(),
+            invs: ModP::inv_cache(),
+            finvs: vec![ModP::new(1)],
         }
     }
 }
@@ -372,45 +391,78 @@ impl<'a> std::iter::Product<&'a ModP> for ModP {
 
 readable!(ModP, 1, |ws| ModP::new(ws[0].read::<ModPBase>()));
 
-/// Cache for faster calculation of factorials etc.
-///
-/// In some problems, you have to calculate factorials or inverses
-/// for all i such that 0 ≤ i ≤ n (typically n is about 10^6).
-///
-/// For example, if you have to calculate nCm for many n and m,
-/// you need precalculate factorials and inverses for avoiding
-/// expensive cost of divisions mod p.
-///
-/// `ModPTables` performs such precalculation automatically.
-pub struct ModPTables {
-    facts: Vec<ModP>,
-    invs: Vec<ModP>,
+pub struct FactCache {
+    table: Vec<ModP>
+}
+
+impl FactCache {
+    pub fn get(&mut self, n: ModPBase) -> ModP {
+        self.extend(n as usize);
+        self.table[n as usize]
+    }
+
+    fn extend(&mut self, max: usize) {
+        for i in self.table.len()..max+1 {
+            let prev = self.table[i-1];
+            self.table.push(prev * i as ModPBase);
+        }
+    }
+}
+
+pub struct InvCache {
+    table: Vec<ModP>
+}
+
+impl InvCache {
+    pub fn get(&mut self, n: ModPBase) -> ModP {
+        assert!(n > 0);
+        self.extend(n as usize);
+        self.table[n as usize]
+    }
+
+    fn extend(&mut self, max: usize) {
+        for i in self.table.len()..max+1 {
+            let m = unsafe { MODULUS };
+            // cf. http://drken1215.hatenablog.com/entry/2018/06/08/210000
+            let prev = self.table[m as usize % i];
+            self.table.push(m / i as ModPBase * (-prev));
+        }
+    }
+}
+
+pub struct PowCache {
+    base: ModPBase,
+    table: Vec<ModP>
+}
+
+impl PowCache {
+    pub fn get(&mut self, n: ModPBase) -> ModP {
+        self.extend(n as usize);
+        self.table[n as usize]
+    }
+
+    fn extend(&mut self, max: usize) {
+        for i in self.table.len()..max+1 {
+            let prev = self.table[i-1];
+            self.table.push(prev * self.base);
+        }
+    }
+}
+
+pub struct CombinatoricsCache {
+    facts: FactCache,
+    invs: InvCache,
     finvs: Vec<ModP>,
 }
 
-impl ModPTables {
-    /// Factorial of `n`.
-    pub fn fact(&mut self, n: ModPBase) -> ModP {
-        self.extend_facts(n as usize);
-        self.facts[n as usize]
-    }
-
-    /// Inverse of `n`.
-    pub fn inv(&mut self, n: ModPBase) -> ModP {
-        assert!(n > 0);
-        self.extend_invs(n as usize);
-        self.invs[n as usize]
-    }
-
+impl CombinatoricsCache {
     /// `n` choose `m`.
     pub fn choose(&mut self, n: ModPBase, m: ModPBase) -> ModP {
         if n < m {
             return ModP::new(0);
         }
-        self.extend_facts(n as usize);
-        self.extend_invs(n as usize);
-        self.extend_finvs(n as usize);
-        self.facts[n as usize] * self.finvs[m as usize] * self.finvs[(n-m) as usize]
+        self.extend_finvs(std::cmp::max(m, n-m) as usize);
+        self.fact(n) * self.finvs[m as usize] * self.finvs[(n-m) as usize]
     }
 
     /// `n` multi-choose `m`.
@@ -422,26 +474,18 @@ impl ModPTables {
         }
     }
 
-    fn extend_facts(&mut self, max: usize) {
-        for i in self.facts.len()..max+1 {
-            let prev = self.facts[i-1];
-            self.facts.push(prev * i as ModPBase);
-        }
+    pub fn fact(&mut self, n: ModPBase) -> ModP {
+        self.facts.get(n)
     }
 
-    fn extend_invs(&mut self, max: usize) {
-        for i in self.invs.len()..max+1 {
-            let m = unsafe { MODULUS };
-            // cf. http://drken1215.hatenablog.com/entry/2018/06/08/210000
-            let prev = self.invs[m as usize % i];
-            self.invs.push(m / i as ModPBase * (-prev));
-        }
+    pub fn inv(&mut self, n: ModPBase) -> ModP {
+        self.invs.get(n)
     }
 
     fn extend_finvs(&mut self, max: usize) {
         for i in self.finvs.len()..max+1 {
             let prev = self.finvs[i-1];
-            self.finvs.push(prev * self.invs[i])
+            self.finvs.push(prev * self.invs.get(i as ModPBase))
         }
     }
 }
@@ -689,12 +733,5 @@ mod tests {
     fn test_read() {
         unsafe { ModP::set_mod(7).unwrap(); }
         assert_eq!(ModP::read_words(&["10"]), Ok(ModP::new(3)));
-    }
-
-    #[test]
-    fn test_tables() {
-        unsafe { ModP::set_mod(7).unwrap(); }
-        let mut tables = ModP::tables();
-        assert_eq!(tables.choose(5, 3), 3);
     }
 }
