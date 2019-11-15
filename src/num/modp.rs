@@ -134,6 +134,17 @@ impl ModP {
         assert!(self.base() != 0);
         self.pow(unsafe { MODULUS } - 2)
     }
+
+    /// Cache for faster calculation.
+    ///
+    /// See [`ModPTables`](struct.ModPTables.html).
+    pub fn tables() -> ModPTables {
+        ModPTables {
+            facts: vec![ModP::new(1), ModP::new(1)],
+            invs: vec![ModP::new(0), ModP::new(1)],
+            finvs: vec![ModP::new(1), ModP::new(1)],
+        }
+    }
 }
 
 /// Shorthand of `ModP::new(x)`.
@@ -360,6 +371,72 @@ impl<'a> std::iter::Product<&'a ModP> for ModP {
 }
 
 readable!(ModP, 1, |ws| ModP::new(ws[0].read::<ModPBase>()));
+
+/// Cache for faster calculation of factorials etc.
+///
+/// In some problems, you have to calculate factorials or inverses
+/// for all i such that 0 ≤ i ≤ n (typically n is about 10^6).
+///
+/// For example, if you have to calculate nCm for many n and m,
+/// you need precalculate factorials and inverses for avoiding
+/// expensive cost of divisions mod p.
+///
+/// `ModPTables` performs such precalculation automatically.
+pub struct ModPTables {
+    facts: Vec<ModP>,
+    invs: Vec<ModP>,
+    finvs: Vec<ModP>,
+}
+
+impl ModPTables {
+    /// Factorial of `n`.
+    pub fn fact(&mut self, n: ModPBase) -> ModP {
+        self.extend_facts(n as usize);
+        self.facts[n as usize]
+    }
+
+    /// Inverse of `n`.
+    pub fn inv(&mut self, n: ModPBase) -> ModP {
+        assert!(n > 0);
+        self.extend_invs(n as usize);
+        self.invs[n as usize]
+    }
+
+    /// `n` choose `m`.
+    pub fn choose(&mut self, n: ModPBase, m: ModPBase) -> ModP {
+        self.extend_facts(n as usize);
+        self.extend_invs(n as usize);
+        self.extend_finvs(n as usize);
+        self.facts[n as usize] * self.finvs[m as usize] * self.finvs[(n-m) as usize]
+    }
+
+    /// `n` multi-choose `m`.
+    pub fn homo(&mut self, n: ModPBase, m: ModPBase) -> ModP {
+        self.choose(n+m-1, m)
+    }
+
+    fn extend_facts(&mut self, max: usize) {
+        for i in self.facts.len()..max+1 {
+            let prev = self.facts[i-1];
+            self.facts.push(prev * i as ModPBase);
+        }
+    }
+
+    fn extend_invs(&mut self, max: usize) {
+        for i in self.invs.len()..max+1 {
+            let m = unsafe { MODULUS };
+            let prev = self.invs[m as usize % i];
+            self.invs.push(m / i as ModPBase * (-prev));
+        }
+    }
+
+    fn extend_finvs(&mut self, max: usize) {
+        for i in self.finvs.len()..max+1 {
+            let prev = self.finvs[i-1];
+            self.finvs.push(prev * self.invs[i])
+        }
+    }
+}
 
 // END SNIPPET
 
@@ -604,5 +681,12 @@ mod tests {
     fn test_read() {
         unsafe { ModP::set_mod(7).unwrap(); }
         assert_eq!(ModP::read_words(&["10"]), Ok(ModP::new(3)));
+    }
+
+    #[test]
+    fn test_tables() {
+        unsafe { ModP::set_mod(7).unwrap(); }
+        let mut tables = ModP::tables();
+        assert_eq!(tables.choose(5, 3), 3);
     }
 }
