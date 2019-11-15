@@ -4,9 +4,10 @@
 // 動的なmod設定が必要な問題: ABC137 F
 // 複数のmodを使い分けなければならない問題には対応できない
 
-// BEGIN SNIPPET modp
-
 use num::{WithZero, WithOne, Numeric};
+use read::{Readable, Words};
+
+// BEGIN SNIPPET modp
 
 pub type ModPBase = u64;
 pub type ModPModulus = u32;
@@ -397,8 +398,6 @@ impl<'a> std::iter::Product<&'a ModP> for ModP {
         ans
     }
 }
-
-use read::{Readable, Words};
 
 readable!(ModP, 1, |ws| ModP::new(ws[0].read::<ModPBase>()));
 
