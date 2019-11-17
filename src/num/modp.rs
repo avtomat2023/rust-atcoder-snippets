@@ -7,7 +7,7 @@
 use std;
 use read::{Readable, Words};
 
-// BEGIN SNIPPET modp
+// BEGIN SNIPPET modp DEPENDS ON read
 
 pub type ModPBase = u64;
 pub type ModPModulus = u32;

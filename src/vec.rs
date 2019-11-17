@@ -22,7 +22,7 @@
 use std;
 use read::Readable;
 
-// BEGIN SNIPPET vec
+// BEGIN SNIPPET vec DEPENDS ON read
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Vec2<T> {
