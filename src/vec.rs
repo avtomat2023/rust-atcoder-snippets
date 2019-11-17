@@ -20,6 +20,7 @@
 //! ```
 
 use std;
+use read::Readable;
 
 // BEGIN SNIPPET vec
 
@@ -141,8 +142,6 @@ impl<S: Copy, T: std::ops::DivAssign<S>> std::ops::DivAssign<S> for Vec2<T> {
         self.y /= rhs;
     }
 }
-
-use read::Readable;
 
 impl<T: Readable> Readable for Vec2<T> {
     type Output = Vec2<T::Output>;
