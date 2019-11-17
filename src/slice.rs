@@ -181,7 +181,7 @@ pub trait SliceExt<T> {
     /// ```
     fn split_by_gap<F: Fn(&T, &T) -> bool>(&self, gap_fn: F) -> SplitByGap<T, F>;
 
-    // TODO: ABC103 A
+    // TODO: ABC103 A, ABC145 C
     /// Returns an iterator yielding all permutations of the slice.
     ///
     /// Each permutation is a `Vec` of shared references to items in the slice.
