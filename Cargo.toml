@@ -5,6 +5,7 @@ authors = ["yoshrc"]
 
 [dev-dependencies]
 criterion = "0.2.11"
+rand = "0.7.2"
 
 [[bench]]
 name = "z"
