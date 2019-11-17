@@ -1,6 +1,4 @@
 //! Utility snippets for fighting AtCoder.
-//!
-//! Use [cargo-snippet](https://github.com/hatoo/cargo-snippet) for copy-and-pasting snippets easily.
 
 #[macro_use] pub mod read;
 pub mod write;
