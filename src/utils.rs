@@ -62,7 +62,9 @@ macro_rules! dbg {
 #[cfg(not(local))]
 macro_rules! dbg {
     () => {};
-    ($e: expr) => { $e }
+    ($e: expr) => {
+        { $e }
+    }
 }
 
 // END SNIPPET
