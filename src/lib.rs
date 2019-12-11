@@ -9,6 +9,7 @@ pub mod slice;
 pub mod collections;
 pub mod vec;
 pub mod bsearch;
+pub mod interval;
 pub mod z;
 pub mod rolling_hash;
 pub mod utils;
