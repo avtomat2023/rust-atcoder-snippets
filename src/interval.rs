@@ -39,8 +39,8 @@ impl<T: IntervalEndpoint> Interval<T> {
             None
         } else {
             Some(Interval {
-                left,
-                right
+                left: left,
+                right: right
             })
         }
     }
@@ -154,9 +154,11 @@ pub trait IntervalIterator<T: IntervalEndpoint>: Sized + Iterator<Item=Interval<
             points.push((left, 1));
             points.push((right, -1));
         }
-        points.sort_by(|(point1, d1), (point2, d2)| (point2, -d2).cmp(&(point1, -d1)));
+        points.sort_by(|&(ref point1, d1), &(ref point2, d2)| (point2, -d2).cmp(&(point1, -d1)));
 
-        IntervalMerge { points }
+        IntervalMerge {
+            points: points
+        }
     }
 }
 
