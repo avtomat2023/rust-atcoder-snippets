@@ -170,6 +170,8 @@ impl Readable for Chars {
     }
 }
 
+// Primitive integers
+
 impl Readable for i8 {
     type Output = Self;
 
@@ -290,6 +292,8 @@ impl Readable for usize {
     }
 }
 
+// 0-origin unsigned integers
+
 // TODO: 実際の問題を使った例にする
 /// Converts 1-origin integer into 0-origin when read from stdin.
 ///
@@ -406,47 +410,158 @@ impl Readable for usize_ {
     }
 }
 
-macro_rules! impl_readable_for_tuples {
-    ( $t:ident $var:ident ) => ();
-    ( $t:ident $var:ident; $( $inner_t:ident $inner_var:ident );* ) => {
-        impl_readable_for_tuples!($($inner_t $inner_var);*);
+// Tuples
 
-        impl<$t: Readable, $($inner_t: Readable),*> Readable
-            for ($t, $($inner_t),*)
-        {
-            type Output = ( <$t>::Output, $(<$inner_t>::Output),* );
+impl<T1: Readable, T2: Readable> Readable for (T1, T2) {
+    type Output = (T1::Output, T2::Output);
 
-            fn words_count() -> usize {
-                let mut n = <$t>::words_count();
-                $(
-                    n += <$inner_t>::words_count();
-                )*
-                n
-            }
+    fn words_count() -> usize {
+        T1::words_count() + T2::words_count()
+    }
 
-            #[allow(unused_assignments)]
-            fn read_words(words: &[&str]) ->
-                Result<Self::Output, String>
-            {
-                let mut start = 0;
-                let $var = <$t>::read_words(
-                    &words[start .. start+<$t>::words_count()]
-                )?;
-                start += <$t>::words_count();
-                $(
-                    let $inner_var =
-                        <$inner_t>::read_words(
-                            &words[start .. start+<$inner_t>::words_count()]
-                        )?;
-                    start += <$inner_t>::words_count();
-                )*
-                Ok(( $var, $($inner_var),* ))
-            }
-        }
-    };
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        assert_eq!(words.len(), Self::words_count());
+
+        let mut start = 0;
+
+        let count1 = T1::words_count();
+        let val1 = T1::read_words(&words[start .. start+count1])?;
+        start += count1;
+
+        let val2 = T2::read_words(&words[start..])?;
+
+        Ok((val1, val2))
+    }
 }
 
-impl_readable_for_tuples!(T8 x8; T7 x7; T6 x6; T5 x5; T4 x4; T3 x3; T2 x2; T1 x1);
+impl<T1: Readable, T2: Readable, T3: Readable> Readable for (T1, T2, T3) {
+    type Output = (T1::Output, T2::Output, T3::Output);
+
+    fn words_count() -> usize {
+        T1::words_count() + T2::words_count() + T3::words_count()
+    }
+
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        assert_eq!(words.len(), Self::words_count());
+
+        let mut start = 0;
+
+        let count1 = T1::words_count();
+        let val1 = T1::read_words(&words[start .. start+count1])?;
+        start += count1;
+
+        let count2 = T2::words_count();
+        let val2 = T2::read_words(&words[start .. start+count2])?;
+        start += count2;
+
+        let val3 = T3::read_words(&words[start..])?;
+
+        Ok((val1, val2, val3))
+    }
+}
+
+impl<T1: Readable, T2: Readable, T3: Readable, T4: Readable> Readable for (T1, T2, T3, T4) {
+    type Output = (T1::Output, T2::Output, T3::Output, T4::Output);
+
+    fn words_count() -> usize {
+        T1::words_count() + T2::words_count() + T3::words_count() + T4::words_count()
+    }
+
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        assert_eq!(words.len(), Self::words_count());
+
+        let mut start = 0;
+
+        let count1 = T1::words_count();
+        let val1 = T1::read_words(&words[start .. start+count1])?;
+        start += count1;
+
+        let count2 = T2::words_count();
+        let val2 = T2::read_words(&words[start .. start+count2])?;
+        start += count2;
+
+        let count3 = T3::words_count();
+        let val3 = T3::read_words(&words[start .. start+count3])?;
+        start += count3;
+
+        let val4 = T4::read_words(&words[start..])?;
+
+        Ok((val1, val2, val3, val4))
+    }
+}
+
+impl<T1: Readable, T2: Readable, T3: Readable, T4: Readable, T5: Readable> Readable for (T1, T2, T3, T4, T5) {
+    type Output = (T1::Output, T2::Output, T3::Output, T4::Output, T5::Output);
+
+    fn words_count() -> usize {
+        T1::words_count() + T2::words_count() + T3::words_count() + T4::words_count() + T5::words_count()
+    }
+
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        assert_eq!(words.len(), Self::words_count());
+
+        let mut start = 0;
+
+        let count1 = T1::words_count();
+        let val1 = T1::read_words(&words[start .. start+count1])?;
+        start += count1;
+
+        let count2 = T2::words_count();
+        let val2 = T2::read_words(&words[start .. start+count2])?;
+        start += count2;
+
+        let count3 = T3::words_count();
+        let val3 = T3::read_words(&words[start .. start+count3])?;
+        start += count3;
+
+        let count4 = T4::words_count();
+        let val4 = T4::read_words(&words[start .. start+count4])?;
+        start += count4;
+
+        let val5 = T5::read_words(&words[start..])?;
+
+        Ok((val1, val2, val3, val4, val5))
+    }
+}
+
+
+impl<T1: Readable, T2: Readable, T3: Readable, T4: Readable, T5: Readable, T6: Readable> Readable for (T1, T2, T3, T4, T5, T6) {
+    type Output = (T1::Output, T2::Output, T3::Output, T4::Output, T5::Output, T6::Output);
+
+    fn words_count() -> usize {
+        T1::words_count() + T2::words_count() + T3::words_count() + T4::words_count() + T5::words_count() + T6::words_count()
+    }
+
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        assert_eq!(words.len(), Self::words_count());
+
+        let mut start = 0;
+
+        let count1 = T1::words_count();
+        let val1 = T1::read_words(&words[start .. start+count1])?;
+        start += count1;
+
+        let count2 = T2::words_count();
+        let val2 = T2::read_words(&words[start .. start+count2])?;
+        start += count2;
+
+        let count3 = T3::words_count();
+        let val3 = T3::read_words(&words[start .. start+count3])?;
+        start += count3;
+
+        let count4 = T4::words_count();
+        let val4 = T4::read_words(&words[start .. start+count4])?;
+        start += count4;
+
+        let count5 = T5::words_count();
+        let val5 = T5::read_words(&words[start .. start+count5])?;
+        start += count5;
+
+        let val6 = T6::read_words(&words[start..])?;
+
+        Ok((val1, val2, val3, val4, val5, val6))
+    }
+}
 
 /// Readable by `read` function.
 pub trait ReadableFromLine {
@@ -604,14 +719,14 @@ macro_rules! readable_collection {
     ($u:ident => $collection_in:ty, $collection_out:ty) => {
         impl_readable_from_line_for_tuples_with_from_iterator!(
             $u: => $collection_in, $collection_out;
-            T8 x8, T7 x7, T6 x6, T5 x5, T4 x4, T3 x3, T2 x2, T1 x1
+            T6 x6, T4 x4, T3 x3, T2 x2, T1 x1
         );
     };
 
     ($u:ident : $( $bound:path ),* => $collection_in:ty, $collection_out:ty) => {
         impl_readable_from_line_for_tuples_with_from_iterator!(
             $u: $(+ $bound)* => $collection_in, $collection_out;
-            T8 x8, T7 x7, T6 x6, T5 x5, T4 x4, T3 x3, T2 x2, T1 x1
+            T6 x6, T4 x4, T3 x3, T2 x2, T1 x1
         );
     }
 }
@@ -1037,8 +1152,12 @@ mod test {
     }
 
     #[test]
-    fn test_read_words_one_origin_integer() {
+    fn test_read_words_one_origin_integers() {
+        assert_eq!(u8_::read_words(&["1"]), Ok(0));
+        assert_eq!(u16_::read_words(&["1"]), Ok(0));
+        assert_eq!(u32_::read_words(&["1"]), Ok(0));
         assert_eq!(u64_::read_words(&["1"]), Ok(0));
+        assert_eq!(usize_::read_words(&["1"]), Ok(0));
     }
 
     #[test]
@@ -1047,7 +1166,77 @@ mod test {
     }
 
     #[test]
-    fn test_from_fratments_nested_tuple() {
+    fn test_read_words_tuple_2() {
+        type T0 = (char, char);
+        assert!(T0::read_words(&["a", "a"]).is_ok());
+        type T1 = (Pair, char);
+        assert!(T1::read_words(&["10", "10", "a"]).is_ok());
+        type T2 = (Pair, Pair);
+        assert!(T2::read_words(&["10", "10", "10", "10"]).is_ok());
+    }
+
+    #[test]
+    fn test_read_words_tuple_3() {
+        type T0 = (char, char, char);
+        assert!(T0::read_words(&["a", "a", "a"]).is_ok());
+        type T1 = (Pair, char, char);
+        assert!(T1::read_words(&["10", "10", "a", "a"]).is_ok());
+        type T2 = (Pair, Pair, char);
+        assert!(T2::read_words(&["10", "10", "10", "10", "a"]).is_ok());
+        type T3 = (Pair, Pair, Pair);
+        assert!(T3::read_words(&["10", "10", "10", "10", "10", "10"]).is_ok());
+    }
+
+    #[test]
+    fn test_read_words_tuple_4() {
+        type T0 = (char, char, char, char);
+        assert!(T0::read_words(&["a", "a", "a", "a"]).is_ok());
+        type T1 = (Pair, char, char, char);
+        assert!(T1::read_words(&["10", "10", "a", "a", "a"]).is_ok());
+        type T2 = (Pair, Pair, char, char);
+        assert!(T2::read_words(&["10", "10", "10", "10", "a", "a"]).is_ok());
+        type T3 = (Pair, Pair, Pair, char);
+        assert!(T3::read_words(&["10", "10", "10", "10", "10", "10", "a"]).is_ok());
+        type T4 = (Pair, Pair, Pair, Pair);
+        assert!(T4::read_words(&["10", "10", "10", "10", "10", "10", "10", "10"]).is_ok());
+    }
+
+    #[test]
+    fn test_read_words_tuple_5() {
+        type T0 = (char, char, char, char, char);
+        assert!(T0::read_words(&["a", "a", "a", "a", "a"]).is_ok());
+        type T1 = (Pair, char, char, char, char);
+        assert!(T1::read_words(&["10", "10", "a", "a", "a", "a"]).is_ok());
+        type T2 = (Pair, Pair, char, char, char);
+        assert!(T2::read_words(&["10", "10", "10", "10", "a", "a", "a"]).is_ok());
+        type T3 = (Pair, Pair, Pair, char, char);
+        assert!(T3::read_words(&["10", "10", "10", "10", "10", "10", "a", "a"]).is_ok());
+        type T4 = (Pair, Pair, Pair, Pair, char);
+        assert!(T4::read_words(&["10", "10", "10", "10", "10", "10", "10", "10", "a"]).is_ok());
+        type T5 = (Pair, Pair, Pair, Pair, Pair);
+        assert!(T5::read_words(&["10", "10", "10", "10", "10", "10", "10", "10", "10", "10"]).is_ok());
+    }
+
+    #[test]
+    fn test_read_words_tuple_6() {
+        type T0 = (char, char, char, char, char, char);
+        assert!(T0::read_words(&["a", "a", "a", "a", "a", "a"]).is_ok());
+        type T1 = (Pair, char, char, char, char, char);
+        assert!(T1::read_words(&["10", "10", "a", "a", "a", "a", "a"]).is_ok());
+        type T2 = (Pair, Pair, char, char, char, char);
+        assert!(T2::read_words(&["10", "10", "10", "10", "a", "a", "a", "a"]).is_ok());
+        type T3 = (Pair, Pair, Pair, char, char, char);
+        assert!(T3::read_words(&["10", "10", "10", "10", "10", "10", "a", "a", "a"]).is_ok());
+        type T4 = (Pair, Pair, Pair, Pair, char, char);
+        assert!(T4::read_words(&["10", "10", "10", "10", "10", "10", "10", "10", "a", "a"]).is_ok());
+        type T5 = (Pair, Pair, Pair, Pair, Pair, char);
+        assert!(T5::read_words(&["10", "10", "10", "10", "10", "10", "10", "10", "10", "10", "a"]).is_ok());
+        type T6 = (Pair, Pair, Pair, Pair, Pair, Pair);
+        assert!(T6::read_words(&["10", "10", "10", "10", "10", "10", "10", "10", "10", "10", "10", "10"]).is_ok());
+    }
+
+    #[test]
+    fn test_read_words_nested_tuple() {
         assert_eq!(<(i32, (i32, i32), i32)>::read_words(&["1", "2", "3", "4"]),
                    Ok((1, (2, 3), 4)));
     }
