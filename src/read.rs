@@ -170,58 +170,241 @@ impl Readable for Chars {
     }
 }
 
-macro_rules! impl_readable_for_ints {
-    ( $( $t:ty )* ) => { $(
-        impl Readable for $t {
-            type Output = Self;
+impl Readable for i8 {
+    type Output = Self;
 
-            fn words_count() -> usize { 1 }
-            fn read_words(words: &[&str]) -> Result<$t, String> {
-                use std::str::FromStr;
-                <$t>::from_str(words[0]).map_err(|_| {
-                    format!("cannot parse `{}` as {}", words[0], stringify!($t))
-                })
-            }
-        }
-    )* };
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<i8, String> {
+        use std::str::FromStr;
+        <i8>::from_str(words[0]).map_err(|_| {
+            format!("cannot parse `{}` as {}", words[0], stringify!(i8))
+        })
+    }
 }
 
-impl_readable_for_ints!(i8 u8 i16 u16 i32 u32 i64 u64 isize usize f32 f64);
+impl Readable for u8 {
+    type Output = Self;
 
-macro_rules! define_one_origin_int_types {
-    ( $new_t:ident $int_t:ty ) => {
-        // TODO: 実際の問題を使った例にする
-        /// Converts 1-origin integer into 0-origin when read from stdin.
-        ///
-        /// # Example
-        ///
-        /// ```no_run
-        /// # #[macro_use] extern crate atcoder_snippets;
-        /// # use atcoder_snippets::read::*;
-        /// // Stdin: "1"
-        /// read!(a = usize_);
-        /// assert_eq!(a, 0);
-        /// ```
-        #[allow(non_camel_case_types)]
-        pub struct $new_t;
-
-        impl Readable for $new_t {
-            type Output = $int_t;
-
-            fn words_count() -> usize { 1 }
-            fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-                <$int_t>::read_words(words).map(|n| n-1)
-            }
-        }
-    };
-
-    ( $new_t:ident $int_t:ty; $( $inner_new_t:ident $inner_int_t:ty );* ) => {
-        define_one_origin_int_types!($new_t $int_t);
-        define_one_origin_int_types!($($inner_new_t $inner_int_t);*);
-    };
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<u8, String> {
+        use std::str::FromStr;
+        <u8>::from_str(words[0]).map_err(|_| {
+            format!("cannot parse `{}` as {}", words[0], stringify!(u8))
+        })
+    }
 }
 
-define_one_origin_int_types!(u8_ u8; u16_ u16; u32_ u32; u64_ u64; usize_ usize);
+impl Readable for i16 {
+    type Output = Self;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<i16, String> {
+        use std::str::FromStr;
+        <i16>::from_str(words[0]).map_err(|_| {
+            format!("cannot parse `{}` as {}", words[0], stringify!(i16))
+        })
+    }
+}
+
+impl Readable for u16 {
+    type Output = Self;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<u16, String> {
+        use std::str::FromStr;
+        <u16>::from_str(words[0]).map_err(|_| {
+            format!("cannot parse `{}` as {}", words[0], stringify!(u16))
+        })
+    }
+}
+
+impl Readable for i32 {
+    type Output = Self;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<i32, String> {
+        use std::str::FromStr;
+        <i32>::from_str(words[0]).map_err(|_| {
+            format!("cannot parse `{}` as {}", words[0], stringify!(i32))
+        })
+    }
+}
+
+impl Readable for u32 {
+    type Output = Self;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<u32, String> {
+        use std::str::FromStr;
+        <u32>::from_str(words[0]).map_err(|_| {
+            format!("cannot parse `{}` as {}", words[0], stringify!(u32))
+        })
+    }
+}
+
+impl Readable for i64 {
+    type Output = Self;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<i64, String> {
+        use std::str::FromStr;
+        <i64>::from_str(words[0]).map_err(|_| {
+            format!("cannot parse `{}` as {}", words[0], stringify!(i64))
+        })
+    }
+}
+
+impl Readable for u64 {
+    type Output = Self;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<u64, String> {
+        use std::str::FromStr;
+        <u64>::from_str(words[0]).map_err(|_| {
+            format!("cannot parse `{}` as {}", words[0], stringify!(u64))
+        })
+    }
+}
+
+impl Readable for isize {
+    type Output = Self;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<isize, String> {
+        use std::str::FromStr;
+        <isize>::from_str(words[0]).map_err(|_| {
+            format!("cannot parse `{}` as {}", words[0], stringify!(isize))
+        })
+    }
+}
+
+impl Readable for usize {
+    type Output = Self;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<usize, String> {
+        use std::str::FromStr;
+        <usize>::from_str(words[0]).map_err(|_| {
+            format!("cannot parse `{}` as {}", words[0], stringify!(usize))
+        })
+    }
+}
+
+// TODO: 実際の問題を使った例にする
+/// Converts 1-origin integer into 0-origin when read from stdin.
+///
+/// # Example
+///
+/// ```no_run
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::read::*;
+/// // Stdin: "1"
+/// read!(a = usize_);
+/// assert_eq!(a, 0);
+/// ```
+#[allow(non_camel_case_types)]
+pub struct u8_;
+
+impl Readable for u8_ {
+    type Output = u8;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        <u8>::read_words(words).map(|n| n-1)
+    }
+}
+
+/// Converts 1-origin integer into 0-origin when read from stdin.
+///
+/// # Example
+///
+/// ```no_run
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::read::*;
+/// // Stdin: "1"
+/// read!(a = usize_);
+/// assert_eq!(a, 0);
+/// ```
+#[allow(non_camel_case_types)]
+pub struct u16_;
+
+impl Readable for u16_ {
+    type Output = u16;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        <u16>::read_words(words).map(|n| n-1)
+    }
+}
+
+/// Converts 1-origin integer into 0-origin when read from stdin.
+///
+/// # Example
+///
+/// ```no_run
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::read::*;
+/// // Stdin: "1"
+/// read!(a = usize_);
+/// assert_eq!(a, 0);
+/// ```
+#[allow(non_camel_case_types)]
+pub struct u32_;
+
+impl Readable for u32_ {
+    type Output = u32;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        <u32>::read_words(words).map(|n| n-1)
+    }
+}
+
+/// Converts 1-origin integer into 0-origin when read from stdin.
+///
+/// # Example
+///
+/// ```no_run
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::read::*;
+/// // Stdin: "1"
+/// read!(a = usize_);
+/// assert_eq!(a, 0);
+/// ```
+#[allow(non_camel_case_types)]
+pub struct u64_;
+
+impl Readable for u64_ {
+    type Output = u64;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        <u64>::read_words(words).map(|n| n-1)
+    }
+}
+
+/// Converts 1-origin integer into 0-origin when read from stdin.
+///
+/// # Example
+///
+/// ```no_run
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::read::*;
+/// // Stdin: "1"
+/// read!(a = usize_);
+/// assert_eq!(a, 0);
+/// ```
+#[allow(non_camel_case_types)]
+pub struct usize_;
+
+impl Readable for usize_ {
+    type Output = usize;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        <usize>::read_words(words).map(|n| n-1)
+    }
+}
 
 macro_rules! impl_readable_for_tuples {
     ( $t:ident $var:ident ) => ();
