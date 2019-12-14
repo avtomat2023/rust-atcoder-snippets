@@ -644,13 +644,13 @@ fn split_into_words_for_collection<T: Readable>(
 ///
 /// ```ignore
 /// readable_collection!(U => Vec<U>, Vec<U::Output>);
-/// readable_collection!(U: Eq, Hash => HashSet<U>, HashSet<U::Output>);
+/// readable_collection!(U: [Eq, Hash] => HashSet<U>, HashSet<U::Output>);
 /// ```
 ///
 /// The content of this macro should be either of the followings:
 ///
 /// - `U` `=>` collection type for `U` `,` collection type for `U::Output`
-/// - `U` `:` type bounds of the item type `=>` collection type for `U` `,` collection type for `U::Output`
+/// - `U` `:` `[`type bounds of the item type`]` `=>` collection type for `U` `,` collection type for `U::Output`
 ///
 /// The first identifier must be `U`, or the compilation may fail.
 ///
@@ -659,10 +659,10 @@ fn split_into_words_for_collection<T: Readable>(
 #[macro_export]
 macro_rules! readable_collection {
     ($u:ident => $collection_in:ty, $collection_out:ty) => {
-        readable_collection!($u: => $collection_in, $collection_out);
+        readable_collection!($u: [] => $collection_in, $collection_out);
     };
 
-    ($u:ident : $( $bound:path ),* => $collection_in:ty, $collection_out:ty) => {
+    ($u:ident : [ $( $bound:path ),* ] => $collection_in:ty, $collection_out:ty) => {
         // Copy and paste impls instead of using recursive macro for compilation speedup
 
         impl<$u: Readable> ReadableFromLine for $collection_in
@@ -785,15 +785,15 @@ readable_collection!(U => Vec<U>, Vec<U::Output>);
 // );
 
 // readable_collection!(
-//     U: Eq, std::hash::Hash => std::collections::HashSet<U>, std::collections::HashSet<U::Output>
+//     U: [Eq, std::hash::Hash] => std::collections::HashSet<U>, std::collections::HashSet<U::Output>
 // );
 
 // readable_collection!(
-//     U: Ord => std::collections::BTreeSet<U>, std::collections::BTreeSet<U::Output>
+//     U: [Ord] => std::collections::BTreeSet<U>, std::collections::BTreeSet<U::Output>
 // );
 
 // readable_collection!(
-//     U: Ord => std::collections::BinaryHeap<U>, std::collections::BinaryHeap<U::Output>
+//     U: [Ord] => std::collections::BinaryHeap<U>, std::collections::BinaryHeap<U::Output>
 // );
 
 
