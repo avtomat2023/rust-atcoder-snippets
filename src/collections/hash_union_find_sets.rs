@@ -8,10 +8,10 @@
 // After language update of AtCoder, merge branch `disjoint-set-for-latest-rust`,
 // and `T` does not require `Clone`.
 
-// BEGIN SNIPPET sets
+// BEGIN SNIPPET hash_union_find_sets
 
 // TODO: Show solution of ABC120 D and ABC126 E as examples
-/// Disjoint-set data structure, known as union-find.
+/// Disjoint-set data structure, known as union-find, for hashable types.
 ///
 /// `HashUnionFindSets` uses `HashMap` internally to manage items.
 /// Therefore, item type `T` must implement `Hash`.
@@ -90,8 +90,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
     /// # Example
     ///
     /// ```
-    /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::collections::sets::*;
+    /// # use atcoder_snippets::collections::hash_union_find_sets::*;
     /// let mut sets = HashUnionFindSets::new();
     /// assert!(sets.add(1));
     /// assert!(!sets.add(1));
@@ -112,8 +111,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
     /// # Example
     ///
     /// ```
-    /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::collections::sets::*;
+    /// # use atcoder_snippets::collections::hash_union_find_sets::*;
     /// let mut sets: HashUnionFindSets<i32> = vec![1, 2].into_iter().collect();
     /// assert_eq!(sets.items_len(), 2);
     /// sets.unite(&1, &2);
@@ -145,8 +143,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
     /// # Example
     ///
     /// ```
-    /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::collections::sets::*;
+    /// # use atcoder_snippets::collections::hash_union_find_sets::*;
     /// let mut sets: HashUnionFindSets<i32> = vec![1, 2].into_iter().collect();
     /// assert_eq!(sets.count(), 2);
     /// sets.unite(&1, &2);
@@ -163,8 +160,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
     /// # Example
     ///
     /// ```
-    /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::collections::sets::*;
+    /// # use atcoder_snippets::collections::hash_union_find_sets::*;
     /// let mut sets: HashUnionFindSets<i32> = vec![1, 2].into_iter().collect();
     ///
     /// assert_eq!(sets.len_of(&1), Ok(1));
@@ -186,8 +182,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> HashUnionFindSets<T> {
     /// # Example
     ///
     /// ```
-    /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::collections::sets::*;
+    /// # use atcoder_snippets::collections::hash_union_find_sets::*;
     /// let mut sets: HashUnionFindSets<i32> = vec![1, 2].into_iter().collect();
     ///
     /// assert_eq!(sets.set_eq(&1, &2), Ok(false));
@@ -269,8 +264,7 @@ impl<T: Eq + std::hash::Hash + std::fmt::Debug + Clone> std::iter::FromIterator<
     /// # Example
     ///
     /// ```
-    /// #[macro_use] extern crate atcoder_snippets;
-    /// use atcoder_snippets::collections::sets::*;
+    /// use atcoder_snippets::collections::hash_union_find_sets::*;
     /// let sets: HashUnionFindSets<i32> = vec![1, 2, 3, 1].into_iter().collect();
     /// assert_eq!(sets.items_len(), 3);
     /// ```
