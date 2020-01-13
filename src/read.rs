@@ -179,7 +179,7 @@ impl Readable for i8 {
     fn words_count() -> usize { 1 }
     fn read_words(words: &[&str]) -> Result<i8, String> {
         use std::str::FromStr;
-        <i8>::from_str(words[0]).map_err(|_| {
+        i8::from_str(words[0]).map_err(|_| {
             format!("cannot parse `{}` as {}", words[0], stringify!(i8))
         })
     }
@@ -191,7 +191,7 @@ impl Readable for u8 {
     fn words_count() -> usize { 1 }
     fn read_words(words: &[&str]) -> Result<u8, String> {
         use std::str::FromStr;
-        <u8>::from_str(words[0]).map_err(|_| {
+        u8::from_str(words[0]).map_err(|_| {
             format!("cannot parse `{}` as {}", words[0], stringify!(u8))
         })
     }
@@ -203,7 +203,7 @@ impl Readable for i16 {
     fn words_count() -> usize { 1 }
     fn read_words(words: &[&str]) -> Result<i16, String> {
         use std::str::FromStr;
-        <i16>::from_str(words[0]).map_err(|_| {
+        i16::from_str(words[0]).map_err(|_| {
             format!("cannot parse `{}` as {}", words[0], stringify!(i16))
         })
     }
@@ -215,7 +215,7 @@ impl Readable for u16 {
     fn words_count() -> usize { 1 }
     fn read_words(words: &[&str]) -> Result<u16, String> {
         use std::str::FromStr;
-        <u16>::from_str(words[0]).map_err(|_| {
+        u16::from_str(words[0]).map_err(|_| {
             format!("cannot parse `{}` as {}", words[0], stringify!(u16))
         })
     }
@@ -227,7 +227,7 @@ impl Readable for i32 {
     fn words_count() -> usize { 1 }
     fn read_words(words: &[&str]) -> Result<i32, String> {
         use std::str::FromStr;
-        <i32>::from_str(words[0]).map_err(|_| {
+        i32::from_str(words[0]).map_err(|_| {
             format!("cannot parse `{}` as {}", words[0], stringify!(i32))
         })
     }
@@ -239,7 +239,7 @@ impl Readable for u32 {
     fn words_count() -> usize { 1 }
     fn read_words(words: &[&str]) -> Result<u32, String> {
         use std::str::FromStr;
-        <u32>::from_str(words[0]).map_err(|_| {
+        u32::from_str(words[0]).map_err(|_| {
             format!("cannot parse `{}` as {}", words[0], stringify!(u32))
         })
     }
@@ -251,7 +251,7 @@ impl Readable for i64 {
     fn words_count() -> usize { 1 }
     fn read_words(words: &[&str]) -> Result<i64, String> {
         use std::str::FromStr;
-        <i64>::from_str(words[0]).map_err(|_| {
+        i64::from_str(words[0]).map_err(|_| {
             format!("cannot parse `{}` as {}", words[0], stringify!(i64))
         })
     }
@@ -263,7 +263,7 @@ impl Readable for u64 {
     fn words_count() -> usize { 1 }
     fn read_words(words: &[&str]) -> Result<u64, String> {
         use std::str::FromStr;
-        <u64>::from_str(words[0]).map_err(|_| {
+        u64::from_str(words[0]).map_err(|_| {
             format!("cannot parse `{}` as {}", words[0], stringify!(u64))
         })
     }
@@ -293,6 +293,30 @@ impl Readable for usize {
     }
 }
 
+impl Readable for f32 {
+    type Output = Self;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<f32, String> {
+        use std::str::FromStr;
+        f32::from_str(words[0]).map_err(|_| {
+            format!("cannot parse `{}` as {}", words[0], stringify!(usize))
+        })
+    }
+}
+
+impl Readable for f64 {
+    type Output = Self;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<f64, String> {
+        use std::str::FromStr;
+        f64::from_str(words[0]).map_err(|_| {
+            format!("cannot parse `{}` as {}", words[0], stringify!(usize))
+        })
+    }
+}
+
 // 0-origin unsigned integers
 // Copy and paste instead of using macro for compilation speedup
 
@@ -316,7 +340,7 @@ impl Readable for u8_ {
 
     fn words_count() -> usize { 1 }
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-        <u8>::read_words(words).map(|n| n-1)
+        u8::read_words(words).map(|n| n-1)
     }
 }
 
@@ -339,7 +363,7 @@ impl Readable for u16_ {
 
     fn words_count() -> usize { 1 }
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-        <u16>::read_words(words).map(|n| n-1)
+        u16::read_words(words).map(|n| n-1)
     }
 }
 
@@ -362,7 +386,7 @@ impl Readable for u32_ {
 
     fn words_count() -> usize { 1 }
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-        <u32>::read_words(words).map(|n| n-1)
+        u32::read_words(words).map(|n| n-1)
     }
 }
 
@@ -385,7 +409,7 @@ impl Readable for u64_ {
 
     fn words_count() -> usize { 1 }
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-        <u64>::read_words(words).map(|n| n-1)
+        u64::read_words(words).map(|n| n-1)
     }
 }
 
