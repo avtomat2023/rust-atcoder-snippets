@@ -4,6 +4,7 @@
 pub mod write;
 pub mod num;
 pub mod cmp;
+pub mod option;
 pub mod iter;
 pub mod slice;
 pub mod collections;
