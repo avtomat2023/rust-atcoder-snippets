@@ -128,12 +128,6 @@ impl<T: Clone, F: Fn(&T, &T) -> T> SegmentTree<T, F> {
             Excluded(&i) => i+1,
             Unbounded => 0
         };
-        if start == self.len() && range.end_bound() == Unbounded {
-            return Some(self.identity.clone());
-        }
-        if self.len() <= start {
-            return None;
-        }
 
         let end = match range.end_bound() {
             Included(&i) => i+1,
@@ -453,6 +447,6 @@ mod test {
         *range_sum.at(2) = 0;
 
         assert_eq!(range_sum.query(3..), Some(0));
-        assert_eq!(range_sum.query(3..3), None);
+        assert_eq!(range_sum.query(3..3), Some(0));
     }
 }
