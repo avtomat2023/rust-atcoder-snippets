@@ -208,7 +208,7 @@ impl<T: PrimitiveInteger + Clone> BSearch for std::ops::Range<T> {
     }
 
     fn middle_item(&self) -> T {
-        (self.start.clone() + self.end.clone()) / (T::one() + T::one())
+        (self.leftmost_item() + self.rightmost_item()) / (T::one() + T::one())
     }
 
     fn left_half(&self) -> std::ops::Range<T> {
@@ -321,6 +321,19 @@ mod tests {
     use super::BSearch;
 
     #[test]
+    fn test_range_middle_item() {
+        assert_eq!((10..11).middle_item(), 10);
+        assert!((10..12).middle_item() == 10 || (10..12).middle_item() == 11);
+        assert_eq!((10..13).middle_item(), 11);
+        assert_eq!((10..21).middle_item(), 15);
+
+        assert_eq!((-10..-9).middle_item(), -10);
+        assert!((-10..-8).middle_item() == -10 || (-10..-8).middle_item() == -9);
+        assert_eq!((-10..-7).middle_item(), -9);
+        assert_eq!((-10..1).middle_item(), -5);
+    }
+
+    #[test]
     fn test_slice_bsearch_left_max() {
         use super::SliceBSearch;
 
@@ -366,15 +379,5 @@ mod tests {
         assert_eq!(seq.bsearch_index_right_min(|&x| x >= 0), Some(0));
         assert_eq!(seq.bsearch_index_right_min(|&x| x >= 10), Some(3));
         assert_eq!(seq.bsearch_index_right_min(|&x| x >= 20), None);
-    }
-
-    #[test]
-    fn test_bsearch_left_max() {
-        let empty: Vec<i32> = Vec::new();
-        assert_eq!(empty.as_slice().bsearch_left_max(|&&x| x <= 0), None);
-        let seq = vec![3, 6, 9, 12, 15];
-        assert_eq!(seq.as_slice().bsearch_left_max(|&&x| x <= 0), None);
-        assert_eq!(seq.as_slice().bsearch_left_max(|&&x| x <= 10), Some(&9));
-        assert_eq!(seq.as_slice().bsearch_left_max(|&&x| x <= 20), Some(&15));
     }
 }
