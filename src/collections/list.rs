@@ -1,20 +1,18 @@
-//! Data structures.
+//! Functional list.
 
-// use std::iter::FromIterator;
+// BEGIN SNIPPET list
 
 /// For pattern match.
 ///
 /// It is not necessary to use this enum directly.
 /// See [Example section of `List`](struct.List.html#example)
 /// for usage in pattern matching.
-#[snippet = "list"]
 #[derive(Clone, PartialEq, Eq)]
 pub enum ListInner<T: Clone> {
     Nil,
     Cons(T, List<T>)
 }
 
-#[snippet = "list"]
 pub use self::ListInner::{Nil, Cons};
 
 // The example is ignored because `flatten` method by `iter` snippet collide
@@ -40,7 +38,7 @@ pub use self::ListInner::{Nil, Cons};
 ///
 /// ```
 /// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::collections::*;
+/// # use atcoder_snippets::collections::list::*;
 /// assert_eq!(List::<i32>::nil(), list![]);
 /// let sublist = 2.cons(List::nil());
 /// assert_eq!(1.cons(sublist), list![1, 2]);
@@ -50,7 +48,7 @@ pub use self::ListInner::{Nil, Cons};
 ///
 /// ```
 /// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::collections::*;
+/// # use atcoder_snippets::collections::list::*;
 /// fn power_set<T: Clone>(set: &List<T>) -> List<List<T>> {
 ///     match set.as_ref() {
 ///         &Nil => list![list![]],
@@ -131,14 +129,12 @@ pub use self::ListInner::{Nil, Cons};
 ///     println!("{}", dfs(n, &digits, &mut HashMap::new()).unwrap().cat());
 /// }
 /// ```
-#[snippet = "list"]
 #[derive(Clone, PartialEq, Eq)]
 pub struct List<T: Clone> {
     inner: std::rc::Rc<ListInner<T>>,
     len: usize
 }
 
-#[snippet = "list"]
 impl<T: Clone> List<T> {
     pub fn nil() -> List<T> { List { inner: std::rc::Rc::new(Nil), len: 0 } }
 
@@ -165,7 +161,7 @@ impl<T: Clone> List<T> {
     ///
     /// ```
     /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::collections::*;
+    /// # use atcoder_snippets::collections::list::*;
     /// assert_eq!(list![1, 2, 3].head(), 1);
     /// ```
     pub fn head(&self) -> T {
@@ -185,7 +181,7 @@ impl<T: Clone> List<T> {
     ///
     /// ```
     /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::collections::*;
+    /// # use atcoder_snippets::collections::list::*;
     /// assert_eq!(list![1, 2, 3].tail(), list![2, 3]);
     /// ```
     pub fn tail(&self) -> List<T> {
@@ -196,16 +192,78 @@ impl<T: Clone> List<T> {
     }
 
     /// Gets an iterator without moving `self`.
-    pub fn iter(&self) -> List<T> {
-        self.clone()
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::list::*;
+    /// let mut iter = list![1, 2, 3].iter();
+    /// assert_eq!(iter.next(), Some(1));
+    /// assert_eq!(iter.next(), Some(2));
+    /// assert_eq!(iter.next(), Some(3));
+    /// assert_eq!(iter.next(), None);
+    /// ```
+    pub fn iter(&self) -> ListIter<T> {
+        ListIter { iter: self.clone() }
+    }
+
+    /// Get reversed list in O(n) time.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::list::*;
+    /// assert_eq!(list![1, 2, 3].rev(), list![3, 2, 1]);
+    /// ```
+    pub fn rev(&self) -> List<T> {
+        fn go<T: Clone>(list: &List<T>, acc: List<T>) -> List<T> {
+            match list.as_ref() {
+                &Nil => acc,
+                &Cons(ref head, ref tail) => go(tail, head.clone().cons(acc))
+            }
+        }
+
+        go(self, List::nil())
     }
 
     /// Concatenates two lists.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::list::*;
+    /// assert_eq!(list![1, 2, 3].append(&list![4, 5, 6]), list![1, 2, 3, 4, 5, 6]);
+    /// ```
     pub fn append(&self, other: &List<T>) -> List<T> {
-        append_tailrec(self, other, List::nil())
+        fn go<T: Clone>(
+            list1: &List<T>,
+            list2: &List<T>,
+            list1_rev: List<T>
+        ) -> List<T> {
+            match list1.as_ref() {
+                &Nil => list1_rev.rev_append(list2),
+                &Cons(ref head, ref tail) =>
+                    go(tail, list2, head.clone().cons(list1_rev))
+            }
+        }
+
+        go(self, other, List::nil())
     }
 
     /// Reverses `self`, then concatenates two lists.
+    ///
+    /// It is more efficient than `self.rev().append(other)`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::list::*;
+    /// assert_eq!(list![1, 2, 3].rev_append(&list![4, 5, 6]), list![3, 2, 1, 4, 5, 6]);
+    /// ```
     pub fn rev_append(&self, other: &List<T>) -> List<T> {
         match self.as_ref() {
             &Nil => other.clone(),
@@ -214,22 +272,12 @@ impl<T: Clone> List<T> {
         }
     }
 
+    // TODO: Add `rev_map` method
+    // https://caml.inria.fr/pub/docs/manual-ocaml/libref/List.html
+
     #[cfg(test)]
     fn take(self) -> std::rc::Rc<ListInner<T>> {
         self.inner
-    }
-}
-
-#[snippet = "list"]
-fn append_tailrec<T: Clone>(
-    list1: &List<T>,
-    list2: &List<T>,
-    list1_rev: List<T>
-) -> List<T> {
-    match list1.as_ref() {
-        &Nil => list1_rev.rev_append(list2),
-        &Cons(ref head, ref tail) =>
-            append_tailrec(tail, list2, head.clone().cons(list1_rev))
     }
 }
 
@@ -239,7 +287,7 @@ fn append_tailrec<T: Clone>(
 ///
 /// ```
 /// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::collections::*;
+/// # use atcoder_snippets::collections::list::*;
 /// let list = list![1, 2, 3];
 /// match list.as_ref() {
 ///     // The patterns can be writtern `Nil` and `Cons(head, tail)`
@@ -252,7 +300,6 @@ fn append_tailrec<T: Clone>(
 /// // `list` is not moved, still usable.
 /// println!("length of list = {}", list.len());
 /// ```
-#[snippet = "list"]
 impl<T: Clone> AsRef<ListInner<T>> for List<T> {
     fn as_ref(&self) -> &ListInner<T> {
         self.inner.as_ref()
@@ -272,7 +319,7 @@ impl<T: Clone> AsRef<ListInner<T>> for List<T> {
  * ///
  * /// ```
  * /// # #[macro_use] extern crate atcoder_snippets;
- * /// # use atcoder_snippets::collections::*;
+ * /// # use atcoder_snippets::collections::list::*;
  * /// let list = list![1, 2, 3];
  * ///
  * /// match list.into() {
@@ -283,7 +330,6 @@ impl<T: Clone> AsRef<ListInner<T>> for List<T> {
  * ///
  * /// // `list` is moved, cannot use it anymore.
  * /// ```
- * #[snippet = "list"]
  * impl<T: Clone> From<List<T>> for ListInner<T> {
  *     fn from(list: List<T>) -> ListInner<T> {
  *         match std::rc::Rc::try_unwrap(list.inner) {
@@ -300,10 +346,9 @@ impl<T: Clone> AsRef<ListInner<T>> for List<T> {
 ///
 /// ```
 /// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::collections::*;
+/// # use atcoder_snippets::collections::list::*;
 /// assert_eq!(format!("{:?}", list!["a", "b"]), r#""a" :: "b" :: nil"#);
 /// ```
-#[snippet = "list"]
 impl<T: Clone + std::fmt::Debug> std::fmt::Debug for List<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self.inner.as_ref() {
@@ -314,7 +359,6 @@ impl<T: Clone + std::fmt::Debug> std::fmt::Debug for List<T> {
 }
 
 /// Comparation by dictionary order.
-#[snippet = "list"]
 impl<T: Clone + PartialOrd> PartialOrd for List<T> {
     fn partial_cmp(&self, other: &List<T>) -> Option<std::cmp::Ordering> {
         use std::cmp::Ordering::*;
@@ -335,7 +379,6 @@ impl<T: Clone + PartialOrd> PartialOrd for List<T> {
 }
 
 /// Comparation by dictionary order.
-#[snippet = "list"]
 impl<T: Clone + Ord> Ord for List<T> {
     fn cmp(&self, other: &List<T>) -> std::cmp::Ordering {
         use std::cmp::Ordering::*;
@@ -353,28 +396,49 @@ impl<T: Clone + Ord> Ord for List<T> {
     }
 }
 
-/// `List` is both a collection and an iterator.
-#[snippet = "list"]
-impl<T: Clone> Iterator for List<T> {
+/// An iterator over the items of a `List`.
+pub struct ListIter<T: Clone> {
+    iter: List<T>
+}
+
+impl<T: Clone> Iterator for ListIter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
         let cons;
-        match self.as_ref() {
+        match self.iter.as_ref() {
             &Nil => return None,
             &Cons(ref head, ref tail) => cons = (head.clone(), tail.clone())
         }
-        *self = cons.1;
+        self.iter = cons.1;
         Some(cons.0)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.iter.len(), Some(self.iter.len()))
+    }
+
+    fn count(self) -> usize {
+        self.iter.len()
     }
 }
 
-#[snippet = "list"]
+impl<T: Clone> ExactSizeIterator for ListIter<T> {}
+
+impl<T: Clone> IntoIterator for List<T> {
+    type Item = T;
+    type IntoIter = ListIter<T>;
+
+    fn into_iter(self) -> ListIter<T> {
+        ListIter { iter: self }
+    }
+}
+
 impl<'a, T: Clone> IntoIterator for &'a List<T> {
     type Item = T;
-    type IntoIter = List<T>;
+    type IntoIter = ListIter<T>;
 
-    fn into_iter(self) -> List<T> {
+    fn into_iter(self) -> ListIter<T> {
         self.iter()
     }
 }
@@ -387,10 +451,9 @@ impl<'a, T: Clone> IntoIterator for &'a List<T> {
 ///
 /// ```
 /// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::collections::*;
+/// # use atcoder_snippets::collections::list::*;
 /// assert_eq!(vec![1, 2, 3].into_iter().collect::<List<_>>(), list![1, 2, 3]);
 /// ```
-#[snippet = "list"]
 impl<T: Clone> std::iter::FromIterator<T> for List<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> List<T> {
         let xs: Vec<T> = iter.into_iter().collect();
@@ -408,15 +471,13 @@ impl<T: Clone> std::iter::FromIterator<T> for List<T> {
 ///
 /// ```
 /// # #[macro_use] extern crate atcoder_snippets;
-/// # use atcoder_snippets::collections::*;
+/// # use atcoder_snippets::collections::list::*;
 /// assert_eq!(1.cons(2.cons(List::nil())), list![1, 2]);
 /// ```
-#[snippet = "list"]
 pub trait IntoCons<T: Clone, L: std::borrow::Borrow<List<T>>> {
     fn cons(self, tail: L) -> List<T>;
 }
 
-#[snippet = "list"]
 impl<T: Clone, L: std::borrow::Borrow<List<T>>> IntoCons<T, L> for T {
     fn cons(self, tail: L) -> List<T> {
         let tail_cloned: List<T> = tail.borrow().clone().into();
@@ -446,7 +507,6 @@ impl<T: Clone> IntoConsByMove<T> for T {
 /// Makes a list by enumerating its contents.
 ///
 /// See [Example section of `List`](collections/struct.List.html#example) for usage.
-#[snippet = "list"]
 #[macro_export]
 macro_rules! list {
     [] => { List::nil() };
@@ -454,6 +514,8 @@ macro_rules! list {
     [$head:expr, $($tail:expr),*] => { $head.cons(list![$($tail),*]) };
     [$head:expr, $($tail:expr),+ ,] => { list![$head, $($tail),*] };
 }
+
+// END SNIPPET list
 
 #[cfg(test)]
 mod tests {
@@ -542,7 +604,7 @@ mod tests {
 
     #[test]
     fn test_partial_ord() {
-        assert_eq!(List::<f64>::nil().partial_cmp(List::nil()), Some(Equal));
+        assert_eq!(List::<f64>::nil().partial_cmp(&List::nil()), Some(Equal));
         assert_eq!(list![1.0].partial_cmp(&List::nil()), Some(Greater));
         assert_eq!(List::<f64>::nil().partial_cmp(&list![1.0]), Some(Less));
         assert_eq!(list![1.0].partial_cmp(&list![1.0]), Some(Equal));

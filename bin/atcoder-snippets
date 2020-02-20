@@ -1,0 +1,59 @@
+#!/usr/bin/env python3.8
+import argparse
+import os
+import glob
+import re
+from collections import defaultdict
+import json
+import pathlib
+
+def get_snippet(name, lines):
+    for i in range(len(lines)):
+        if re.match(r'\s*//\s*END\s+SNIPPET', lines[i]):
+            return lines[:i]
+    else:
+        raise Exception(f"{name}: without END SNIPPET")
+
+def format_snippet(lines):
+    res = ''
+    for l in lines:
+        if not (re.match(r'\s*//', l) or re.fullmatch(r'\s*', l)):
+            res += l
+    if res and res[-1] != '\n':
+        res += '\n'
+    return res
+
+def process(path):
+    snippets = defaultdict(lambda: {"text": "", "dependencies": set()})
+    for filename in pathlib.Path(path).rglob('*.rs'):
+        with open(filename) as f:
+            lines = f.readlines()
+            i = 0
+            while i < len(lines):
+                with_dep = re.compile(r'\s*//\s*BEGIN\s+SNIPPET\s+(\S+)\s+DEPENDS\s+ON\s+(\S+)((\s+\S+)*)')
+                plain = re.compile(r'\s*//\s*BEGIN\s+SNIPPET\s+(\S+)')
+                if m := with_dep.match(lines[i]):
+                    name = m.group(1)
+                    deps = {m.group(2)}
+                    for d in m.group(3).lstrip().split():
+                        deps.add(d)
+                elif m := plain.match(lines[i]):
+                    name = m.group(1)
+                    deps = set()
+                else:
+                    i += 1
+                    continue
+                snippet_lines = get_snippet(name, lines[i+1:])
+                i += len(snippet_lines)
+                snippets[name]["text"] += format_snippet(snippet_lines)
+                snippets[name]["dependencies"] ^= deps
+    for name in snippets:
+        deps = snippets[name]["dependencies"]
+        snippets[name]["dependencies"] = list(deps)
+    print(json.dumps(snippets))
+
+parser = argparse.ArgumentParser()
+parser.add_argument('path')
+
+args = parser.parse_args()
+process(args.path)
