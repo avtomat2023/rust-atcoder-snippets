@@ -943,44 +943,53 @@ macro_rules! read {
     // Discards a line
     () => {
         let mut line = String::new();
-        // Can be faster by removing UTF-8 validation,
-        // but enables validation in case of feeding a wrong test case manually.
+        // Can be faster by disabling UTF-8 validation,
+        // but keeps it enabled in case of feeding a wrong test case manually.
         std::io::stdin().read_line(&mut line).unwrap();
     };
 
-    ( $( $body:tt )+ ) => {
-        read_inner!($($body)+; );
+    // Handles one-pattern case separately because of
+    // - avoiding "unnecessaryparentheses" warning
+    // - simplifying `read_inner`
+    //
+    // On Codeforces environment, optional pattern '$(,)?' may not be supported.
+    ( $pat:pat = $t:ty $(,)* ) => {
+        let $pat = read::<$t>();
+    };
+    ( ! $(,)* ) => {
+        let _ = read::<()>();
+    };
+
+    ( $pat:pat = $t:ty, $( $rest:tt )+ ) => {
+        read_inner!($pat = $t; $($rest)+);
+    };
+    ( !, $( $rest:tt )+ ) => {
+        read_inner!(_ = (); $($rest)+);
     };
 }
 
-// This macro works in latest stable Rust, but it doesn't in Rust 1.15.1.
 #[macro_export]
 #[doc(hidden)]
-#[snippet = "read"]
 macro_rules! read_inner {
-    ( $pat:pat = $t:ty ; $( $acc:tt )* ) => {
-        read_inner!(; $($acc)* $pat = $t,);
+    // Processes patterns
+    ( $( $acc_pat:pat = $acc_t:ty ),+ ; $pat:pat = $t:ty, $( $rest:tt )* ) => {
+        read_inner!($( $acc_pat = $acc_t ),+ , $pat = $t ; $($rest)*);
+    };
+    ( $( $acc_pat:pat = $acc_t:ty ),+ ; !, $( $rest:tt )* ) => {
+        read_inner!($( $acc_pat = $acc_t ),+ , _ = () ; $($rest)*);
     };
 
-    ( $pat:pat = $t:ty, $( $pat_rest:pat = $t_rest:ty ),+  ; $( $acc:tt )* ) => {
-        read_inner!($($pat_rest = $t_rest),+; $($acc)* $pat = $t,);
+    // In case the last assignment has no trailing comma
+    ( $( $acc_pat:pat = $acc_t:ty ),+ ; $pat:pat = $t:ty ) => {
+        read_inner!($( $acc_pat = $acc_t ),+ , $pat = $t ;);
     };
-
-    ( ! ; $( $acc:tt )* ) => {
-        read_inner!(; $($acc)* _ = (),);
-    };
-
-    ( !, $( $pat_rest:pat = $t_rest:ty ),*; $( $acc:tt )* ) => {
-        read_inner!($($pat_rest = $t_rest),*; $($acc)* _ = (), );
+    ( $( $acc_pat:pat = $acc_t:ty ),+ ; ! ) => {
+        read_inner!($( $acc_pat = $acc_t ),+ , _ = () ;);
     };
 
     // Gets a ReadableFromLine
-    ( ; $pat:pat = $t:ty , ) => {
-        let $pat = read::<$t>();
-    };
-
-    ( ; $( $pat:pat = $t:ty ),+ , ) => {
-        read_inner!(; ($($pat),*) = ($($t),*),);
+    ( $( $pat:pat = $t:ty ),+ ; ) => {
+        let ($($pat),+) = read::<($($t),+)>();
     };
 }
 
