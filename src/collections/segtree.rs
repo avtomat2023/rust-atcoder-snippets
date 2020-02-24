@@ -2,7 +2,9 @@
 //!
 //! For implementation details, see [this article](https://codeforces.com/blog/entry/18051).
 
-// BEGIN SNIPPET segtree
+use range::*;
+
+// BEGIN SNIPPET segtree DEPENDS ON range option
 
 // use num::Numeric;
 
@@ -121,31 +123,12 @@ impl<T: Clone, F: Fn(&T, &T) -> T> SegmentTree<T, F> {
     /// assert_eq!(segment_tree.query(3..=10), None);
     /// ```
     pub fn query<R: std::ops::RangeBounds<usize>>(&self, range: R) -> Option<T> {
-        use std::ops::Bound::*;
-
-        let start = match range.start_bound() {
-            Included(&i) => i,
-            Excluded(&i) => i+1,
-            Unbounded => 0
-        };
-
-        let end = match range.end_bound() {
-            Included(&i) => i+1,
-            Excluded(&i) => i,
-            Unbounded => self.len(),
-        };
-        if self.len() < end {
-            return None;
-        }
-
-        if start <= end {
-            Some(self.aggregate_interval(
-                self.node_count() + start, self.node_count() + end,
+        range.to_range(self.len()).map(|range| {
+            self.aggregate_interval(
+                self.node_count() + range.start, self.node_count() + range.end,
                 self.identity.clone(), self.identity.clone()
-            ))
-        } else {
-            None
-        }
+            )
+        })
     }
 
     fn aggregate_interval(&self, mut heap_start: usize, mut heap_end: usize,
