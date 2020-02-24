@@ -35,6 +35,8 @@ impl<T: std::ops::RangeBounds<usize>> UsizeRangeBoundsExt for T {
     }
 }
 
+// END SNIPPET
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -102,5 +104,3 @@ mod tests {
     }
     */
 }
-
-// END SNIPPET
