@@ -4,7 +4,7 @@ use crate::read::{Readable, readx, readn};
 use crate::option::BoolExt;
 use crate::range::UsizeRangeBoundsExt;
 
-// BEGIN SNIPPET table DEPENDS ON read range
+// BEGIN SNIPPET table DEPENDS ON read option range
 
 /// 2-dimentional array.
 ///
