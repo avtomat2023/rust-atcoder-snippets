@@ -114,7 +114,7 @@ impl<T, F1: Fn(&T, &T) -> T, F2: Fn(&T, &T) -> T> CumulativeTable<T, F1, F2> {
 ///
 /// # Example
 ///
-/// ```
+/// ```edition2018
 /// # use atcoder_snippets::table::*;
 /// // Makes a table with 3 rows and 2 columns, filled by 0.
 /// let table1 = table![0; 3,2];
