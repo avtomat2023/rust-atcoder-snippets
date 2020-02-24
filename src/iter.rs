@@ -275,6 +275,7 @@ pub trait IteratorExt: Iterator {
     /// # #[macro_use] extern crate atcoder_snippets;
     /// # use atcoder_snippets::iter::*;
     /// let data = vec![1, 2, 3, 4, 5];
+    /// // the sum of data[start..end] is calculated by cumsum[end] - cumsum[start].
     /// let cumsum: Vec<i32> = data.into_iter().lscan(0, |&acc, x| acc + x).collect();
     /// assert_eq!(cumsum, vec![0, 1, 3, 6, 10, 15]);
     /// ```
@@ -288,6 +289,33 @@ pub trait IteratorExt: Iterator {
             state: Some(state),
             f: f,
         }
+    }
+
+    /// `lscan` using the first item as initial state.
+    ///
+    /// If the iterator is empty, returns `None`.
+    ///
+    /// # Example
+    ///
+    /// Calculates a cumulative max.
+    ///
+    /// ```
+    /// # use atcoder_snippets::iter::*;
+    /// use std::cmp;
+    ///
+    /// let data = vec![10, 1, 20, 2, 30];
+    /// // maxs[i] means the maximum value in data[..=i].
+    /// let maxs: Vec<i32> = data.into_iter()
+    ///     .lscan1(|&acc, x| cmp::max(acc, x)).unwrap().collect();
+    /// assert_eq!(maxs, vec![10, 10, 20, 20, 30]);
+    /// ```
+    fn lscan1<F>(mut self, f: F) -> Option<LScan<Self, Self::Item, F>>
+    where
+        Self: Sized,
+        Self::Item: Clone,
+        F: FnMut(&Self::Item, Self::Item) -> Self::Item
+    {
+        self.next().map(|first| self.lscan(first, f))
     }
 
     // If the iterator has any item and all the items are same, returns `Some` of the first item.
@@ -432,6 +460,8 @@ impl<T, F> Iterator for Unfold<T, F> where F: FnMut(&T) -> Option<T> {
 /// Returns an iterator applying `f` to `init` repeatedly.
 ///
 /// The iterator yields inner values of `Options` until `f` returns `None`.
+///
+/// In Rust >= 1.34.0, the same functionality is provided as `iter::succesors`.
 ///
 /// # Example
 ///
