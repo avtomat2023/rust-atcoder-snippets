@@ -24,7 +24,7 @@
 //! assert_eq!(count_key(&[2,2,2,2,2,2], 2), 6);
 //! ```
 
-use num::Integer;
+use crate::num::Integer;
 
 // BEGIN SNIPPET bsearch DEPENDS ON num
 

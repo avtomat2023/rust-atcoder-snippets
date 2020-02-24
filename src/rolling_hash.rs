@@ -1,7 +1,7 @@
 /// Rolling hash for efficient string matching.
 // Example: ABC135 F
 
-use iter::IteratorExt;
+use crate::iter::IteratorExt;
 
 // BEGIN SNIPPET rolling_hash DEPENDS ON iter
 

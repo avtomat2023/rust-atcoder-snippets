@@ -2,7 +2,7 @@
 
 // BEGIN SNIPPET num
 
-use num::{WithZero, WithOne, Numeric, Integer, Float};
+use crate::num::{WithZero, WithOne, Numeric, Integer, Float};
 
 /// Enriches signed and unsigned integer types.
 pub trait PrimitiveInteger: Integer {

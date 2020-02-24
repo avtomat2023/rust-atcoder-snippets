@@ -2,6 +2,7 @@
 name = "atcoder_snippets"
 version = "0.0.1"
 authors = ["yoshrc"]
+edition = "2018"
 
 [dev-dependencies]
 criterion = "0.2.11"

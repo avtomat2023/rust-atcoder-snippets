@@ -1,6 +1,6 @@
 //! Enriches ranges
 
-use option::BoolExt;
+use crate::option::BoolExt;
 
 // BEGIN SNIPPET range DEPENDS ON option
 

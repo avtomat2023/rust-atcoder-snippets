@@ -2,7 +2,7 @@
 //!
 //! For implementation details, see [this article](https://codeforces.com/blog/entry/18051).
 
-use range::*;
+use crate::range::UsizeRangeBoundsExt;
 
 // BEGIN SNIPPET segtree DEPENDS ON range option
 

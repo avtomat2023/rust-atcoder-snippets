@@ -19,7 +19,7 @@
 //! }
 //! ```
 
-use read::Readable;
+use crate::read::Readable;
 
 // BEGIN SNIPPET vec DEPENDS ON read
 
