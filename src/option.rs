@@ -64,11 +64,11 @@ impl<T> OptionExt<T> for Option<T> {
 /// Enrich all types by adding `guard` method
 trait Guard: Sized {
     /// `Some(self)` if `pred(&self)` holds, otherwise `None`.
-    fn guard(self, pred: impl FnOnce(&Self) -> bool) -> Option<Self>;
+    fn guard<F: FnOnce(&Self) -> bool>(self, pred: F) -> Option<Self>;
 }
 
 impl<T> Guard for T {
-    fn guard(self, pred: impl FnOnce(&T) -> bool) -> Option<T> {
+    fn guard<F: FnOnce(&T) -> bool>(self, pred: F) -> Option<T> {
         if pred(&self) { Some(self) } else { None }
     }
 }
