@@ -2,9 +2,8 @@
 
 use crate::read::{Readable, readx, readn};
 use crate::option::BoolExt;
-use crate::range::UsizeRangeBoundsExt;
 
-// BEGIN SNIPPET table DEPENDS ON read option range
+// BEGIN SNIPPET table DEPENDS ON read option
 
 /// 2-dimentional array.
 ///
@@ -19,12 +18,12 @@ pub struct Table<T> {
 }
 
 /// An iterator created by [`Table::rows`](struct.Table.html#method.rows).
-pub struct TableRows<'a, T> {
+pub struct TableRows<'a, T: 'a> {
     table: &'a Table<T>,
     index: usize
 }
 
-impl<'a, T> Iterator for TableRows<'a, T> {
+impl<'a, T: 'a> Iterator for TableRows<'a, T> {
     type Item = &'a [T];
 
     fn next(&mut self) -> Option<&'a [T]> {
@@ -78,24 +77,33 @@ impl<T> Table<T> {
         let mut inner = vec![vec![identity.clone(); self.col_count() + 1]];
         for table_row in self.rows() {
             let mut new_row = vec![identity.clone()];
-            let last_row = inner.last().unwrap();
-            for (x, acc1) in table_row.iter().zip(last_row.windows(2)) {
-                // Do op before op_inv in order to avoid overflow when op is addtion
-                let acc2 = new_row.last().unwrap();
-                let tmp1 = op(x, &acc1[1]);
-                let tmp2 = op(&tmp1, acc2);
-                new_row.push(op_inv(&tmp2, &acc1[0]));
+            {
+                let last_row = inner.last().unwrap();
+                for (x, acc1) in table_row.iter().zip(last_row.windows(2)) {
+                    // Do op before op_inv in order to avoid overflow when op is addtion
+                    let result = {
+                        let acc2 = new_row.last().unwrap();
+                        let tmp1 = op(x, &acc1[1]);
+                        let tmp2 = op(&tmp1, acc2);
+                        op_inv(&tmp2, &acc1[0])
+                    };
+                    new_row.push(result);
+                }
             }
             inner.push(new_row);
         }
-        CumulativeTable { op, op_inv, inner: Table { inner } }
+        CumulativeTable { op: op, op_inv: op_inv, inner: Table { inner: inner } }
     }
 }
 
 impl<T, F1: Fn(&T, &T) -> T, F2: Fn(&T, &T) -> T> CumulativeTable<T, F1, F2> {
-    pub fn query(&self, yrange: impl std::ops::RangeBounds<usize>, xrange: impl std::ops::RangeBounds<usize>) -> Option<T> {
-        let y = yrange.to_range(self.inner.row_count() - 1)?;
-        let x = xrange.to_range(self.inner.col_count() - 1)?;
+    pub fn query(&self, y: std::ops::Range<usize>, x: std::ops::Range<usize>) -> Option<T> {
+        if y.start > y.end || y.end > self.inner.row_count() - 1 {
+            return None;
+        }
+        if x.start > x.end || x.end > self.inner.col_count() - 1 {
+            return None;
+        }
 
         let val1 = &self.inner.inner[y.end][x.end];
         let val2 = &self.inner.inner[y.end][x.start];
