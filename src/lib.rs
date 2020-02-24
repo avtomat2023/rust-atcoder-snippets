@@ -9,6 +9,7 @@ pub mod iter;
 pub mod slice;
 pub mod collections;
 pub mod vec;
+pub mod table;
 pub mod bsearch;
 pub mod interval;
 pub mod z;
