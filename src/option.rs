@@ -31,7 +31,7 @@ impl BoolExt for bool {
     }
 }
 
-trait OptionExt<T> {
+pub trait OptionExt<T> {
     /// Convert to string or get default.
     ///
     /// Useful for printing the `u32` answer if it exists, otherwise `"-1"`.
@@ -62,7 +62,7 @@ impl<T> OptionExt<T> for Option<T> {
 }
 
 /// Enrich all types by adding `guard` method
-trait Guard: Sized {
+pub trait Guard: Sized {
     /// `Some(self)` if `pred(&self)` holds, otherwise `None`.
     fn guard(self, pred: impl FnOnce(&Self) -> bool) -> Option<Self>;
 }
