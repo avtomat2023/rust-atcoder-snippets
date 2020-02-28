@@ -27,7 +27,7 @@ impl<'a, T: 'a> Iterator for TableRows<'a, T> {
     type Item = &'a [T];
 
     fn next(&mut self) -> Option<&'a [T]> {
-        if self.index < self.table.row_count() {
+        if self.index < self.table.height() {
             let i = self.index;
             self.index += 1;
             Some(&self.table.inner[i])
@@ -54,11 +54,11 @@ impl<T> Table<T> {
             .then_with(|| Table { inner: rows })
     }
 
-    pub fn row_count(&self) -> usize {
+    pub fn height(&self) -> usize {
         self.inner.len()
     }
 
-    pub fn col_count(&self) -> usize {
+    pub fn width(&self) -> usize {
         self.inner.first().map_or(0, |row| row.len())
     }
 
@@ -73,7 +73,7 @@ impl<T> Table<T> {
     /// assert_eq!(table.in_range((4, 5)), false);
     /// ```
     pub fn in_range(&self, (y, x): (usize, usize)) -> bool {
-        y < self.row_count() && x < self.col_count()
+        y < self.height() && x < self.width()
     }
 
     pub fn rows(&self) -> TableRows<T> {
@@ -101,7 +101,7 @@ impl<T> Table<T> {
     pub fn adjacent_8_indices(&self, (y, x): (usize, usize)) -> Option<Vec<(usize, usize)>> {
         self.in_range((y, x)).then_with(|| {
             let mut result = Vec::new();
-            let xs = x.saturating_sub(1) ..= std::cmp::min(x+1, self.col_count()-1);
+            let xs = x.saturating_sub(1) ..= std::cmp::min(x+1, self.width()-1);
 
             if y > 0 {
                 for x in xs.clone() {
@@ -112,11 +112,11 @@ impl<T> Table<T> {
             if x > 0 {
                 result.push((y, x-1));
             }
-            if x < self.col_count()-1 {
+            if x < self.width()-1 {
                 result.push((y, x+1));
             }
 
-            if y < self.row_count()-1 {
+            if y < self.height()-1 {
                 for x in xs {
                     result.push((y+1, x));
                 }
@@ -134,7 +134,7 @@ impl<T> Table<T> {
         F1: Fn(&T, &T) -> T,
         F2: Fn(&T, &T) -> T
     {
-        let mut inner = vec![vec![identity.clone(); self.col_count() + 1]];
+        let mut inner = vec![vec![identity.clone(); self.width() + 1]];
         for table_row in self.rows() {
             let mut new_row = vec![identity.clone()];
             {
@@ -158,10 +158,10 @@ impl<T> Table<T> {
 
 impl<T, F1: Fn(&T, &T) -> T, F2: Fn(&T, &T) -> T> CumulativeTable<T, F1, F2> {
     pub fn query(&self, y: std::ops::Range<usize>, x: std::ops::Range<usize>) -> Option<T> {
-        if y.start > y.end || y.end > self.inner.row_count() - 1 {
+        if y.start > y.end || y.end > self.inner.height() - 1 {
             return None;
         }
-        if x.start > x.end || x.end > self.inner.col_count() - 1 {
+        if x.start > x.end || x.end > self.inner.width() - 1 {
             return None;
         }
 
@@ -209,8 +209,8 @@ pub fn read_table<T: Readable>() -> Table<T::Output> {
     Table::from_rows(res).unwrap()
 }
 
-pub fn read_table_rows<T: Readable>(row_count: usize) -> Table<T::Output> {
-    let res = readn::<Vec<T>>(row_count);
+pub fn read_table_rows<T: Readable>(height: usize) -> Table<T::Output> {
+    let res = readn::<Vec<T>>(height);
     Table::from_rows(res).unwrap()
 }
 
@@ -236,18 +236,18 @@ mod tests {
     }
 
     #[test]
-    fn test_count() {
+    fn test_size() {
         let table1: Table<i32> = table![];
-        assert_eq!(table1.row_count(), 0);
-        assert_eq!(table1.col_count(), 0);
+        assert_eq!(table1.height(), 0);
+        assert_eq!(table1.width(), 0);
 
         let table2 = table![0; 3,0];
-        assert_eq!(table2.row_count(), 3);
-        assert_eq!(table2.col_count(), 0);
+        assert_eq!(table2.height(), 3);
+        assert_eq!(table2.width(), 0);
 
         let table3 = table![0; 3,2];
-        assert_eq!(table3.row_count(), 3);
-        assert_eq!(table3.col_count(), 2);
+        assert_eq!(table3.height(), 3);
+        assert_eq!(table3.width(), 2);
     }
 
     #[test]
