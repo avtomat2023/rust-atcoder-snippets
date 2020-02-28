@@ -18,6 +18,32 @@ pub struct Table<T> {
     inner: Vec<Vec<T>>
 }
 
+pub struct TableRange {
+    height: usize,
+    width: usize,
+    y: usize,
+    x: usize
+}
+
+impl Iterator for TableRange {
+    type Item = (usize, usize);
+
+    fn next(&mut self) -> Option<(usize, usize)> {
+        if self.x < self.width {
+            self.x += 1;
+            return Some((self.y, self.x-1))
+        }
+
+        if self.y+1 < self.height {
+            self.y += 1;
+            self.x = 1;
+            return Some((self.y, 0))
+        }
+
+        None
+    }
+}
+
 /// An iterator created by [`Table::rows`](struct.Table.html#method.rows).
 pub struct TableRows<'a, T> {
     table: &'a Table<T>,
@@ -63,6 +89,19 @@ impl<T> Table<T> {
         self.inner.first().map_or(0, |row| row.len())
     }
 
+    pub fn shape(&self) -> (usize, usize) {
+        (self.height(), self.width())
+    }
+
+    pub fn range(&self) -> impl Iterator<Item=(usize, usize)> {
+        TableRange {
+            height: self.height(),
+            width: self.width(),
+            y: if self.width() == 0 { self.height() } else { 0 },
+            x: 0
+        }
+    }
+
     /// Checks the index is in range.
     ///
     /// # Example
@@ -75,6 +114,14 @@ impl<T> Table<T> {
     /// ```
     pub fn in_range(&self, (y, x): (usize, usize)) -> bool {
         y < self.height() && x < self.width()
+    }
+
+    pub fn get(&self, (y, x): (usize, usize)) -> Option<&T> {
+        self.inner.get(y).and_then(|row| row.get(x))
+    }
+
+    pub fn get_mut(&mut self, (y, x): (usize, usize)) -> Option<&mut T> {
+        self.inner.get_mut(y).and_then(|row| row.get_mut(x))
     }
 
     pub fn rows(&self) -> TableRows<T> {
@@ -151,6 +198,35 @@ impl<T> Table<T> {
         CumulativeTable { op, op_inv, inner: Table { inner } }
     }
 }
+
+impl<T> std::ops::Index<(usize, usize)> for Table<T> {
+    type Output = T;
+
+    fn index(&self, index: (usize, usize)) -> &T {
+        match self.get(index) {
+            Some(result) => result,
+            None => panic!(
+                "index out of bounds: the table shape is {:?} but the index is {:?}",
+                self.shape(), index
+            )
+        }
+    }
+}
+
+impl<T> std::ops::IndexMut<(usize, usize)> for Table<T> {
+    fn index_mut(&mut self, index: (usize, usize)) -> &mut T {
+        // TODO: It may have a serious overhead to get the shape every time.
+        let shape = self.shape();
+        match self.get_mut(index) {
+            Some(result) => result,
+            None => panic!(
+                "index out of bounds: the table shape is {:?} but the index is {:?}",
+                shape, index
+            )
+        }
+    }
+}
+
 
 impl<T, F1: Fn(&T, &T) -> T, F2: Fn(&T, &T) -> T> CumulativeTable<T, F1, F2> {
     pub fn query(&self, yrange: impl std::ops::RangeBounds<usize>, xrange: impl std::ops::RangeBounds<usize>) -> Option<T> {
@@ -240,6 +316,31 @@ mod tests {
         let table3 = table![0; 3,2];
         assert_eq!(table3.height(), 3);
         assert_eq!(table3.width(), 2);
+    }
+
+    #[test]
+    fn test_range() {
+        fn indices(table: &Table<i32>) -> Vec<(usize, usize)> {
+            table.range().collect()
+        }
+
+        let table1: Table<i32> = table![];
+        assert_eq!(indices(&table1), vec![]);
+        let table2 = table![0; 3,0];
+        assert_eq!(indices(&table2), vec![]);
+        let table3 = table![0; 3,2];
+        assert_eq!(indices(&table3), vec![(0,0), (0,1), (1,0), (1,1), (2,0), (2,1)]);
+    }
+
+    #[test]
+    fn test_range_exhausted() {
+        let mut range = table![0; 2,2].range();
+        assert_eq!(range.next(), Some((0, 0)));
+        assert_eq!(range.next(), Some((0, 1)));
+        assert_eq!(range.next(), Some((1, 0)));
+        assert_eq!(range.next(), Some((1, 1)));
+        assert_eq!(range.next(), None);
+        assert_eq!(range.next(), None);
     }
 
     #[test]
