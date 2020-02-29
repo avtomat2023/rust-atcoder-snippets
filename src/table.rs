@@ -160,9 +160,47 @@ impl<T> Table<T> {
         TableRows { table: self, index: 0 }
     }
 
+    // Ant Book p. 37
+    // TODO: Maybe out-of-range should not be treated as an error.
+    /// Indices of vertically and horizontlly adjacent cells in the dictionary order.
+    ///
+    /// Useful for traversing a grid graph.
+    ///
+    /// If the given index is out of range, returns `None`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::table::*;
+    /// let table = table![0; 5,5];
+    /// assert_eq!(table.adjacent_indices_4((3,2)),
+    ///            Some(vec![(2,2), (3,1), (3,3), (4,2)]));
+    /// assert_eq!(table.adjacent_indices_4((4,3)),
+    ///            Some(vec![(3,3), (4,2), (4,4)]));
+    /// ```
+    pub fn adjacent_indices_4(&self, (y, x): (usize, usize)) -> Option<Vec<(usize, usize)>> {
+        self.inside((y, x)).then_with(|| {
+            let mut result = Vec::new();
+            if y > 0 {
+                result.push((y-1, x));
+            }
+            if x > 0 {
+                result.push((y, x-1));
+            }
+            if x < self.width()-1 {
+                result.push((y, x+1));
+            }
+            if y < self.height()-1 {
+                result.push((y+1, x));
+            }
+            result
+        })
+    }
+
     // Ant Book p. 35
     // TODO: Maybe out-of-range should not be treated as an error.
-    /// Indices of enclosing 8 cells in the dictionary order.p
+    /// Indices of 8 enclosing cells in the dictionary order.
     ///
     /// Useful for traversing a grid graph.
     ///
