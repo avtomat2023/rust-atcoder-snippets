@@ -140,6 +140,20 @@ fn count_inversions_sub<T: Clone + Ord>(seq: &[T]) -> (Vec<T>, usize) {
 
 /// Enriches slices by adding various methods.
 pub trait SliceExt<T> {
+    // TODO: Ant Book p. 47
+    /// Takes the prefix slice satisfying the predicate, and makes a tuple of the slice and the rest.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use atcoder_snippets::slice::*;
+    /// let seq = [1, 2, 3, 4, 1, 2];
+    /// assert_eq!(seq.span(|&x| x < 3), ([1, 2].as_ref(), [3, 4, 1, 2].as_ref()));
+    /// assert_eq!(seq.span(|&x| x < 9), ([1, 2, 3, 4, 1, 2].as_ref(), [].as_ref()));
+    /// assert_eq!(seq.span(|&x| x < 1), ([].as_ref(), [1, 2, 3, 4, 1, 2].as_ref()));
+    /// ```
+    fn span<F: Fn(&T) -> bool>(&self, predicate: F) -> (&[T], &[T]);
+
     /// Returns an iterator yielding groups.
     ///
     /// Each group is a pair of key and subslice.
@@ -216,6 +230,11 @@ pub trait SliceExt<T> {
 }
 
 impl<T> SliceExt<T> for [T] {
+    fn span<F: Fn(&T) -> bool>(&self, predicate: F) -> (&[T], &[T]) {
+        let i = self.iter().position(|x| !predicate(x)).unwrap_or(self.len());
+        (&self[..i], &self[i..])
+    }
+
     fn group_by<K: Eq, F: Fn(&T) -> K>(&self, key_fn: F) -> SliceGroupBy<T, K, F> {
         SliceGroupBy { key_fn: key_fn, rest: self }
     }
