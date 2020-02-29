@@ -35,6 +35,34 @@ impl<T: std::ops::RangeBounds<usize>> UsizeRangeBoundsExt for T {
     }
 }
 
+pub trait BoundCloned<T> {
+    fn cloned(self) -> std::ops::Bound<T>;
+}
+
+impl<T: Clone> BoundCloned<T> for std::ops::Bound<&T> {
+    fn cloned(self) -> std::ops::Bound<T> {
+        match self {
+            std::ops::Bound::Included(x) => std::ops::Bound::Included(x.clone()),
+            std::ops::Bound::Excluded(x) => std::ops::Bound::Excluded(x.clone()),
+            std::ops::Bound::Unbounded => std::ops::Bound::Unbounded
+        }
+    }
+}
+
+pub trait BoundExt<T> {
+    fn map<U>(self, f: impl FnOnce(T) -> U) -> std::ops::Bound<U>;
+}
+
+impl<T> BoundExt<T> for std::ops::Bound<T> {
+    fn map<U>(self, f: impl FnOnce(T) -> U) -> std::ops::Bound<U> {
+        match self {
+            std::ops::Bound::Included(x) => std::ops::Bound::Included(f(x)),
+            std::ops::Bound::Excluded(x) => std::ops::Bound::Excluded(f(x)),
+            std::ops::Bound::Unbounded => std::ops::Bound::Unbounded
+        }
+    }
+}
+
 // END SNIPPET
 
 #[cfg(test)]
