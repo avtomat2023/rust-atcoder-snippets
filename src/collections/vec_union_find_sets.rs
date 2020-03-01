@@ -224,13 +224,33 @@ impl VecUnionFindSets {
     /// assert!(sets.contains(&vec![2, 3, 4]));
     /// assert!(sets.contains(&vec![5]));
     /// ```
-    pub fn iter_cloned(&self) -> impl Iterator<Item=Vec<usize>> {
+    pub fn iter_cloned(&self) -> VecUnionFindSetsIter {
         let mut sets = vec![Vec::new(); self.items_len()];
         for i in 0..self.items_len() {
             let repr = self.find(i).unwrap();
             sets[repr].push(i);
         }
-        sets.into_iter().filter(|v| !v.is_empty())
+        sets.reverse();
+        VecUnionFindSetsIter {
+            sets: sets
+        }
+    }
+}
+
+pub struct VecUnionFindSetsIter {
+    sets: Vec<Vec<usize>>,
+}
+
+impl Iterator for VecUnionFindSetsIter {
+    type Item = Vec<usize>;
+
+    fn next(&mut self) -> Option<Vec<usize>> {
+        while let Some(set) = self.sets.pop() {
+            if !set.is_empty() {
+                return Some(set)
+            }
+        }
+        None
     }
 }
 
