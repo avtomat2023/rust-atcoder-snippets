@@ -4,10 +4,9 @@
 // 動的なmod設定が必要な問題: ABC137 F
 // 複数のmodを使い分けなければならない問題には対応できない
 
-use std;
-use read::{Readable, Words};
+use crate::read::{Readable, Words};
 
-// BEGIN SNIPPET modp DEPENDS ON read
+// BEGIN SNIPPET modp DEPENDS ON read op_macros
 
 pub type ModPBase = u64;
 pub type ModPModulus = u32;
@@ -97,10 +96,11 @@ impl ModP {
     ///
     /// # Example
     ///
-    /// ```no_run
-    /// # extern crate atcoder_snippets;
-    /// # use atcoder_snippets::num::*;
-    /// // MODULUS is set to 7.
+    /// ```
+    /// # use atcoder_snippets::modulo::modp::*;
+    /// unsafe {
+    ///     ModP::set_mod(7).unwrap();
+    /// }
     /// // 2^5 = 32 = 4 mod 7.
     /// assert_eq!(ModP::new(2).pow(5), ModP::new(4));
     /// ```
@@ -123,11 +123,13 @@ impl ModP {
     ///
     /// # Example
     ///
-    /// ```no_run
-    /// # extern crate atcoder_snippets;
-    /// # use atcoder_snippets::num::*;
+    /// ```
+    /// # use atcoder_snippets::modulo::modp::*;
     /// // MODULUS is set to 7.
     /// // 3^5 = 15 = 1 mod 7.
+    /// unsafe {
+    ///     ModP::set_mod(7).unwrap();
+    /// }
     /// assert_eq!(ModP::new(3).inv(), ModP::new(5));
     /// ```
     pub fn inv(self) -> ModP {

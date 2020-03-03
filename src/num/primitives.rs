@@ -2,7 +2,7 @@
 
 use std;
 
-// BEGIN SNIPPET num
+// BEGIN SNIPPET int
 
 /// Enriches signed and unsigned integer types.
 pub trait PrimitiveInteger:

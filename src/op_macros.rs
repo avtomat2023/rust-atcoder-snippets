@@ -1,4 +1,4 @@
-// BEGIN SNIPPET num
+// BEGIN SNIPPET op_macros
 
 /// Implements the unary operator "op &T"
 /// based on "op T" where T is expected to be `Copy`able.
