@@ -4,10 +4,9 @@
 // 動的なmod設定が必要な問題: ABC137 F
 // 複数のmodを使い分けなければならない問題には対応できない
 
-use crate::num::{WithZero, WithOne, Numeric};
 use crate::read::{Readable, Words};
 
-// BEGIN SNIPPET modp DEPENDS ON read
+// BEGIN SNIPPET modp DEPENDS ON read op_macros
 
 pub type ModPBase = u64;
 pub type ModPModulus = u32;
@@ -97,10 +96,11 @@ impl ModP {
     ///
     /// # Example
     ///
-    /// ```no_run
-    /// # extern crate atcoder_snippets;
-    /// # use atcoder_snippets::num::*;
-    /// // MODULUS is set to 7.
+    /// ```
+    /// # use atcoder_snippets::modulo::modp::*;
+    /// unsafe {
+    ///     ModP::set_mod(7).unwrap();
+    /// }
     /// // 2^5 = 32 = 4 mod 7.
     /// assert_eq!(ModP::new(2).pow(5), ModP::new(4));
     /// ```
@@ -123,11 +123,13 @@ impl ModP {
     ///
     /// # Example
     ///
-    /// ```no_run
-    /// # extern crate atcoder_snippets;
-    /// # use atcoder_snippets::num::*;
+    /// ```
+    /// # use atcoder_snippets::modulo::modp::*;
     /// // MODULUS is set to 7.
     /// // 3^5 = 15 = 1 mod 7.
+    /// unsafe {
+    ///     ModP::set_mod(7).unwrap();
+    /// }
     /// assert_eq!(ModP::new(3).inv(), ModP::new(5));
     /// ```
     pub fn inv(self) -> ModP {
@@ -375,20 +377,6 @@ forward_ref_binop!(impl Div, div for ModPBase, ModP);
 forward_ref_op_assign!(impl DivAssign, div_assign for ModP, ModP);
 forward_ref_op_assign!(impl DivAssign, div_assign for ModP, ModPBase);
 
-impl WithZero for ModP {
-    fn zero() -> ModP {
-        unsafe { ModP::new_unchecked(0) }
-    }
-}
-
-impl WithOne for ModP {
-    fn one() -> ModP {
-        unsafe { ModP::new_unchecked(1) }
-    }
-}
-
-impl Numeric for ModP {}
-
 impl std::iter::Sum for ModP {
     fn sum<I: Iterator<Item=ModP>>(iter: I) -> ModP {
         let mut ans = 0;
@@ -411,7 +399,7 @@ impl<'a> std::iter::Sum<&'a ModP> for ModP {
 
 impl std::iter::Product for ModP {
     fn product<I: Iterator<Item=ModP>>(iter: I) -> ModP {
-        let mut ans = ModP::one();
+        let mut ans = unsafe { ModP::new_unchecked(1) };
         for n in iter {
             ans *= n;
         }
@@ -421,7 +409,7 @@ impl std::iter::Product for ModP {
 
 impl<'a> std::iter::Product<&'a ModP> for ModP {
     fn product<I: Iterator<Item=&'a ModP>>(iter: I) -> ModP {
-        let mut ans = ModP::one();
+        let mut ans = unsafe { ModP::new_unchecked(1) };
         for &n in iter {
             ans *= n;
         }

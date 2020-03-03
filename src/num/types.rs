@@ -1,4 +1,4 @@
-// BEGIN SNIPPET num
+// BEGIN SNIPPET num_types
 
 /// Having identity element for addition.
 pub trait WithZero: Sized +

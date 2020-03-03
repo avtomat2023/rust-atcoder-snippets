@@ -26,7 +26,7 @@
 
 use crate::num::Integer;
 
-// BEGIN SNIPPET bsearch DEPENDS ON num
+// BEGIN SNIPPET bsearch DEPENDS ON int
 
 /// A sequence that binary search is applicable to.
 pub trait BSearch: Sized {
