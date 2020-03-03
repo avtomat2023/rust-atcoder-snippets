@@ -1,8 +1,8 @@
 //! Extension traits for primitive integer types.
 
-// BEGIN SNIPPET num
-
 use crate::num::{WithZero, WithOne, Numeric, Integer, Float};
+
+// BEGIN SNIPPET num
 
 /// Enriches signed and unsigned integer types.
 pub trait PrimitiveInteger: Integer {
