@@ -57,16 +57,22 @@ Clone https://github.com/yoshrc/rust-atcoder-snippets and set the path of the re
 '(\"s1\" \"s2\" \"s3\") means s1 may depend on s2 and s3, and s2 may depend on s3.")
 
 (defun atcoder-snippets--move-before-pattern (pattern)
+  "If not found, returns `nil'."
   (goto-char (point-min))
   (while (let ((index (string-match-p pattern (thing-at-point 'line))))
            (and (/= (point) (point-max)) (or (not index) (/= index 0))))
-    (forward-line)))
+    (forward-line))
+  (/= (point) (point-max)))
 
 (defun atcoder-snippets--move-before-snippet (name)
   (atcoder-snippets--move-before-pattern (concat " *// *SNIPPET +" name)))
 
 (defun atcoder-snippets--move-before-end-snippets ()
-  (atcoder-snippets--move-before-pattern " *// *END +SNIPPETS"))
+  "If not found, inserts \"// END SNIPPETS\" at the head of the file."
+  (unless (atcoder-snippets--move-before-pattern " *// *END +SNIPPETS")
+    (goto-char (point-min))
+    (insert "// END SNIPPETS\n\n")
+    (goto-char (point-min))))
 
 (defun atcoder-snippets--insert-snippet-before (name before)
   (save-excursion
