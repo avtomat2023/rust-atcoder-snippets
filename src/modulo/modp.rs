@@ -19,7 +19,7 @@ pub type ModPModulus = u32;
 static mut MODULUS: ModPBase = 0;
 
 /// A number whose arithmetics is carried modulo a prime number.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ModP {
     base: ModPBase
 }
