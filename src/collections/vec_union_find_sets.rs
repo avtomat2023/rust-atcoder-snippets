@@ -339,15 +339,15 @@ mod tests {
         let mut sets = VecUnionFindSets::with_items(6);
         assert_eq!(sets.len_of(0).unwrap(), 1);
 
-        sets.unite(0, 1);
+        sets.unite(0, 1).unwrap();
         assert_eq!(sets.len_of(0).unwrap(), 2);
 
-        sets.unite(2, 5);
-        sets.unite(3, 4);
-        sets.unite(2, 4);
+        sets.unite(2, 5).unwrap();
+        sets.unite(3, 4).unwrap();
+        sets.unite(2, 4).unwrap();
         assert_eq!(sets.len_of(3).unwrap(), 4);
 
-        sets.unite(0, 5);
+        sets.unite(0, 5).unwrap();
         assert_eq!(sets.len_of(4).unwrap(), 6);
     }
 

@@ -1232,7 +1232,6 @@ impl<'a> Words for &'a str {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::collections::{VecDeque, HashSet, BTreeSet, BinaryHeap};
 
     #[derive(Debug, PartialEq, Eq)]
     struct Pair(i32, i32);
