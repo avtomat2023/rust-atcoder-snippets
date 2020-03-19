@@ -16,6 +16,7 @@ pub trait UsizeRangeBoundsExt {
 }
 
 impl<T: std::ops::RangeBounds<usize>> UsizeRangeBoundsExt for T {
+    #[allow(unstable_name_collisions)]
     fn to_range(&self, len: usize) -> Option<std::ops::Range<usize>> {
         use std::ops::Bound::*;
 
