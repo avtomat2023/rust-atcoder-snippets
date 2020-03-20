@@ -320,10 +320,8 @@ pub trait IteratorExt: Iterator {
         self.next().map(|first| self.lscan(first, f))
     }
 
-    // If the iterator has any item and all the items are same, returns `Some` of the first item.
-    // Othewise (having no items or non-unique items), returns `None`.
-    //
-    // Self should implement FusedIterator introduced in rust 1.26.0.
+    /// If the iterator has any item and all the items are same, returns `Some` of the first item.
+    /// Othewise (having no items or non-unique items), returns `None`.
     fn get_unique(mut self) -> Option<Self::Item> where Self: Sized, Self::Item: Eq {
         let first_opt = self.next();
         first_opt.and_then(|first| {
