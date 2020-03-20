@@ -4,7 +4,7 @@
 
 use crate::range::UsizeRangeBoundsExt;
 
-// BEGIN SNIPPET segtree DEPENDS ON range option
+// BEGIN SNIPPET segment_tree DEPENDS ON range option
 
 // use num::Numeric;
 
