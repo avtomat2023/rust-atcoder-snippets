@@ -597,7 +597,7 @@ pub trait ReadableFromLine {
 }
 
 fn split_into_words(line: &str) -> Vec<&str> {
-    line.trim_end_matches('\n').split_whitespace().collect()
+    line.trim_right_matches('\n').split_whitespace().collect()
 }
 
 impl<T: Readable> ReadableFromLine for T {
@@ -1074,11 +1074,8 @@ macro_rules! read_chunk {
     };
 }
 
-static mut STDIN: Option<std::io::Stdin> = None;
-
 /// Iterator created by [`read_lines`](fn.read_lines.html) function.
 pub struct ReadLines<T: ReadableFromLine> {
-    lock: std::io::StdinLock<'static>,
     phantom: std::marker::PhantomData<T>
 }
 
@@ -1088,8 +1085,9 @@ impl<T: ReadableFromLine> Iterator for ReadLines<T> {
     fn next(&mut self) -> Option<T::Output> {
         use std::io::BufRead;
 
+        let stdin = std::io::stdin();
         let mut line = String::new();
-        if self.lock.read_line(&mut line).unwrap() > 0 {
+        if stdin.lock().read_line(&mut line).unwrap() > 0 {
             Some(T::read_line(&line).unwrap())
         } else {
             None
@@ -1157,21 +1155,13 @@ impl<T: ReadableFromLine> Iterator for ReadLines<T> {
 /// `read_lines` gets the mutex for stdin, and release it when the iterator is dropped.
 /// So, it causes deadlock to read stdin before the iterator is dropped.
 pub fn read_lines<T: ReadableFromLine>() -> ReadLines<T> {
-    unsafe {
-        if STDIN.is_none() {
-            STDIN = Some(std::io::stdin());
-        }
-    }
-
     ReadLines {
-        lock: unsafe { STDIN.as_ref().unwrap().lock() },
         phantom: std::marker::PhantomData::<T>
     }
 }
 
 /// Iterator created by [`read_chunks`](fn.read_chunks.html) function.
 pub struct ReadChunks<T: ReadableFromChunk> {
-    lock: std::io::StdinLock<'static>,
     phantom: std::marker::PhantomData<T>
 }
 
@@ -1179,20 +1169,15 @@ impl<T: ReadableFromChunk> Iterator for ReadChunks<T> {
     type Item = T::Output;
 
     fn next(&mut self) -> Option<T::Output> {
-        read_chunk_from_handle::<T>(&mut self.lock)
+        let stdin = std::io::stdin();
+        let mut handle = stdin.lock();
+        read_chunk_from_handle::<T>(&mut handle)
     }
 }
 
 /// Creates an iterator reading stdin chunk by chunk.
 pub fn read_chunks<T: ReadableFromChunk>() -> ReadChunks<T> {
-    unsafe {
-        if STDIN.is_none() {
-            STDIN = Some(std::io::stdin());
-        }
-    }
-
     ReadChunks {
-        lock: unsafe { STDIN.as_ref().unwrap().lock() },
         phantom: std::marker::PhantomData::<T>
     }
 }
