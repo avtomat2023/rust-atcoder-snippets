@@ -2,27 +2,6 @@
 
 // BEGIN SNIPPET iter
 
-/// An iterator created by [`step_by_`](trait.IteratorExt.html#method.step_by_) method on iterators.
-#[derive(Clone)]
-pub struct StepBy<I> {
-    iter: I,
-    step: usize,
-    first_take: bool
-}
-
-impl<I: Iterator> Iterator for StepBy<I> {
-    type Item = I::Item;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.first_take {
-            self.first_take = false;
-            self.iter.next()
-        } else {
-            self.iter.nth(self.step)
-        }
-    }
-}
-
 /// An iterator created by [`chunks`](trait.IteratorExt.html#method.chunks) method on iterators.
 pub struct Chunks<I: Iterator> {
     iter: I,
@@ -75,48 +54,6 @@ where
         Some(state_inner)
     }
 }
-
-/// An iterator created by [`flatten`](trait.IteratorExt.html#method.flatten) method
-/// on iterators.
-// #[derive(Clone)]
-pub struct Flatten<I: Iterator>
-where
-    I::Item: IntoIterator
-{
-    outer_iter: I,
-    inner_iter: Option<<<I as Iterator>::Item as IntoIterator>::IntoIter>
-}
-
-impl<I, J> Iterator for Flatten<I>
-where
-    I: Iterator<Item = J>,
-    J: IntoIterator
-{
-    type Item = <<J as IntoIterator>::IntoIter as Iterator>::Item;
-
-    fn next(&mut self) -> Option<J::Item> {
-        loop {
-            if let Some(inner_iter) = self.inner_iter.as_mut() {
-                if let item@Some(_) = inner_iter.next() {
-                    return item
-                }
-            }
-
-            match self.outer_iter.next() {
-                None => return None,
-                Some(inner) => self.inner_iter = Some(inner.into_iter())
-            }
-        }
-    }
-}
-
-/*
-impl<I, J> DoubleEndedIterator for Flatten<I>
-where
-    I: DoubleEndedIterator,
-    J: DoubleEndedIterator,
-    I::Item: J {}
-*/
 
 /// An iterator created by [`group_by`](trait.IteratorExt#method.group_by) method
 /// on iterators.
@@ -194,50 +131,6 @@ impl<I: Iterator> Iterator for RunLength<I> where I::Item: Eq {
 
 /// Enriches iterators by adding various methods.
 pub trait IteratorExt: Iterator {
-    /// Returns an iterator skipping a constant number of items in each iteration.
-    ///
-    /// This method is introduced in Rust 1.28.0 for `Iterator`.
-    /// The trailing underbar is for avoiding the name collision.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::iter::*;
-    /// let mut iter = (0..10).step_by(4);
-    /// assert_eq!(iter.next(), Some(0));
-    /// assert_eq!(iter.next(), Some(4));
-    /// assert_eq!(iter.next(), Some(8));
-    /// assert_eq!(iter.next(), None);
-    /// ```
-    fn step_by_(self, step: usize) -> StepBy<Self> where Self: Sized {
-        assert_ne!(step, 0);
-        StepBy {
-            iter: self,
-            step: step - 1,
-            first_take: true
-        }
-    }
-
-    /// Applying an function (usually producing a side effect) for each items.
-    ///
-    /// This method is introduced in Rust 1.21.0 for `Iterator`.
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::iter::*;
-    /// let mut sum = 0;
-    /// (0..10).for_each(|x| sum += x);
-    /// assert_eq!(sum, 45);
-    /// ```
-    fn for_each<F: FnMut(Self::Item)>(self, mut f: F) where Self: Sized {
-        for item in self {
-            f(item);
-        }
-    }
-
     /// Returns an iterator yielding chunks.
     ///
     /// # Panic
@@ -327,25 +220,6 @@ pub trait IteratorExt: Iterator {
         first_opt.and_then(|first| {
             if self.all(|item| item == first) { Some(first) } else { None }
         })
-    }
-
-    // TODO, If possible, avoid name collision to Iterator::flatten introduced in Rust 1.29.0
-    /// Returns an iterator concatenating its inner `IntoIterator`s.
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::iter::*;
-    /// let seq = vec![Some(1), Some(2), None, Some(3), None, None];
-    /// assert_eq!(seq.into_iter().flatten().collect(), vec![1, 2, 3]);
-    /// ```
-    fn flatten(mut self) -> Flatten<Self> where Self: Sized, Self::Item: IntoIterator {
-        let inner_opt = self.next();
-        Flatten {
-            outer_iter: self,
-            inner_iter: inner_opt.map(|inner| inner.into_iter())
-        }
     }
 
     /// `f`によってグループ分けされた`Vec`を生成するイテレータを返す
@@ -830,12 +704,6 @@ macro_rules! combinations_repl {
 mod test {
     use super::*;
     use std::iter;
-
-    #[test]
-    fn test_step_by() {
-        let ns: Vec<_> = (1..10).step_by_(3).collect();
-        assert_eq!(ns, vec![1, 4, 7]);
-    }
 
     #[test]
     fn test_get_unique() {
