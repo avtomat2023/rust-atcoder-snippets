@@ -29,6 +29,8 @@ pub struct SegmentTree<T: Clone, F: Fn(&T, &T) -> T> {
 }
 
 mod segment_tree_internal {
+    // The calculation can be simplify by using 1-origin heap,
+    // but it has almost no effect for time efficiency.
     pub fn parent_of(heap_index: usize) -> usize {
         (heap_index - 1) / 2
     }
@@ -140,6 +142,8 @@ impl<T: Clone, F: Fn(&T, &T) -> T> SegmentTree<T, F> {
         }
     }
 
+    // It has almost no effect for time efficiency
+    // to making this function loop instead of recursion.
     fn aggregate_interval(&self, mut heap_start: usize, mut heap_end: usize,
                           mut acc_left: T, mut acc_right: T) -> T {
         use self::segment_tree_internal::*;
