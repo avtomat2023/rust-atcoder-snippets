@@ -4,7 +4,7 @@
 
 use std;
 
-// BEGIN SNIPPET segtree
+// BEGIN SNIPPET segment_tree
 
 // use num::Numeric;
 
