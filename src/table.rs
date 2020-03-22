@@ -1,6 +1,6 @@
 //! 2-dimentional array.
 
-use crate::read::{Readable, read_lines};
+use crate::read::{Readable, Chars, read_lines};
 use crate::option::BoolExt;
 use crate::range::{UsizeRangeBoundsExt, BoundExt};
 
@@ -394,6 +394,22 @@ pub fn read_table<T: Readable>() -> Table<T::Output> {
 
 pub fn read_table_rows<T: Readable>(height: usize) -> Table<T::Output> {
     let res: Vec<Vec<T::Output>> = read_lines::<Vec<T>>().take(height).collect();
+    if res.len() < height {
+        panic!(
+            "tried reading {} rows for table, but stdin has only {} lines",
+            height, res.len()
+        );
+    }
+    Table::from_rows(res).unwrap()
+}
+
+pub fn read_char_table() -> Table<char> {
+    let res: Vec<Vec<char>> = read_lines::<Chars>().collect();
+    Table::from_rows(res).unwrap()
+}
+
+pub fn read_char_table_rows(height: usize) -> Table<char> {
+    let res: Vec<Vec<char>> = read_lines::<Chars>().take(height).collect();
     if res.len() < height {
         panic!(
             "tried reading {} rows for table, but stdin has only {} lines",
