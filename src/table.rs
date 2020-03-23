@@ -1,7 +1,7 @@
 //! 2-dimentional array.
 
 use std;
-use read::{Readable, read_lines};
+use read::{Readable, Chars, read_lines};
 use option::BoolExt;
 
 // BEGIN SNIPPET table DEPENDS ON read option
@@ -157,6 +157,14 @@ impl<T> Table<T> {
         y < self.height() && x < self.width()
     }
 
+    pub fn get(&self, (y, x): (usize, usize)) -> Option<&T> {
+        self.inner.get(y).and_then(|row| row.get(x))
+    }
+
+    pub fn get_mut(&mut self, (y, x): (usize, usize)) -> Option<&mut T> {
+        self.inner.get_mut(y).and_then(|row| row.get_mut(x))
+    }
+
     pub fn rows(&self) -> TableRows<T> {
         TableRows { table: self, index: 0 }
     }
@@ -296,6 +304,34 @@ impl<T> Table<T> {
     }
 }
 
+impl<T> std::ops::Index<(usize, usize)> for Table<T> {
+    type Output = T;
+
+    fn index(&self, index: (usize, usize)) -> &T {
+        match self.get(index) {
+            Some(result) => result,
+            None => panic!(
+                "index out of bounds: the table shape is {:?} but the index is {:?}",
+                self.shape(), index
+            )
+        }
+    }
+}
+
+impl<T> std::ops::IndexMut<(usize, usize)> for Table<T> {
+    fn index_mut(&mut self, index: (usize, usize)) -> &mut T {
+        // TODO: It may have a serious overhead to get the shape every time.
+        let shape = self.shape();
+        match self.get_mut(index) {
+            Some(result) => result,
+            None => panic!(
+                "index out of bounds: the table shape is {:?} but the index is {:?}",
+                shape, index
+            )
+        }
+    }
+}
+
 impl<T, F1: Fn(&T, &T) -> T, F2: Fn(&T, &T) -> T> CumulativeTable<T, F1, F2> {
     pub fn query(&self, range: std::ops::Range<(usize, usize)>) -> Option<T> {
         self.query_yx(range.start.0 .. range.end.0, range.start.1 .. range.end.1)
@@ -368,6 +404,22 @@ pub fn read_table<T: Readable>() -> Table<T::Output> {
 
 pub fn read_table_rows<T: Readable>(height: usize) -> Table<T::Output> {
     let res: Vec<Vec<T::Output>> = read_lines::<Vec<T>>().take(height).collect();
+    if res.len() < height {
+        panic!(
+            "tried reading {} rows for table, but stdin has only {} lines",
+            height, res.len()
+        );
+    }
+    Table::from_rows(res).unwrap()
+}
+
+pub fn read_char_table() -> Table<char> {
+    let res: Vec<Vec<char>> = read_lines::<Chars>().collect();
+    Table::from_rows(res).unwrap()
+}
+
+pub fn read_char_table_rows(height: usize) -> Table<char> {
+    let res: Vec<Vec<char>> = read_lines::<Chars>().take(height).collect();
     if res.len() < height {
         panic!(
             "tried reading {} rows for table, but stdin has only {} lines",
