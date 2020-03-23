@@ -4,7 +4,8 @@
 // 動的なmod設定が必要な問題: ABC137 F
 // 複数のmodを使い分けなければならない問題には対応できない
 
-use crate::read::{Readable, Words};
+use std;
+use read::{Readable, Words};
 
 // BEGIN SNIPPET modp DEPENDS ON read op_macros
 

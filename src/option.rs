@@ -1,5 +1,7 @@
 //! Enriches `bool` and `Option`.
 
+use std;
+
 // BEGIN SNIPPET option
 
 pub trait BoolExt {

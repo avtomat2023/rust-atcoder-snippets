@@ -1,7 +1,8 @@
 //! 2-dimentional array.
 
-use crate::read::{Readable, read_lines};
-use crate::option::BoolExt;
+use std;
+use read::{Readable, read_lines};
+use option::BoolExt;
 
 // BEGIN SNIPPET table DEPENDS ON read option
 

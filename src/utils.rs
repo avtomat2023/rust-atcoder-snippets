@@ -1,5 +1,7 @@
 //! Utilities.
 
+use std;
+
 // BEGIN SNIPPET utils
 
 /// Prints "Yes" or "No" according to `result`.
@@ -26,7 +28,7 @@ pub fn YN(result: bool) {
 ///
 /// Useful for exiting after printing "-1" or "No" when it is found that
 /// there is no solution for the given input.
-pub fn exit(msg: impl std::fmt::Display) -> ! {
+pub fn exit<T: std::fmt::Display>(msg: T) -> ! {
     println!("{}", msg);
     std::process::exit(0)
 }

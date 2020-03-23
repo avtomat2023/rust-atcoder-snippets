@@ -9,6 +9,8 @@
 
 // TODO: method to check whether an interval is contained, and whether an interval is overwrapped
 
+use std;
+
 // BEGIN SNIPPET interval
 
 /// Point on a number line.

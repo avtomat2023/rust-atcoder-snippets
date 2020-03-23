@@ -1,5 +1,7 @@
 //! Disjoint-set data structure, known as union-find.
 
+use std;
+
 // BEGIN SNIPPET vec_union_find_sets
 
 // TODO: Show solution of ABC120 D, ABC126 E and ABC157 D as examples

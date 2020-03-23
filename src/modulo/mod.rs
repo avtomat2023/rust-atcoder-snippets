@@ -1,2 +1,2 @@
 pub mod modp;
-pub use modp::ModP;
+pub use self::modp::ModP;
