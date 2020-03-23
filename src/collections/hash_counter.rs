@@ -14,7 +14,7 @@ pub struct HashCounter<T> {
     counter: std::collections::HashMap<T, usize>
 }
 
-pub struct HashCounterItemRef<'a, 'b, T, Q: ?Sized>
+pub struct HashCounterItemRef<'a, 'b, T: 'a, Q: 'b + ?Sized>
 where
     T: Eq + std::hash::Hash + std::borrow::Borrow<Q>,
     Q: Eq + std::hash::Hash
@@ -24,7 +24,7 @@ where
     item: *mut usize
 }
 
-impl<T, Q: ?Sized> std::ops::Deref for HashCounterItemRef<'_, '_, T, Q>
+impl<'a, 'b, T, Q: ?Sized> std::ops::Deref for HashCounterItemRef<'a, 'b, T, Q>
 where
     T: Eq + std::hash::Hash + std::borrow::Borrow<Q>,
     Q: Eq + std::hash::Hash
@@ -36,7 +36,7 @@ where
     }
 }
 
-impl<T, Q: ?Sized> std::ops::DerefMut for HashCounterItemRef<'_, '_, T, Q>
+impl<'a, 'b, T, Q: ?Sized> std::ops::DerefMut for HashCounterItemRef<'a, 'b, T, Q>
 where
     T: Eq + std::hash::Hash + std::borrow::Borrow<Q>,
     Q: Eq + std::hash::Hash
@@ -46,7 +46,7 @@ where
     }
 }
 
-impl<T, Q: ?Sized> Drop for HashCounterItemRef<'_, '_, T, Q>
+impl<'a, 'b, T, Q: ?Sized> Drop for HashCounterItemRef<'a, 'b, T, Q>
 where
     T: Eq + std::hash::Hash + std::borrow::Borrow<Q>,
     Q: Eq + std::hash::Hash
