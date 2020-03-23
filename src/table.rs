@@ -193,14 +193,14 @@ impl<T> Table<T> {
     /// # #[macro_use] extern crate atcoder_snippets;
     /// # use atcoder_snippets::table::*;
     /// let table = table![0; 5,5];
-    /// assert_eq!(table.adjacent_indices_4((3,2)),
+    /// assert_eq!(table.adjacent4_indices((3,2)),
     ///            Some(vec![(2,2), (3,1), (3,3), (4,2)]));
-    /// assert_eq!(table.adjacent_indices_4((4,3)),
+    /// assert_eq!(table.adjacent4_indices((4,3)),
     ///            Some(vec![(3,3), (4,2), (4,4)]));
     /// ```
-    pub fn adjacent_indices_4(&self, (y, x): (usize, usize)) -> Option<Vec<(usize, usize)>> {
+    pub fn adjacent4_indices(&self, (y, x): (usize, usize)) -> Option<Vec<(usize, usize)>> {
         self.inside((y, x)).then_with(|| {
-            let mut result = Vec::new();
+            let mut result = Vec::with_capacity(4);
             if y > 0 {
                 result.push((y-1, x));
             }
@@ -231,14 +231,14 @@ impl<T> Table<T> {
     /// # #[macro_use] extern crate atcoder_snippets;
     /// # use atcoder_snippets::table::*;
     /// let table = table![0; 5,5];
-    /// assert_eq!(table.adjacent_indices_8((3,2)),
+    /// assert_eq!(table.adjacent8_indices((3,2)),
     ///            Some(vec![(2,1), (2,2), (2,3), (3,1), (3,3), (4,1), (4,2), (4,3)]));
-    /// assert_eq!(table.adjacent_indices_8((4,3)),
+    /// assert_eq!(table.adjacent8_indices((4,3)),
     ///            Some(vec![(3,2), (3,3), (3,4), (4,2), (4,4)]));
     /// ```
-    pub fn adjacent_indices_8(&self, (y, x): (usize, usize)) -> Option<Vec<(usize, usize)>> {
+    pub fn adjacent8_indices(&self, (y, x): (usize, usize)) -> Option<Vec<(usize, usize)>> {
         self.inside((y, x)).then_with(|| {
-            let mut result = Vec::new();
+            let mut result = Vec::with_capacity(8);
             let xs = x.saturating_sub(1) ..= std::cmp::min(x+1, self.width()-1);
 
             if y > 0 {
@@ -356,6 +356,17 @@ impl<T, F1: Fn(&T, &T) -> T, F2: Fn(&T, &T) -> T> CumulativeTable<T, F1, F2> {
         let result = (self.op_inv)(&tmp1, &tmp2);
         Some(result)
     }
+}
+
+pub fn backward2_indices((y, x): (usize, usize)) -> Vec<(usize, usize)> {
+    let mut res = Vec::with_capacity(2);
+    if y > 0 {
+        res.push((y-1, x));
+    }
+    if x > 0 {
+        res.push((y, x-1));
+    }
+    res
 }
 
 // TODO: Handle N x 0 tables.
@@ -481,47 +492,47 @@ mod tests {
     }
 
     #[test]
-    fn test_adjacent_indices_8_trivial() {
+    fn test_adjacent8_indices_trivial() {
         let empty_table: Table<i32> = table![];
-        assert_eq!(empty_table.adjacent_indices_8((0,0)), None);
+        assert_eq!(empty_table.adjacent8_indices((0,0)), None);
         let singleton_table = table![0; 1,1];
-        assert_eq!(singleton_table.adjacent_indices_8((0,0)), Some(vec![]));
+        assert_eq!(singleton_table.adjacent8_indices((0,0)), Some(vec![]));
     }
 
     #[test]
-    fn test_adjacent_indices_8_row() {
+    fn test_adjacent8_indices_row() {
         let table = table![0; 1,3];
-        assert_eq!(table.adjacent_indices_8((0,0)), Some(vec![(0,1)]));
-        assert_eq!(table.adjacent_indices_8((0,1)), Some(vec![(0,0), (0,2)]));
-        assert_eq!(table.adjacent_indices_8((0,2)), Some(vec![(0,1)]));
-        assert_eq!(table.adjacent_indices_8((0,3)), None);
-        assert_eq!(table.adjacent_indices_8((1,0)), None);
+        assert_eq!(table.adjacent8_indices((0,0)), Some(vec![(0,1)]));
+        assert_eq!(table.adjacent8_indices((0,1)), Some(vec![(0,0), (0,2)]));
+        assert_eq!(table.adjacent8_indices((0,2)), Some(vec![(0,1)]));
+        assert_eq!(table.adjacent8_indices((0,3)), None);
+        assert_eq!(table.adjacent8_indices((1,0)), None);
     }
 
     #[test]
-    fn test_adjacent_indices_8_column() {
+    fn test_adjacent8_indices_column() {
         let table = table![0; 3,1];
-        assert_eq!(table.adjacent_indices_8((0,0)), Some(vec![(1,0)]));
-        assert_eq!(table.adjacent_indices_8((1,0)), Some(vec![(0,0), (2,0)]));
-        assert_eq!(table.adjacent_indices_8((2,0)), Some(vec![(1,0)]));
-        assert_eq!(table.adjacent_indices_8((3,0)), None);
-        assert_eq!(table.adjacent_indices_8((0,1)), None);
+        assert_eq!(table.adjacent8_indices((0,0)), Some(vec![(1,0)]));
+        assert_eq!(table.adjacent8_indices((1,0)), Some(vec![(0,0), (2,0)]));
+        assert_eq!(table.adjacent8_indices((2,0)), Some(vec![(1,0)]));
+        assert_eq!(table.adjacent8_indices((3,0)), None);
+        assert_eq!(table.adjacent8_indices((0,1)), None);
     }
 
     #[test]
-    fn test_adjacent_indices_8_2x2() {
+    fn test_adjacent8_indices_2x2() {
         let table = table![0; 2,2];
-        assert_eq!(table.adjacent_indices_8((0,0)), Some(vec![(0,1), (1,0), (1,1)]));
-        assert_eq!(table.adjacent_indices_8((0,1)), Some(vec![(0,0), (1,0), (1,1)]));
-        assert_eq!(table.adjacent_indices_8((1,0)), Some(vec![(0,0), (0,1), (1,1)]));
-        assert_eq!(table.adjacent_indices_8((1,1)), Some(vec![(0,0), (0,1), (1,0)]));
+        assert_eq!(table.adjacent8_indices((0,0)), Some(vec![(0,1), (1,0), (1,1)]));
+        assert_eq!(table.adjacent8_indices((0,1)), Some(vec![(0,0), (1,0), (1,1)]));
+        assert_eq!(table.adjacent8_indices((1,0)), Some(vec![(0,0), (0,1), (1,1)]));
+        assert_eq!(table.adjacent8_indices((1,1)), Some(vec![(0,0), (0,1), (1,0)]));
     }
 
     #[test]
-    fn test_adjacent_indices_8_3x3() {
+    fn test_adjacent8_indices_3x3() {
         let table = table![0; 3,3];
         let check = |y: usize, x: usize| {
-            table.adjacent_indices_8((y, x)).unwrap()
+            table.adjacent8_indices((y, x)).unwrap()
         };
         assert_eq!(check(0,0), vec![(0,1), (1,0), (1,1)]);
         assert_eq!(check(0,1), vec![(0,0), (0,2), (1,0), (1,1), (1,2)]);
@@ -532,5 +543,17 @@ mod tests {
         assert_eq!(check(2,0), vec![(1,0), (1,1), (2,1)]);
         assert_eq!(check(2,1), vec![(1,0), (1,1), (1,2), (2,0), (2,2)]);
         assert_eq!(check(2,2), vec![(1,1), (1,2), (2,1)]);
+    }
+
+    #[test]
+    fn test_backward2_indices() {
+        assert_eq!(backward2_indices((0, 0)), vec![]);
+        assert_eq!(backward2_indices((0, 1)), vec![(0, 0)]);
+        assert_eq!(backward2_indices((1, 0)), vec![(0, 0)]);
+        assert_eq!(backward2_indices((1, 1)), vec![(0, 1), (1, 0)]);
+
+        assert_eq!(backward2_indices((5, 0)), vec![(4, 0)]);
+        assert_eq!(backward2_indices((0, 5)), vec![(0, 4)]);
+        assert_eq!(backward2_indices((5, 5)), vec![(4, 5), (5, 4)]);
     }
 }
