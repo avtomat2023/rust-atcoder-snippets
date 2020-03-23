@@ -16,6 +16,10 @@ Clone https://github.com/yoshrc/rust-atcoder-snippets and set the path of the re
 (defvar atcoder-snippets-acc-template-path nil
   "Path of the Rust template file for atcoder-cli.")
 
+(defconst atcoder-snippets--end-snippets-message
+  "// END SNIPPETS
+// Here is the documentation: https://yoshrc.github.io/rust-atcoder-snippets/atcoder_snippets/index.html")
+
 (defun atcoder-snippets--read-json ()
   (let ((json-key-type 'string)
         (json-object-type 'hash-table)
@@ -71,7 +75,7 @@ Clone https://github.com/yoshrc/rust-atcoder-snippets and set the path of the re
   "If not found, inserts \"// END SNIPPETS\" at the head of the file."
   (unless (atcoder-snippets--move-before-pattern " *// *END +SNIPPETS")
     (goto-char (point-min))
-    (insert "// END SNIPPETS\n\n")
+    (insert atcoder-snippets--end-snippets-message "\n")
     (goto-char (point-min))))
 
 (defun atcoder-snippets--insert-snippet-before (name before)
@@ -146,12 +150,10 @@ Clone https://github.com/yoshrc/rust-atcoder-snippets and set the path of the re
 
 (defun atcoder-snippets--write-acc-template ()
   (with-temp-buffer
-    (insert "// END SNIPPETS
-
-fn main() {
-    ")
+    (insert atcoder-snippets--end-snippets-message
+            "\n\nfn main() {\n    ")
     (atcoder-snippets-insert "read")
-    (atcoder-snippets-insert "dbg")
+    (atcoder-snippets-insert "utils")
     (write-region nil nil atcoder-snippets-acc-template-path)))
 
 (defun atcoder-snippets-reload ()

@@ -1,6 +1,6 @@
 //! Utilities.
 
-// BEGIN SNIPPET yn
+// BEGIN SNIPPET utils
 
 /// Prints "Yes" or "No" according to `result`.
 pub fn yn(result: bool) {
@@ -22,9 +22,14 @@ pub fn YN(result: bool) {
     }
 }
 
-// END SNIPPET
-
-// BEGIN SNIPPET dbg
+/// Prints the given message with newline and exits the process successfully.
+///
+/// Useful for exiting after printing "-1" or "No" when it is found that
+/// there is no solution for the given input.
+pub fn exit(msg: impl std::fmt::Display) -> ! {
+    println!("{}", msg);
+    std::process::exit(0)
+}
 
 /// Make a debug output of the given expression to stderr.
 ///
