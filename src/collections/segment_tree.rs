@@ -115,7 +115,7 @@ impl<T: Clone, F: Fn(&T, &T) -> T> SegmentTree<T, F> {
     ///
     /// ```
     /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::collections::segtree::*;
+    /// # use atcoder_snippets::collections::segment_tree::*;
     ///
     /// // let segment_tree = (0..10).range_sum_segment_tree();
     /// let segment_tree = (0..10).segment_tree(0, |&x, &y| x + y);
@@ -166,7 +166,7 @@ impl<T: Clone, F: Fn(&T, &T) -> T> SegmentTree<T, F> {
     ///
     /// ```
     /// # #[macro_use] extern crate atcoder_snippets;
-    /// # use atcoder_snippets::collections::segtree::*;
+    /// # use atcoder_snippets::collections::segment_tree::*;
     ///
     /// let mut segment_tree = SegmentTree::new(10, 0, |&a, &b| a+b);
     /// {
