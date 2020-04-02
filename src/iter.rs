@@ -1,8 +1,9 @@
 //! Enriches iterators.
 
 use std;
+use option::BoolExt;
 
-// BEGIN SNIPPET iter
+// BEGIN SNIPPET iter DEPENDS ON option
 
 /// An iterator created by [`step_by_`](trait.IteratorExt.html#method.step_by_) method on iterators.
 #[derive(Clone)]
@@ -436,6 +437,56 @@ pub trait IteratorExt: Iterator {
 }
 
 impl<I: Iterator> IteratorExt for I {}
+
+/// Enriches exact-sized iterators by adding `inner_product` method.
+pub trait IteratorInnerProduct<T, Rhs=T>: ExactSizeIterator<Item=T> {
+    /// Calculate inner product of two iterators.
+    ///
+    /// If the iterators have different lengths, returns `None`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use atcoder_snippets::iter::*;
+    /// let v1: Vec<i32> = vec![1, 2, 3];
+    /// let v2: Vec<i32> = vec![10, 20, 30];
+    /// assert_eq!(v1.iter().inner_product(&v2), Some(10 + 40 + 90));
+    ///
+    /// // You can calculate inner_product of `i32` and `&i32` because `i32: Mul<&i32>` holds.
+    /// // The output type is `i32`, which is `<i32 as Mul<&i32>>::Output`.
+    /// assert_eq!(v1.iter().inner_product(v2), Some(10 + 40 + 90));
+    ///
+    /// // You can use any types impl-ing `Mul`.
+    /// use std::time::Duration;
+    /// let factors: Vec<u32> = vec![1, 2, 3];
+    /// let durations: Vec<Duration> = vec![
+    ///     Duration::from_secs(10),
+    ///     Duration::from_secs(20),
+    ///     Duration::from_secs(30)
+    /// ];
+    /// assert_eq!(factors.into_iter().inner_product(durations),
+    ///            Some(Duration::from_secs(10 + 40 + 90)));
+    /// ```
+    fn inner_product<I, J>(self, other: I) -> Option<<T as std::ops::Mul<Rhs>>::Output>
+    where
+        Self: Sized,
+        I: IntoIterator<Item=Rhs, IntoIter=J>,
+        J: Iterator<Item=Rhs> + ExactSizeIterator,
+        T: std::ops::Mul<Rhs>,
+        <T as std::ops::Mul<Rhs>>::Output: std::iter::Sum
+    {
+        let iter = other.into_iter();
+        (self.len() == iter.len()).then_with(|| {
+            self.zip(iter).map(|(a, b)| a * b).sum()
+        })
+    }
+}
+
+impl<T1, T2, I> IteratorInnerProduct<T1, T2> for I
+where
+    I: Iterator<Item=T1> + ExactSizeIterator,
+    T1: std::ops::Mul<T2>
+{}
 
 /// An iterator created by [`unfold`](fn.unfold.html) function.
 pub struct Unfold<T, F> where F: FnMut(&T) -> Option<T> {
@@ -887,6 +938,40 @@ mod test {
         assert_eq!(v.into_iter().flatten_().collect::<Vec<i32>>(), vec![1, 2, 3, 4, 5, 6]);
     }
     */
+
+    #[test]
+    fn test_inner_product_length() {
+        let empty: Vec<i32> = vec![];
+        assert_eq!(empty.iter().inner_product(&empty), Some(0));
+
+        let seq1 = vec![10];
+        assert_eq!(empty.iter().inner_product(&seq1), None);
+        assert_eq!(seq1.iter().inner_product(&empty), None);
+        assert_eq!(seq1.iter().inner_product(&seq1), Some(100));
+    }
+
+    #[test]
+    fn test_inner_product_type() {
+        use std::time::Duration;
+
+        let i32_seq = vec![10, 20, 30];
+        assert_eq!(i32_seq.iter().cloned().inner_product(i32_seq.clone()),
+                   Some(100 + 400 + 900));
+        assert_eq!(i32_seq.iter().inner_product(i32_seq.clone()),
+                   Some(100 + 400 + 900));
+        assert_eq!(i32_seq.iter().inner_product(&i32_seq),
+                   Some(100 + 400 + 900));
+
+        let dur_seq = vec![
+            Duration::from_secs(10),
+            Duration::from_secs(20),
+            Duration::from_secs(30)
+        ];
+        assert_eq!(dur_seq.iter().cloned().inner_product(i32_seq.clone()),
+                   Some(Duration::from_secs(100 + 400 + 900)));
+        assert_eq!(i32_seq.iter().cloned().inner_product(dur_seq.clone()),
+                   Some(Duration::from_secs(100 + 400 + 900)));
+    }
 
     #[test]
     fn test_join() {
