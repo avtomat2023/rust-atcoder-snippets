@@ -742,18 +742,6 @@ mod test {
         ]);
     }
 
-    /*
-    // Rename IteratorExt::flatten to flatten_ for testing
-    #[test]
-    fn test_flatten() {
-        assert_eq!(iter::empty::<Vec<i32>>().flatten_().collect::<Vec<i32>>(), vec![]);
-        assert_eq!(iter::once(vec![1]).flatten_().collect::<Vec<i32>>(), vec![1]);
-        assert_eq!(iter::once(vec![1, 2, 3]).flatten_().collect::<Vec<i32>>(), vec![1, 2, 3]);
-        let v = vec![vec![], vec![1], vec![], vec![2, 3, 4], vec![5, 6], vec![]];
-        assert_eq!(v.into_iter().flatten_().collect::<Vec<i32>>(), vec![1, 2, 3, 4, 5, 6]);
-    }
-    */
-
     #[test]
     fn test_join() {
         assert_eq!(iter::empty::<i32>().join(" "), "");
