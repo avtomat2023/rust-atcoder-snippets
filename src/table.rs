@@ -167,10 +167,22 @@ impl<T> Table<T> {
         y < self.height() && x < self.width()
     }
 
+    /// Row as a slice.
+    pub fn row(&self, y: usize) -> Option<&[T]> {
+        self.inner.get(y).map(|vec| vec.as_slice())
+    }
+
+    /// Row as a mutable slice.
+    pub fn row_mut(&mut self, y: usize) -> Option<&mut [T]> {
+        self.inner.get_mut(y).map(|vec| vec.as_mut_slice())
+    }
+
+    /// Gets the shared reference to an items at `(y, x)`.
     pub fn get(&self, (y, x): (usize, usize)) -> Option<&T> {
         self.inner.get(y).and_then(|row| row.get(x))
     }
 
+    /// Gets the mutable reference to an items at `(y, x)`.
     pub fn get_mut(&mut self, (y, x): (usize, usize)) -> Option<&mut T> {
         self.inner.get_mut(y).and_then(|row| row.get_mut(x))
     }
@@ -306,6 +318,34 @@ impl<T> Table<T> {
             inner.push(new_row);
         }
         CumulativeTable { op, op_inv, inner: Table { inner } }
+    }
+}
+
+impl<T> std::ops::Index<usize> for Table<T> {
+    type Output = [T];
+
+    fn index(&self, y: usize) -> &[T] {
+        match self.row(y) {
+            Some(row) => row,
+            None => panic!(
+                "index out of bounds: the table has {} rows but the row index is {}",
+                self.height(), y
+            )
+        }
+    }
+}
+
+impl<T> std::ops::IndexMut<usize> for Table<T> {
+    fn index_mut(&mut self, y: usize) -> &mut [T] {
+        // TODO: It may have a serious overhead to get the height every time.
+        let height = self.height();
+        match self.row_mut(y) {
+            Some(row) => row,
+            None => panic!(
+                "index out of bounds: the table has {} rows but the index is {}",
+                height, y
+            )
+        }
     }
 }
 
