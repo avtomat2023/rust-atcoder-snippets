@@ -1,6 +1,6 @@
 //! Enriches slices.
 
-// BEGIN SNIPPET slice
+// BEGIN SNIPPET slice DEPENDS ON option
 
 // TODO: ABC038 D, AGC026 A
 /// An iterator created by [`group_by`](trait.SliceExt.html#tymethod.group_by) method on slices.
@@ -52,6 +52,49 @@ impl<'a, T, F: Fn(&T, &T) -> bool> Iterator for SplitByGap<'a, T, F> {
         self.rest = rest;
         Some(result)
     }
+}
+
+// For implementation, see https://doc.rust-lang.org/src/core/slice/mod.rs.html#4109-4112
+
+pub struct Windows2<'a, T> {
+    slice: &'a [T],
+}
+
+impl<'a, T> Iterator for Windows2<'a, T> {
+    type Item = (&'a T, &'a T);
+
+    fn next(&mut self) -> Option<(&'a T, &'a T)> {
+        if self.slice.len() < 2 {
+            return None;
+        }
+
+        let res = (self.slice[0], self.slice[1]);
+        self.slice = &self.slice[1..];
+        Some(res)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let size = self.slice.len().saturating_sub(2);
+        (size, Some(size));
+    }
+
+    fn count(self) -> usize {
+        self.size_hint().0
+    }
+
+    fn nth(&mut self, n: usize) -> Option<(&'a T, &'a T)> {
+        self.slice = self.slice.get(n..).unwrap_or(&[]);
+        self.next()
+    }
+
+    fn last(self) -> Option<(&'a T, &'a T)> {
+        let len = self.slice.len();
+        (len >= 2).then_with(|| (&self.slice[len-2], &self.slice[len-1]))
+    }
+}
+
+impl <'a, T> DoubleEndedIterator for Windows2<'a, T> {
+    fn next_back(&mut self) -> Option
 }
 
 /// An iterator created by [`permutations`](trait.SliceExt.html#tymethod.permutations)
@@ -194,6 +237,8 @@ pub trait SliceExt<T> {
     /// assert_eq!(subseqs.next(), None);
     /// ```
     fn split_by_gap<F: Fn(&T, &T) -> bool>(&self, gap_fn: F) -> SplitByGap<T, F>;
+
+    fn windows2(&self) -> Windows2<T>;
 
     // TODO: ABC103 A, ABC145 C
     /// Returns an iterator yielding all permutations of the slice.
@@ -345,6 +390,12 @@ mod test {
                         vec![3].as_slice(),
                         vec![0, 5, 8].as_slice(),
                         vec![4, 6].as_slice()]);
+    }
+
+    #[test]
+    fn test_windows2() {
+        let w0: Vec<(&i32, &i32)> = Vec::new::<i32>().windows2().collect();
+        assert_eq!(w0, vec![]);
     }
 
     #[test]
