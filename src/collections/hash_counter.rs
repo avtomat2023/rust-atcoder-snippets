@@ -165,9 +165,58 @@ impl<T: Eq + std::hash::Hash> HashCounter<T> {
     pub fn count<Q: ?Sized>(&self, key: &Q) -> usize
     where
         T: Eq + std::hash::Hash + std::borrow::Borrow<Q>,
-        Q: Eq + std::hash::Hash + std::borrow::ToOwned<Owned=T>
+        Q: Eq + std::hash::Hash
     {
         self.counter.get(key).cloned().unwrap_or(0)
+    }
+
+    /// Increments the counter value for `key`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::hash_counter::*;
+    /// let mut counter = hash_counter![1, 1];
+    /// counter.insert(1);
+    /// assert_eq!(counter.count(&1), 3);
+    /// ```
+    pub fn insert(&mut self, key: T) {
+        *self.counter.entry(key).or_insert(0) += 1;
+    }
+
+    /// Decrements the counter value for `key`.
+    ///
+    /// If the counter is already 0, does nothing and returns false.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::collections::hash_counter::*;
+    /// let mut counter = hash_counter![1];
+    /// assert!(counter.remove(&1));
+    /// assert_eq!(counter.count(&1), 0);
+    /// assert!(!counter.remove(&1));
+    /// assert_eq!(counter.count(&1), 0);
+    /// ```
+    pub fn remove<Q: ?Sized>(&mut self, key: &Q) -> bool
+    where
+        T: std::borrow::Borrow<Q>,
+        Q: Eq + std::hash::Hash
+    {
+        let removes;
+        match self.counter.get_mut(key) {
+            None => return false,
+            Some(x) => {
+                *x -= 1;
+                removes = *x == 0
+            }
+        }
+        if removes {
+            self.counter.remove(key);
+        }
+        true
     }
 
     /// Gets the mutable reference to the counter value of `key`.
@@ -294,5 +343,23 @@ mod tests {
         let mut counter = hash_counter!['a', 'b', 'a'];
         *counter.at(&'a') = 0;
         assert!(counter.keys_len() == 1);
+    }
+
+    #[test]
+    fn test_insert_remove() {
+        let mut counter = hash_counter!['a', 'b', 'a'];
+        counter.insert('a');
+        assert_eq!(counter.count(&'a'), 3);
+
+        counter.insert('c');
+        assert_eq!(counter.count(&'c'), 1);
+
+        assert!(counter.remove(&'b'));
+        assert_eq!(counter.count(&'b'), 0);
+        assert_eq!(counter.keys_len(), 2);
+
+        assert!(!counter.remove(&'b'));
+        assert_eq!(counter.count(&'b'), 0);
+        assert_eq!(counter.keys_len(), 2);
     }
 }
