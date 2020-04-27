@@ -1,5 +1,101 @@
 //! Priority queues implemented by binary heaps.
-// TODO: Add examples: EDPC N, Dijkstra problem
+//!
+//! This module covers use cases `std::collection::BinaryHeap` misses.
+//!
+//! - You can use both of maximum heap and minimum heap.
+//! - You can pass key function for comparing elements. You don't have to implemnt `Ord` for the element.
+//!
+//! As a typical example, `std::collection:::BinaryHeap` requires a lot of boilerplate
+//! for implmeting Dijkstra's single source shortest paths algorithm.
+//!
+//! ```no_run
+//! use std::collections::BinaryHeap;
+//! use std::cmp::Ordering;
+//!
+//! struct Edge {
+//!     incoming_node: usize,
+//!     cost: u32
+//! }
+//!
+//! #[derive(PartialEq, Eq)]
+//! struct Node {
+//!     id: usize,
+//!     distance: u32
+//! }
+//!
+//! impl Ord for Node {
+//!     fn cmp(&self, other: &Node) -> Ordering {
+//!         // reversed compare for using a maximum heap as minimum heap
+//!         other.distance.cmp(&self.distance)
+//!     }
+//! }
+//!
+//! impl PartialOrd for Node {
+//!     fn partial_cmp(&self, other: &Node) -> Option<Ordering> {
+//!         Some(self.cmp(other))
+//!     }
+//! }
+//!
+//! // gets shortest distances for each node from node 0
+//! fn dijkstra(adjacency_list: &[Vec<Edge>]) -> Vec<Option<u32>> {
+//!     let mut queue = BinaryHeap::new();
+//!     let mut distances = vec![None; adjacency_list.len()];
+//!     queue.push(Node { id: 0, distance: 0});
+//!     distances[0] = Some(0);
+//!
+//!     while let Some(node) = queue.pop() {
+//!         if node.distance > distances[node.id].unwrap() {
+//!             continue;
+//!         }
+//!         for edge in &adjacency_list[node.id] {
+//!             let next_distance = node.distance + edge.cost;
+//!             if distances[edge.incoming_node].map_or(true, |d| next_distance < d) {
+//!                 queue.push(Node { id: edge.incoming_node, distance: next_distance });
+//!                 distances[edge.incoming_node] = Some(next_distance);
+//!             }
+//!         }
+//!     }
+//!     distances
+//! }
+//! ```
+//!
+//! You can omit `impl Ord` and `impl PartialOrd` by using a minimum heap.
+//!
+//! ```no_run
+//! # use atcoder_snippets::collections::heap::*;
+//! struct Edge {
+//!     incoming_node: usize,
+//!     cost: u32
+//! }
+//!
+//! struct Node {
+//!     id: usize,
+//!     distance: u32
+//! }
+//!
+//! fn dijkstra(adjacency_list: &[Vec<Edge>]) -> Vec<Option<u32>> {
+//!     let mut queue = min_heap_by_key(|node: &Node| node.distance);
+//!     let mut distances = vec![None; adjacency_list.len()];
+//!     queue.push(Node { id: 0, distance: 0});
+//!     distances[0] = Some(0);
+//!
+//!     while let Some(node) = queue.pop() {
+//!         if node.distance > distances[node.id].unwrap() {
+//!             continue;
+//!         }
+//!         for edge in &adjacency_list[node.id] {
+//!             let next_distance = node.distance + edge.cost;
+//!             if distances[edge.incoming_node].map_or(true, |d| next_distance < d) {
+//!                 queue.push(Node { id: edge.incoming_node, distance: next_distance });
+//!                 distances[node.id] = Some(next_distance);
+//!             }
+//!         }
+//!     }
+//!     distances
+//! }
+//! ```
+
+// TODO: Add examples: EDPC N
 
 // BEGIN SNIPPET heap
 
@@ -103,6 +199,47 @@ mod max_heap_internal {
     }
 }
 
+/// Priority queue trait.
+///
+/// Providing this as a trait is useful for concise coding.
+/// When you write a function receiving a `MaxHeap`,
+/// you don't have to write a trait bound for comparison function.
+/// If you write type directly, the signature looks like:
+///
+/// ```no_run
+/// # use atcoder_snippets::collections::heap::*;
+/// use std::cmp::Ordering;
+///
+/// fn f(heap: &mut MaxHeap<i32, impl Fn(&i32, &i32) -> Ordering>) {
+///     /* ... */
+/// }
+/// ```
+///
+/// Thanks to `PriorityQueue` trait, you can write as:
+///
+/// ```no_run
+/// # use atcoder_snippets::collections::heap::*;
+/// fn f(heap: &mut impl PriorityQueue<i32>) {
+///     /* ... */
+/// }
+/// ```
+pub trait PriorityQueue<T>: IntoIterator<Item=T> + Extend<T> {
+    /// Returns how many items the queue contains.
+    fn len(&self) -> usize;
+
+    /// Returns if the queue is empty.
+    fn is_empty(&self) -> bool;
+
+    /// Pushes an item.
+    fn push(&mut self, x: T);
+
+    /// Pops the most prioritized item.
+    fn pop(&mut self) -> Option<T>;
+
+    /// Gets the most prioritized item without removing it.
+    fn peek(&self) -> Option<&T>;
+}
+
 /// Priority queue yielding its maximum item.
 #[derive(Clone)]
 pub struct MaxHeap<T, F> {
@@ -110,17 +247,35 @@ pub struct MaxHeap<T, F> {
     cmp: F
 }
 
-impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> MaxHeap<T, F> {
+impl<T, F> MaxHeap<T, F> {
     /// Creates an empty priority queue using `cmp` for comparison.
-    pub fn new_by(cmp: F) -> MaxHeap<T, F> {
+    fn new(cmp: F) -> MaxHeap<T, F> {
         MaxHeap {
             heap: Vec::new(),
             cmp: cmp
         }
     }
 
+    /// Returns underlying `Vec` as a slice.
+    ///
+    /// The slice is not necessarily sorted.
+    pub fn as_slice(&self) -> &[T] {
+        &self.heap
+    }
+
+    /// Consumes the priority queue and returns the underlying `Vec`.
+    ///
+    /// The vector is not necessarily sorted.
+    /// To get sorted `Vec` use `queue.into_iter().collect()`.
+    /// It takes Θ(*n* log *n*) time, whereas `into_vec` takes just constant time.
+    pub fn into_vec(self) -> Vec<T> {
+        self.heap
+    }
+}
+
+impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> MaxHeap<T, F> {
     /// Creates a priority queue of all items in `vec`, using `cmp` for comparison.
-    pub fn from_vec_by(mut vec: Vec<T>, cmp: F) -> MaxHeap<T, F> {
+    fn from_vec(mut vec: Vec<T>, cmp: F) -> MaxHeap<T, F> {
         use self::max_heap_internal::*;
 
         build(&mut vec, &cmp);
@@ -129,9 +284,78 @@ impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> MaxHeap<T, F> {
             cmp: cmp
         }
     }
+}
 
-    /// Push an item into the priority queue.
-    pub fn push(&mut self, x: T) {
+/// Creates an empty maximum heap.
+pub fn max_heap<T: Ord>() -> MaxHeap<T, impl Fn(&T, &T) -> std::cmp::Ordering> {
+    MaxHeap::new(Ord::cmp)
+}
+
+/// Creates a maximum heap of all items in `vec`.
+pub fn max_heap_from_vec<T: Ord>(vec: Vec<T>) -> MaxHeap<T, impl Fn(&T, &T) -> std::cmp::Ordering> {
+    MaxHeap::from_vec(vec, Ord::cmp)
+}
+
+/// Creates an empty maximum heap using `cmp` for comparison.
+pub fn max_heap_by<T, F: Fn(&T, &T) -> std::cmp::Ordering>(cmp: F) -> MaxHeap<T, F> {
+    MaxHeap::new(cmp)
+}
+
+/// Creates a maximum heap of all items in `vec`, using `cmp` for comparison.
+pub fn max_heap_from_vec_by<T, F: Fn(&T, &T) -> std::cmp::Ordering>(vec: Vec<T>, cmp: F) -> MaxHeap<T, F> {
+    MaxHeap::from_vec(vec, cmp)
+}
+
+/// Creates an empty maximum heap using `key` for comparison.
+pub fn max_heap_by_key<T, K: Ord>(key: impl Fn(&T) -> K) -> MaxHeap<T, impl Fn(&T, &T) -> std::cmp::Ordering> {
+    MaxHeap::new(move |a: &T, b: &T| key(a).cmp(&key(b)))
+}
+
+/// Creates a maximum heap of all items in `vec`, using `key` for comparison.
+pub fn max_heap_from_vec_by_key<T, K: Ord>(vec: Vec<T>, key: impl Fn(&T) -> K) -> MaxHeap<T, impl Fn(&T, &T) -> std::cmp::Ordering> {
+    MaxHeap::from_vec(vec, move |a: &T, b: &T| key(a).cmp(&key(b)))
+}
+
+/// Creates an empty minimum heap.
+pub fn min_heap<T: Ord>() -> MaxHeap<T, impl Fn(&T, &T) -> std::cmp::Ordering> {
+    MaxHeap::new(|a: &T, b: &T| b.cmp(a))
+}
+
+/// Creates a minimum heap of all items in `vec`.
+pub fn min_heap_from_vec<T: Ord>(vec: Vec<T>) -> MaxHeap<T, impl Fn(&T, &T) -> std::cmp::Ordering> {
+    MaxHeap::from_vec(vec, |a: &T, b: &T| b.cmp(a))
+}
+
+/// Creates an empty minimum heap using `cmp` for comparison.
+pub fn min_heap_by<T, F: Fn(&T, &T) -> std::cmp::Ordering>(cmp: F) -> MaxHeap<T, impl Fn(&T, &T) -> std::cmp::Ordering> {
+    MaxHeap::new(move |a: &T, b: &T| cmp(b, a))
+}
+
+/// Creates a minimum heap of all items in `vec`, using `cmp` for comparison.
+pub fn min_heap_from_vec_by<T, F: Fn(&T, &T) -> std::cmp::Ordering>(vec: Vec<T>, cmp: F) -> MaxHeap<T, impl Fn(&T, &T) -> std::cmp::Ordering> {
+    MaxHeap::from_vec(vec, move |a: &T, b: &T| cmp(b, a))
+}
+
+/// Creates an empty minimum heap using `key` for comparison.
+pub fn min_heap_by_key<T, K: Ord>(key: impl Fn(&T) -> K) -> MaxHeap<T, impl Fn(&T, &T) -> std::cmp::Ordering> {
+    MaxHeap::new(move |a: &T, b: &T| key(b).cmp(&key(a)))
+}
+
+/// Creates a minimum heap of all items in `vec`, using `key` for comparison.
+pub fn min_heap_from_vec_by_key<T, K: Ord>(vec: Vec<T>, key: impl Fn(&T) -> K) -> MaxHeap<T, impl Fn(&T, &T) -> std::cmp::Ordering> {
+    MaxHeap::from_vec(vec, move |a: &T, b: &T| key(b).cmp(&key(a)))
+}
+
+impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> PriorityQueue<T> for MaxHeap<T, F> {
+    fn len(&self) -> usize {
+        self.heap.len()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.heap.is_empty()
+    }
+
+    fn push(&mut self, x: T) {
         use self::max_heap_internal::*;
 
         self.heap.push(x);
@@ -139,8 +363,7 @@ impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> MaxHeap<T, F> {
         sift_up(&mut self.heap, last, &self.cmp);
     }
 
-    /// Pop the maximum item from the priority queue.
-    pub fn pop(&mut self) -> Option<T> {
+    fn pop(&mut self) -> Option<T> {
         use self::max_heap_internal::*;
 
         if !self.heap.is_empty() {
@@ -151,185 +374,71 @@ impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> MaxHeap<T, F> {
             None
         }
     }
-}
 
-impl<T: Ord> MaxHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
-    /// Creates an empty priority queue.
-    pub fn new() -> MaxHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
-        MaxHeap::new_by(Ord::cmp)
-    }
-
-    /// Creates a priority queue of all items in `vec`.
-    pub fn from_vec(vec: Vec<T>) -> MaxHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
-        MaxHeap::from_vec_by(vec, Ord::cmp)
-    }
-}
-
-impl<T, F> MaxHeap<T, F> {
-    /// Length of the priority queue.
-    pub fn len(&self) -> usize {
-        self.heap.len()
-    }
-
-    /// Returns if the priority queue is empty.
-    pub fn is_empty(&self) -> bool {
-        self.heap.is_empty()
-    }
-
-    /// Gets the maximum item without removing it.
-    pub fn peek(&self) -> Option<&T> {
+    fn peek(&self) -> Option<&T> {
         self.heap.get(0)
     }
-
-    /// Iterator yielding the references to the items.
-    ///
-    /// The references are not necessarily sorted.
-    pub fn iter(&self) -> std::slice::Iter<T> {
-        self.heap.iter()
-    }
-
-    /// Consumes the priority queue and returns the underlying `Vec`.
-    ///
-    /// The vector is not necessarily sorted.
-    pub fn into_vec(self) -> Vec<T> {
-        self.heap
-    }
 }
 
-impl<T: std::fmt::Debug, F> std::fmt::Debug for MaxHeap<T, F> {
+impl<T: std::fmt::Debug, F: Fn(&T, &T) -> std::cmp::Ordering> std::fmt::Debug for MaxHeap<T, F> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.debug_list().entries(self.iter()).finish()
+        let mut refs: Vec<&T> = self.as_slice().iter().collect();
+        refs.sort_by(|&a, &b| (self.cmp)(a, b));
+        f.debug_list().entries(refs.into_iter()).finish()
     }
 }
 
-impl<'a, T, F> IntoIterator for &'a MaxHeap<T, F> {
-    type Item = &'a T;
-    type IntoIter = std::slice::Iter<'a, T>;
-
-    fn into_iter(self) -> std::slice::Iter<'a, T> {
-        self.iter()
-    }
+pub struct MaxHeapIterator<T, F> {
+    heap: MaxHeap<T, F>
 }
 
-impl<T, F> IntoIterator for MaxHeap<T, F> {
+impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> IntoIterator for MaxHeap<T, F> {
     type Item = T;
-    type IntoIter = std::vec::IntoIter<T>;
+    type IntoIter = MaxHeapIterator<T, F>;
 
-    fn into_iter(self) -> std::vec::IntoIter<T> {
-        self.heap.into_iter()
-    }
-}
-
-/// Priority queue yielding its minimum item.
-///
-/// `MinHeap` provides the same methods as [`MaxHeap`](struct.MaxHeap.html).
-pub struct MinHeap<T, F> {
-    heap: Vec<T>,
-    cmp: F
-}
-
-impl<T, F: Fn(&T, &T) -> std::cmp::Ordering + Clone> MinHeap<T, F> {
-    pub fn new_by(cmp: F) -> MinHeap<T, F> {
-        MinHeap {
-            heap: Vec::new(),
-            cmp: cmp
-        }
-    }
-
-    pub fn from_vec_by(mut vec: Vec<T>, cmp: F) -> MinHeap<T, F> {
-        use self::max_heap_internal::*;
-
-        build(&mut vec, |x, y| cmp(y, x));
-        MinHeap {
-            heap: vec,
-            cmp: cmp
-        }
-    }
-
-    pub fn push(&mut self, x: T) {
-        use self::max_heap_internal::*;
-
-        self.heap.push(x);
-        let last = self.heap.len() - 1;
-        let cmp = self.cmp.clone();
-        sift_up(&mut self.heap, last, |x, y| cmp(y, x));
-    }
-
-    pub fn pop(&mut self) -> Option<T> {
-        use self::max_heap_internal::*;
-
-        if !self.heap.is_empty() {
-            let min = self.heap.swap_remove(0);
-            let cmp = self.cmp.clone();
-            sift_down(&mut self.heap, 0, |x, y| cmp(y, x));
-            Some(min)
-        } else {
-            None
+    /// Creates an iterator yielding all element in the order of priority.
+    fn into_iter(self) -> MaxHeapIterator<T, F> {
+        MaxHeapIterator {
+            heap: self
         }
     }
 }
 
-impl<T: Ord> MinHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
-    pub fn new() -> MinHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
-        MinHeap::new_by(Ord::cmp)
+impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> Iterator for MaxHeapIterator<T, F> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        self.heap.pop()
     }
 
-    pub fn from_vec(vec: Vec<T>) -> MinHeap<T, fn(&T, &T) -> std::cmp::Ordering> {
-        MinHeap::from_vec_by(vec, Ord::cmp)
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.heap.len(), Some(self.heap.len()))
     }
-}
 
-impl<T, F> MinHeap<T, F> {
-    pub fn len(&self) -> usize {
+    fn count(self) -> usize {
         self.heap.len()
     }
+}
 
-    pub fn is_empty(&self) -> bool {
-        self.heap.is_empty()
-    }
+impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> ExactSizeIterator for MaxHeapIterator<T, F> {}
+impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> std::iter::FusedIterator for MaxHeapIterator<T, F> {}
 
-    pub fn peek(&self) -> Option<&T> {
-        self.heap.get(0)
-    }
-
-    pub fn iter(&self) -> std::slice::Iter<T> {
-        self.heap.iter()
-    }
-
-    pub fn into_vec(self) -> Vec<T> {
-        self.heap
+impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> Extend<T> for MaxHeap<T, F> {
+    fn extend<I: IntoIterator<Item=T>>(&mut self, iter: I) {
+        for x in iter {
+            self.push(x)
+        }
     }
 }
 
-impl<T: std::fmt::Debug, F> std::fmt::Debug for MinHeap<T, F> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.debug_list().entries(self.iter()).finish()
-    }
-}
-
-impl<'a, T, F> IntoIterator for &'a MinHeap<T, F> {
-    type Item = &'a T;
-    type IntoIter = std::slice::Iter<'a, T>;
-
-    fn into_iter(self) -> std::slice::Iter<'a, T> {
-        self.iter()
-    }
-}
-
-impl<T, F> IntoIterator for MinHeap<T, F> {
-    type Item = T;
-    type IntoIter = std::vec::IntoIter<T>;
-
-    fn into_iter(self) -> std::vec::IntoIter<T> {
-        self.heap.into_iter()
-    }
-}
+// TODO: Iterator extension for collecting min-heap and max-heap
 
 // END SNIPPET
 
 #[cfg(test)]
 mod tests {
     use super::{*, max_heap_internal::*};
+    use std::fmt::Debug;
 
     #[test]
     fn test_sift_down() {
@@ -389,113 +498,120 @@ mod tests {
         }));
     }
 
-    #[test]
-    fn test_max_heap_new() {
-        let mut heap = MaxHeap::new();
-        for x in vec![8, 5, 0, 2, 1, 6, 3, 7, 9, 4] {
-            heap.push(x);
-        }
-        for x in (0..10).rev() {
+    fn assert_heap_eq<T: Eq + Debug>(mut heap: impl PriorityQueue<T>, expected: Vec<T>) {
+        for x in expected {
             assert_eq!(heap.peek(), Some(&x));
             assert_eq!(heap.pop(), Some(x));
         }
         assert_eq!(heap.peek(), None);
         assert_eq!(heap.pop(), None);
+    }
+
+    #[test]
+    fn test_max_heap() {
+        let mut heap = max_heap();
+        for x in vec![8, 5, 0, 2, 1, 6, 3, 7, 9, 4] {
+            heap.push(x);
+        }
+        assert_heap_eq(heap, (0..10).rev().collect());
     }
 
     #[test]
     fn test_max_heap_from_vec() {
-        let mut heap = MaxHeap::from_vec(vec![8, 5, 0, 2, 1, 6, 3, 7, 9, 4]);
-        for x in (0..10).rev() {
-            assert_eq!(heap.peek(), Some(&x));
-            assert_eq!(heap.pop(), Some(x));
-        }
-        assert_eq!(heap.peek(), None);
-        assert_eq!(heap.pop(), None);
+        let heap = max_heap_from_vec(vec![8, 5, 0, 2, 1, 6, 3, 7, 9, 4]);
+        assert_heap_eq(heap, (0..10).rev().collect());
     }
 
     #[test]
-    fn test_max_heap_new_by() {
-        let mut heap = MaxHeap::new_by(|s: &&str, t: &&str| s.len().cmp(&t.len()));
-
+    fn test_max_heap_by() {
+        let mut heap = max_heap_by(|s: &&str, t: &&str| s.len().cmp(&t.len()));
         for x in vec!["bbbb", "aaaaa", "e", "ccc", "dd"] {
             heap.push(x);
         }
-        for x in vec!["aaaaa", "bbbb", "ccc", "dd", "e"] {
-            assert_eq!(heap.peek(), Some(&x));
-            assert_eq!(heap.pop(), Some(x));
-        }
-        assert_eq!(heap.peek(), None);
-        assert_eq!(heap.pop(), None);
+        assert_heap_eq(heap, vec!["aaaaa", "bbbb", "ccc", "dd", "e"]);
     }
 
     #[test]
     fn test_max_heap_from_vec_by() {
-        let mut heap = MaxHeap::from_vec_by(
+        let heap = max_heap_from_vec_by(
             vec!["bbbb", "aaaaa", "e", "ccc", "dd"],
             |s: &&str, t: &&str| s.len().cmp(&t.len())
         );
-
-        for x in vec!["aaaaa", "bbbb", "ccc", "dd", "e"] {
-            assert_eq!(heap.peek(), Some(&x));
-            assert_eq!(heap.pop(), Some(x));
-        }
-        assert_eq!(heap.peek(), None);
-        assert_eq!(heap.pop(), None);
+        assert_heap_eq(heap, vec!["aaaaa", "bbbb", "ccc", "dd", "e"]);
     }
 
     #[test]
-    fn test_min_heap_new() {
-        let mut heap = MinHeap::new();
+    fn test_max_heap_by_key() {
+        let mut heap = max_heap_by_key(|s: &&str| s.len());
+        for x in vec!["bbbb", "aaaaa", "e", "ccc", "dd"] {
+            heap.push(x);
+        }
+        assert_heap_eq(heap, vec!["aaaaa", "bbbb", "ccc", "dd", "e"]);
+    }
+
+    #[test]
+    fn test_max_heap_from_vec_by_key() {
+        let heap = max_heap_from_vec_by_key(
+            vec!["bbbb", "aaaaa", "e", "ccc", "dd"],
+            |s: &&str| s.len()
+        );
+        assert_heap_eq(heap, vec!["aaaaa", "bbbb", "ccc", "dd", "e"]);
+    }
+
+    #[test]
+    fn test_min_heap() {
+        let mut heap = min_heap();
         for x in vec![8, 5, 0, 2, 1, 6, 3, 7, 9, 4] {
             heap.push(x);
         }
-        for x in 0..10 {
-            assert_eq!(heap.peek(), Some(&x));
-            assert_eq!(heap.pop(), Some(x));
-        }
-        assert_eq!(heap.peek(), None);
-        assert_eq!(heap.pop(), None);
+        assert_heap_eq(heap, (0..10).collect());
     }
 
     #[test]
     fn test_min_heap_from_vec() {
-        let mut heap = MinHeap::from_vec(vec![8, 5, 0, 2, 1, 6, 3, 7, 9, 4]);
-        for x in 0..10 {
-            assert_eq!(heap.peek(), Some(&x));
-            assert_eq!(heap.pop(), Some(x));
-        }
-        assert_eq!(heap.peek(), None);
-        assert_eq!(heap.pop(), None);
+        let heap = min_heap_from_vec(vec![8, 5, 0, 2, 1, 6, 3, 7, 9, 4]);
+        assert_heap_eq(heap, (0..10).collect());
     }
 
     #[test]
-    fn test_min_heap_new_by() {
-        let mut heap = MinHeap::new_by(|s: &&str, t: &&str| s.len().cmp(&t.len()));
-
+    fn test_min_heap_by() {
+        let mut heap = min_heap_by(|s: &&str, t: &&str| s.len().cmp(&t.len()));
         for x in vec!["bbbb", "aaaaa", "e", "ccc", "dd"] {
             heap.push(x);
         }
-        for x in vec!["e", "dd", "ccc", "bbbb", "aaaaa"] {
-            assert_eq!(heap.peek(), Some(&x));
-            assert_eq!(heap.pop(), Some(x));
-        }
-        assert_eq!(heap.peek(), None);
-        assert_eq!(heap.pop(), None);
+        assert_heap_eq(heap, vec!["e", "dd", "ccc", "bbbb", "aaaaa"]);
     }
 
     #[test]
     fn test_min_heap_from_vec_by() {
-        let mut heap = MinHeap::from_vec_by(
+        let heap = min_heap_from_vec_by(
             vec!["bbbb", "aaaaa", "e", "ccc", "dd"],
             |s: &&str, t: &&str| s.len().cmp(&t.len())
         );
+        assert_heap_eq(heap, vec!["e", "dd", "ccc", "bbbb", "aaaaa"]);
+    }
 
-        for x in vec!["e", "dd", "ccc", "bbbb", "aaaaa"] {
-            assert_eq!(heap.peek(), Some(&x));
-            assert_eq!(heap.pop(), Some(x));
+    #[test]
+    fn test_min_heap_by_key() {
+        let mut heap = min_heap_by_key(|s: &&str| s.len());
+        for x in vec!["bbbb", "aaaaa", "e", "ccc", "dd"] {
+            heap.push(x);
         }
-        assert_eq!(heap.peek(), None);
-        assert_eq!(heap.pop(), None);
+        assert_heap_eq(heap, vec!["e", "dd", "ccc", "bbbb", "aaaaa"]);
+    }
+
+    #[test]
+    fn test_min_heap_from_vec_by_key() {
+        let heap = min_heap_from_vec_by_key(
+            vec!["bbbb", "aaaaa", "e", "ccc", "dd"],
+            |s: &&str| s.len()
+        );
+        assert_heap_eq(heap, vec!["e", "dd", "ccc", "bbbb", "aaaaa"]);
+    }
+
+    #[test]
+    fn test_into_iter() {
+        let heap = min_heap_from_vec(vec![8, 5, 0, 2, 1, 6, 3, 7, 9, 4]);
+        assert_eq!(heap.into_iter().collect::<Vec<_>>(), (0..10).collect::<Vec<_>>());
     }
 }
