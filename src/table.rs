@@ -14,6 +14,8 @@ use crate::range::{UsizeRangeBoundsExt, BoundExt};
 /// All rows in a table must have the same length.
 ///
 /// Table can have 0-length rows, but it's impossible to have 0-length columns.
+// TODO: derive(Debug) is for doctest. Implement human-readble Debug.
+#[derive(PartialEq, Eq, Debug)]
 pub struct Table<T> {
     inner: Vec<Vec<T>>
 }
@@ -189,6 +191,81 @@ impl<T> Table<T> {
 
     pub fn rows(&self) -> TableRows<T> {
         TableRows { table: self, index: 0 }
+    }
+
+    /// Transposes the table's row and column.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::table::*;
+    /// let rows = vec![
+    ///     vec![1, 2, 3],
+    ///     vec![10, 20, 30]
+    /// ];
+    /// let mut table = Table::from_rows(rows).unwrap();
+    ///
+    /// let transposed_rows = vec![
+    ///     vec![1, 10],
+    ///     vec![2, 20],
+    ///     vec![3, 30],
+    /// ];
+    /// let transposed_table = Table::from_rows(transposed_rows).unwrap();
+    ///
+    /// table.transpose();
+    /// assert_eq!(table, transposed_table);
+    /// ```
+    ///
+    /// When you do same operations on rows and columns,
+    /// `transpose` is very useful for short coding.
+    ///
+    /// ```
+    /// # #[macro_use] extern crate atcoder_snippets;
+    /// # use atcoder_snippets::table::*;
+    /// # fn operation_on_rows(table: &Table<i32>) {}
+    /// # let mut table = table![0; 2,3];
+    /// // fn operation_on_rows(table: &Table<i32>) {
+    /// //     ...
+    /// // }
+    /// //
+    /// // let mut table = ...;
+    ///
+    /// for _ in 0..2 {
+    ///     operation_on_rows(&table);
+    ///     table.transpose();
+    /// }
+    /// ```
+    pub fn transpose(&mut self) {
+        if self.height() == 0 {
+            return;
+        }
+
+        if self.height() == self.width() {
+            // transposable without reallocation
+            let size = self.height();
+            for i in 0..size-1 {
+                for j in i+1..size {
+                    unsafe {
+                        let ptr1: *mut T = &mut self.inner[i][j];
+                        let ptr2: *mut T = &mut self.inner[j][i];
+                        std::ptr::swap(ptr1, ptr2);
+                    }
+                }
+            }
+        } else {
+            let mut new_rows = Vec::with_capacity(self.width());
+            for _ in 0..self.width() {
+                new_rows.push(Vec::new());
+            }
+            for row in &mut self.inner {
+                for new_row in new_rows.iter_mut().rev() {
+                    new_row.push(row.pop().unwrap());
+                }
+                assert!(row.is_empty());
+            }
+            self.inner = new_rows;
+        }
     }
 
     // Ant Book p. 37
@@ -504,6 +581,73 @@ mod tests {
         let table3 = table![0; 3,2];
         assert_eq!(table3.height(), 3);
         assert_eq!(table3.width(), 2);
+    }
+
+    #[test]
+    fn test_transpose() {
+        let mut empty: Table<i32> = Table::from_rows(Vec::new()).unwrap();
+        empty.transpose();
+        assert_eq!(empty, Table::from_rows(Vec::new()).unwrap());
+
+        let mut one = table![0; 1,1];
+        one.transpose();
+        assert_eq!(one, table![0; 1,1]);
+
+        let mut row_linear = Table::from_rows(vec![
+            vec![1, 2, 3]
+        ]).unwrap();
+        let row_linear_transposed = Table::from_rows(vec![
+                vec![1],
+                vec![2],
+                vec![3]
+        ]).unwrap();
+        row_linear.transpose();
+        assert_eq!(row_linear, row_linear_transposed);
+
+        let mut col_linear = Table::from_rows(
+            vec![
+                vec![1],
+                vec![2],
+                vec![3]
+            ]
+        ).unwrap();
+        let col_linear_transposed = Table::from_rows(vec![
+            vec![1, 2, 3]
+        ]).unwrap();
+        col_linear.transpose();
+        assert_eq!(col_linear, col_linear_transposed);
+
+        let mut non_square = Table::from_rows(vec![
+            vec![00, 01, 02, 03, 04],
+            vec![10, 11, 12, 13, 14],
+            vec![20, 21, 22, 23, 24]
+        ]).unwrap();
+        let non_square_transposed = Table::from_rows(vec![
+            vec![00, 10, 20],
+            vec![01, 11, 21],
+            vec![02, 12, 22],
+            vec![03, 13, 23],
+            vec![04, 14, 24]
+        ]).unwrap();
+        non_square.transpose();
+        assert_eq!(non_square, non_square_transposed);
+
+        let mut square = Table::from_rows(vec![
+            vec![00, 01, 02, 03, 04],
+            vec![10, 11, 12, 13, 14],
+            vec![20, 21, 22, 23, 24],
+            vec![30, 31, 32, 33, 34],
+            vec![40, 41, 42, 43, 44]
+        ]).unwrap();
+        let square_transposed = Table::from_rows(vec![
+            vec![00, 10, 20, 30, 40],
+            vec![01, 11, 21, 31, 41],
+            vec![02, 12, 22, 32, 42],
+            vec![03, 13, 23, 33, 43],
+            vec![04, 14, 24, 34, 44]
+        ]).unwrap();
+        square.transpose();
+        assert_eq!(square, square_transposed);
     }
 
     #[test]
