@@ -193,12 +193,72 @@ impl<T> Table<T> {
         TableRows { table: self, index: 0 }
     }
 
+    /// Maps each element by `f` and gets a new table with the same shape.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use atcoder_snippets::table::*;
+    /// let rows = vec![
+    ///     vec![1, 2, 3],
+    ///     vec![10, 20, 30]
+    /// ];
+    /// let table = Table::from_rows(rows).unwrap();
+    ///
+    /// let mapped_rows = vec![
+    ///     vec![2, 4, 6],
+    ///     vec![20, 40, 60]
+    /// ];
+    /// let mapped_table = Table::from_rows(mapped_rows).unwrap();
+    ///
+    /// assert_eq!(table.map(|x| x*2), mapped_table);
+    /// ```
+    pub fn map<U>(self, mut f: impl FnMut(T) -> U) -> Table<U> {
+        let rows = self.inner.into_iter().map(|row| {
+            row.into_iter().map(&mut f).collect()
+        }).collect();
+        unsafe { Table::from_rows_unchecked(rows) }
+    }
+
+    /// Same as `map`, but takes `self` by reference instead by move.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use atcoder_snippets::table::*;
+    /// let rows = vec![
+    ///     vec![1, 2, 3],
+    ///     vec![10, 20, 30]
+    /// ];
+    /// let table = Table::from_rows(rows).unwrap();
+    ///
+    /// let mapped_rows_1 = vec![
+    ///     vec![2, 4, 6],
+    ///     vec![20, 40, 60]
+    /// ];
+    /// let mapped_table_1 = Table::from_rows(mapped_rows_1).unwrap();
+    /// assert_eq!(table.ref_map(|&x| x*2), mapped_table_1);
+    ///
+    /// // You can use table again.
+    /// let mapped_rows_2 = vec![
+    ///     vec![3, 6, 9],
+    ///     vec![30, 60, 90]
+    /// ];
+    /// let mapped_table_2 = Table::from_rows(mapped_rows_2).unwrap();
+    /// assert_eq!(table.ref_map(|&x| x*3,), mapped_table_2);
+    /// ```
+    pub fn ref_map<U>(&self, mut f: impl FnMut(&T) -> U) -> Table<U> {
+        let rows = self.inner.iter().map(|row| {
+            row.iter().map(&mut f).collect()
+        }).collect();
+        unsafe { Table::from_rows_unchecked(rows) }
+    }
+
     /// Transposes the table's row and column.
     ///
     /// # Example
     ///
     /// ```
-    /// # #[macro_use] extern crate atcoder_snippets;
     /// # use atcoder_snippets::table::*;
     /// let rows = vec![
     ///     vec![1, 2, 3],
