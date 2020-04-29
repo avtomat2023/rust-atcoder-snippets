@@ -140,6 +140,18 @@ fn count_inversions_sub<T: Clone + Ord>(seq: &[T]) -> (Vec<T>, usize) {
 
 /// Enriches slices by adding various methods.
 pub trait SliceExt<T> {
+    /// Fills the slice by `val`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use atcoder_snippets::slice::*;
+    /// let mut seq = vec![0; 5];
+    /// seq[1..4].fill(1);
+    /// assert_eq!(seq, vec![0, 1, 1, 1, 0]);
+    /// ```
+    fn fill(&mut self, val: T) where T: Clone;
+
     // TODO: Ant Book p. 47
     /// Takes the prefix slice satisfying the predicate, and makes a tuple of the slice and the rest.
     ///
@@ -230,6 +242,12 @@ pub trait SliceExt<T> {
 }
 
 impl<T> SliceExt<T> for [T] {
+    fn fill(&mut self, val: T) where T: Clone {
+        for x in self {
+            *x = val.clone();
+        }
+    }
+
     fn span<F: Fn(&T) -> bool>(&self, predicate: F) -> (&[T], &[T]) {
         let i = self.iter().position(|x| !predicate(x)).unwrap_or(self.len());
         (&self[..i], &self[i..])
