@@ -3,8 +3,9 @@
 use crate::read::{Readable, Chars, read_lines};
 use crate::option::BoolExt;
 use crate::range::{UsizeRangeBoundsExt, BoundExt};
+use crate::iter::IteratorExt;
 
-// BEGIN SNIPPET table DEPENDS ON read option range
+// BEGIN SNIPPET table DEPENDS ON read option range iter
 
 /// 2-dimentional array.
 ///
@@ -455,6 +456,17 @@ impl<T> Table<T> {
             inner.push(new_row);
         }
         CumulativeTable { op, op_inv, inner: Table { inner } }
+    }
+}
+
+impl<T: std::fmt::Display> std::fmt::Display for Table<T> {
+    /// Useful when you solve a problem to print whole the table,
+    /// such as [AtCoder Beginner Contest 164 F: I hate Matrix Construction](https://atcoder.jp/contests/abc164/tasks/abc164_f).
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        for row in self.rows() {
+            writeln!(f, "{}", row.iter().join(" "))?;
+        }
+        Ok(())
     }
 }
 
