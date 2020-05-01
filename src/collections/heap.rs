@@ -383,7 +383,7 @@ impl<T, F: Fn(&T, &T) -> std::cmp::Ordering> PriorityQueue<T> for MaxHeap<T, F> 
 impl<T: std::fmt::Debug, F: Fn(&T, &T) -> std::cmp::Ordering> std::fmt::Debug for MaxHeap<T, F> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut refs: Vec<&T> = self.as_slice().iter().collect();
-        refs.sort_by(|&a, &b| (self.cmp)(a, b));
+        refs.sort_by(|&a, &b| (self.cmp)(b, a));
         f.debug_list().entries(refs.into_iter()).finish()
     }
 }
