@@ -4,7 +4,7 @@
 
 use crate::read::{Readable, ReadableFromLine, read_words_into_vec, split_into_words_for_collection};
 
-// BEGIN SNIPPET hash_counter
+// BEGIN SNIPPET hash_counter DEPENDS ON read
 
 /// Counter by a hash map from keys to counter values.
 ///
