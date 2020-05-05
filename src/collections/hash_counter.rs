@@ -278,6 +278,12 @@ impl<T: Eq + std::hash::Hash> HashCounter<T> {
     }
 }
 
+impl<T: Eq + std::hash::Hash + std::fmt::Debug> std::fmt::Debug for HashCounter<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self.counter)
+    }
+}
+
 // HashCounter doesn't provide indexing methods
 // because they looks that the operation may panic.
 
