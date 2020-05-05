@@ -167,6 +167,29 @@ impl Readable for Chars {
     }
 }
 
+/// Reads a string as `Vec<u8>`
+///
+/// # Example
+///
+/// ```no_run
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::read::*;
+/// // Stdin: "AB"
+/// read!(bs = Bytes);
+/// let indices = ((bs[0] - b'A') as usize, (bs[1] - b'A') as usize);
+/// assert_eq!(indices, (0, 1));
+/// ```
+pub struct Bytes();
+
+impl Readable for Bytes {
+    type Output = Vec<u8>;
+
+    fn words_count() -> usize { 1 }
+    fn read_words(words: &[&str]) -> Result<Vec<u8>, String> {
+        Ok(words[0].bytes().collect())
+    }
+}
+
 // Primitive integers
 // Implemented by copy and paste instead of macro for compilation speedup
 
