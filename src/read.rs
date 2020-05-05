@@ -595,6 +595,81 @@ impl<T1: Readable, T2: Readable, T3: Readable, T4: Readable, T5: Readable, T6: R
     }
 }
 
+impl<T: Readable> Readable for [T; 2] {
+    type Output = [T::Output; 2];
+    const WORDS_COUNT: usize = T::WORDS_COUNT * 2;
+
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        assert_eq!(words.len(), Self::WORDS_COUNT);
+
+        let val1 = T::read_words(&words[T::WORDS_COUNT*0 .. T::WORDS_COUNT*1])?;
+        let val2 = T::read_words(&words[T::WORDS_COUNT*1 .. T::WORDS_COUNT*2])?;
+        Ok([val1, val2])
+    }
+}
+
+impl<T: Readable> Readable for [T; 3] {
+    type Output = [T::Output; 3];
+    const WORDS_COUNT: usize = T::WORDS_COUNT * 3;
+
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        assert_eq!(words.len(), Self::WORDS_COUNT);
+
+        let val1 = T::read_words(&words[T::WORDS_COUNT*0 .. T::WORDS_COUNT*1])?;
+        let val2 = T::read_words(&words[T::WORDS_COUNT*1 .. T::WORDS_COUNT*2])?;
+        let val3 = T::read_words(&words[T::WORDS_COUNT*2 .. T::WORDS_COUNT*3])?;
+        Ok([val1, val2, val3])
+    }
+}
+
+impl<T: Readable> Readable for [T; 4] {
+    type Output = [T::Output; 4];
+    const WORDS_COUNT: usize = T::WORDS_COUNT * 4;
+
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        assert_eq!(words.len(), Self::WORDS_COUNT);
+
+        let val1 = T::read_words(&words[T::WORDS_COUNT*0 .. T::WORDS_COUNT*1])?;
+        let val2 = T::read_words(&words[T::WORDS_COUNT*1 .. T::WORDS_COUNT*2])?;
+        let val3 = T::read_words(&words[T::WORDS_COUNT*2 .. T::WORDS_COUNT*3])?;
+        let val4 = T::read_words(&words[T::WORDS_COUNT*3 .. T::WORDS_COUNT*4])?;
+        Ok([val1, val2, val3, val4])
+    }
+}
+
+impl<T: Readable> Readable for [T; 5] {
+    type Output = [T::Output; 5];
+    const WORDS_COUNT: usize = T::WORDS_COUNT * 5;
+
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        assert_eq!(words.len(), Self::WORDS_COUNT);
+
+        let val1 = T::read_words(&words[T::WORDS_COUNT*0 .. T::WORDS_COUNT*1])?;
+        let val2 = T::read_words(&words[T::WORDS_COUNT*1 .. T::WORDS_COUNT*2])?;
+        let val3 = T::read_words(&words[T::WORDS_COUNT*2 .. T::WORDS_COUNT*3])?;
+        let val4 = T::read_words(&words[T::WORDS_COUNT*3 .. T::WORDS_COUNT*4])?;
+        let val5 = T::read_words(&words[T::WORDS_COUNT*4 .. T::WORDS_COUNT*5])?;
+        Ok([val1, val2, val3, val4, val5])
+    }
+}
+
+impl<T: Readable> Readable for [T; 6] {
+    type Output = [T::Output; 6];
+    const WORDS_COUNT: usize = T::WORDS_COUNT * 6;
+
+    fn read_words(words: &[&str]) -> Result<Self::Output, String> {
+        assert_eq!(words.len(), Self::WORDS_COUNT);
+
+        let val1 = T::read_words(&words[T::WORDS_COUNT*0 .. T::WORDS_COUNT*1])?;
+        let val2 = T::read_words(&words[T::WORDS_COUNT*1 .. T::WORDS_COUNT*2])?;
+        let val3 = T::read_words(&words[T::WORDS_COUNT*2 .. T::WORDS_COUNT*3])?;
+        let val4 = T::read_words(&words[T::WORDS_COUNT*3 .. T::WORDS_COUNT*4])?;
+        let val5 = T::read_words(&words[T::WORDS_COUNT*4 .. T::WORDS_COUNT*5])?;
+        let val6 = T::read_words(&words[T::WORDS_COUNT*5 .. T::WORDS_COUNT*6])?;
+        Ok([val1, val2, val3, val4, val5, val6])
+    }
+}
+
 /// Readable by `read` function/macro.
 pub trait ReadableFromLine {
     type Output;
@@ -1385,6 +1460,36 @@ mod test {
         assert!(T5::read_words(&["10", "10", "10", "10", "10", "10", "10", "10", "10", "10", "a"]).is_ok());
         type T6 = (Pair, Pair, Pair, Pair, Pair, Pair);
         assert!(T6::read_words(&["10", "10", "10", "10", "10", "10", "10", "10", "10", "10", "10", "10"]).is_ok());
+    }
+
+    #[test]
+    fn test_read_words_array_2 () {
+        let val = <[Pair; 2]>::read_words(&["0", "1", "2", "3"]).unwrap();
+        assert_eq!(val, [Pair(0, 1), Pair(2, 3)]);
+    }
+
+    #[test]
+    fn test_read_words_array_3 () {
+        let val = <[Pair; 3]>::read_words(&["0", "1", "2", "3", "4", "5"]).unwrap();
+        assert_eq!(val, [Pair(0, 1), Pair(2, 3), Pair(4, 5)]);
+    }
+
+    #[test]
+    fn test_read_words_array_4 () {
+        let val = <[Pair; 4]>::read_words(&["0", "1", "2", "3", "4", "5", "6", "7"]).unwrap();
+        assert_eq!(val, [Pair(0, 1), Pair(2, 3), Pair(4, 5), Pair(6, 7)]);
+    }
+
+    #[test]
+    fn test_read_words_array_5 () {
+        let val = <[Pair; 5]>::read_words(&["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]).unwrap();
+        assert_eq!(val, [Pair(0, 1), Pair(2, 3), Pair(4, 5), Pair(6, 7), Pair(8, 9)]);
+    }
+
+    #[test]
+    fn test_read_words_array_6 () {
+        let val = <[Pair; 6]>::read_words(&["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]).unwrap();
+        assert_eq!(val, [Pair(0, 1), Pair(2, 3), Pair(4, 5), Pair(6, 7), Pair(8, 9), Pair(10, 11)]);
     }
 
     #[test]
