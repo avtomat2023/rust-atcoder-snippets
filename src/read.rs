@@ -83,7 +83,7 @@ pub trait Readable {
     type Output;
 
     /// Returns how many words are read.
-    const WORDS_COUNT: usize;
+    const WORD_COUNT: usize;
 
     /// Converts words into `Output`s.
     ///
@@ -91,7 +91,7 @@ pub trait Readable {
     ///
     /// # Panics
     ///
-    /// If `words.len()` differs from `WORDS_COUNT`,
+    /// If `words.len()` differs from `WORD_COUNT`,
     /// the method may panic.
     fn read_words(words: &[&str]) -> Result<Self::Output, String>;
 }
@@ -116,7 +116,7 @@ macro_rules! readable {
     ( $t:ty, $words_count:expr, |$words:ident| $read_words:expr ) => {
         impl Readable for $t {
             type Output = $t;
-            const WORDS_COUNT: usize = $words_count;
+            const WORD_COUNT: usize = $words_count;
 
             fn read_words($words: &[&str]) -> Result<$t, String> {
                 Ok($read_words)
@@ -133,7 +133,7 @@ readable!(String, 1, |ss| ss[0].to_string());
 
 impl Readable for char {
     type Output = char;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<char, String> {
         let chars: Vec<char> = words[0].chars().collect();
@@ -160,7 +160,7 @@ pub struct Chars();
 
 impl Readable for Chars {
     type Output = Vec<char>;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<Vec<char>, String> {
         Ok(words[0].chars().collect())
@@ -183,7 +183,7 @@ pub struct Bytes();
 
 impl Readable for Bytes {
     type Output = Vec<u8>;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<Vec<u8>, String> {
         Ok(words[0].bytes().collect())
@@ -195,7 +195,7 @@ impl Readable for Bytes {
 
 impl Readable for i8 {
     type Output = Self;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<i8, String> {
         use std::str::FromStr;
@@ -207,7 +207,7 @@ impl Readable for i8 {
 
 impl Readable for u8 {
     type Output = Self;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<u8, String> {
         use std::str::FromStr;
@@ -219,7 +219,7 @@ impl Readable for u8 {
 
 impl Readable for i16 {
     type Output = Self;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<i16, String> {
         use std::str::FromStr;
@@ -231,7 +231,7 @@ impl Readable for i16 {
 
 impl Readable for u16 {
     type Output = Self;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<u16, String> {
         use std::str::FromStr;
@@ -243,7 +243,7 @@ impl Readable for u16 {
 
 impl Readable for i32 {
     type Output = Self;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<i32, String> {
         use std::str::FromStr;
@@ -255,7 +255,7 @@ impl Readable for i32 {
 
 impl Readable for u32 {
     type Output = Self;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<u32, String> {
         use std::str::FromStr;
@@ -267,7 +267,7 @@ impl Readable for u32 {
 
 impl Readable for i64 {
     type Output = Self;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<i64, String> {
         use std::str::FromStr;
@@ -279,7 +279,7 @@ impl Readable for i64 {
 
 impl Readable for u64 {
     type Output = Self;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<u64, String> {
         use std::str::FromStr;
@@ -291,7 +291,7 @@ impl Readable for u64 {
 
 impl Readable for isize {
     type Output = Self;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<isize, String> {
         use std::str::FromStr;
@@ -303,7 +303,7 @@ impl Readable for isize {
 
 impl Readable for usize {
     type Output = Self;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<usize, String> {
         use std::str::FromStr;
@@ -315,7 +315,7 @@ impl Readable for usize {
 
 impl Readable for f32 {
     type Output = Self;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<f32, String> {
         use std::str::FromStr;
@@ -327,7 +327,7 @@ impl Readable for f32 {
 
 impl Readable for f64 {
     type Output = Self;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<f64, String> {
         use std::str::FromStr;
@@ -357,7 +357,7 @@ pub struct u8_;
 
 impl Readable for u8_ {
     type Output = u8;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
         u8::read_words(words).map(|n| n-1)
@@ -380,7 +380,7 @@ pub struct u16_;
 
 impl Readable for u16_ {
     type Output = u16;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
         u16::read_words(words).map(|n| n-1)
@@ -403,7 +403,7 @@ pub struct u32_;
 
 impl Readable for u32_ {
     type Output = u32;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
         u32::read_words(words).map(|n| n-1)
@@ -426,7 +426,7 @@ pub struct u64_;
 
 impl Readable for u64_ {
     type Output = u64;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
         u64::read_words(words).map(|n| n-1)
@@ -449,7 +449,7 @@ pub struct usize_;
 
 impl Readable for usize_ {
     type Output = usize;
-    const WORDS_COUNT: usize = 1;
+    const WORD_COUNT: usize = 1;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
         <usize>::read_words(words).map(|n| n-1)
@@ -461,14 +461,14 @@ impl Readable for usize_ {
 
 impl<T1: Readable, T2: Readable> Readable for (T1, T2) {
     type Output = (T1::Output, T2::Output);
-    const WORDS_COUNT: usize = T1::WORDS_COUNT + T2::WORDS_COUNT;
+    const WORD_COUNT: usize = T1::WORD_COUNT + T2::WORD_COUNT;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-        assert_eq!(words.len(), Self::WORDS_COUNT);
+        assert_eq!(words.len(), Self::WORD_COUNT);
 
         let mut start = 0;
 
-        let count1 = T1::WORDS_COUNT;
+        let count1 = T1::WORD_COUNT;
         let val1 = T1::read_words(&words[start .. start+count1])?;
         start += count1;
 
@@ -480,18 +480,18 @@ impl<T1: Readable, T2: Readable> Readable for (T1, T2) {
 
 impl<T1: Readable, T2: Readable, T3: Readable> Readable for (T1, T2, T3) {
     type Output = (T1::Output, T2::Output, T3::Output);
-    const WORDS_COUNT: usize = T1::WORDS_COUNT + T2::WORDS_COUNT + T3::WORDS_COUNT;
+    const WORD_COUNT: usize = T1::WORD_COUNT + T2::WORD_COUNT + T3::WORD_COUNT;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-        assert_eq!(words.len(), Self::WORDS_COUNT);
+        assert_eq!(words.len(), Self::WORD_COUNT);
 
         let mut start = 0;
 
-        let count1 = T1::WORDS_COUNT;
+        let count1 = T1::WORD_COUNT;
         let val1 = T1::read_words(&words[start .. start+count1])?;
         start += count1;
 
-        let count2 = T2::WORDS_COUNT;
+        let count2 = T2::WORD_COUNT;
         let val2 = T2::read_words(&words[start .. start+count2])?;
         start += count2;
 
@@ -503,22 +503,22 @@ impl<T1: Readable, T2: Readable, T3: Readable> Readable for (T1, T2, T3) {
 
 impl<T1: Readable, T2: Readable, T3: Readable, T4: Readable> Readable for (T1, T2, T3, T4) {
     type Output = (T1::Output, T2::Output, T3::Output, T4::Output);
-    const WORDS_COUNT: usize = T1::WORDS_COUNT + T2::WORDS_COUNT + T3::WORDS_COUNT + T4::WORDS_COUNT;
+    const WORD_COUNT: usize = T1::WORD_COUNT + T2::WORD_COUNT + T3::WORD_COUNT + T4::WORD_COUNT;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-        assert_eq!(words.len(), Self::WORDS_COUNT);
+        assert_eq!(words.len(), Self::WORD_COUNT);
 
         let mut start = 0;
 
-        let count1 = T1::WORDS_COUNT;
+        let count1 = T1::WORD_COUNT;
         let val1 = T1::read_words(&words[start .. start+count1])?;
         start += count1;
 
-        let count2 = T2::WORDS_COUNT;
+        let count2 = T2::WORD_COUNT;
         let val2 = T2::read_words(&words[start .. start+count2])?;
         start += count2;
 
-        let count3 = T3::WORDS_COUNT;
+        let count3 = T3::WORD_COUNT;
         let val3 = T3::read_words(&words[start .. start+count3])?;
         start += count3;
 
@@ -530,26 +530,26 @@ impl<T1: Readable, T2: Readable, T3: Readable, T4: Readable> Readable for (T1, T
 
 impl<T1: Readable, T2: Readable, T3: Readable, T4: Readable, T5: Readable> Readable for (T1, T2, T3, T4, T5) {
     type Output = (T1::Output, T2::Output, T3::Output, T4::Output, T5::Output);
-    const WORDS_COUNT: usize = T1::WORDS_COUNT + T2::WORDS_COUNT + T3::WORDS_COUNT + T4::WORDS_COUNT + T5::WORDS_COUNT;
+    const WORD_COUNT: usize = T1::WORD_COUNT + T2::WORD_COUNT + T3::WORD_COUNT + T4::WORD_COUNT + T5::WORD_COUNT;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-        assert_eq!(words.len(), Self::WORDS_COUNT);
+        assert_eq!(words.len(), Self::WORD_COUNT);
 
         let mut start = 0;
 
-        let count1 = T1::WORDS_COUNT;
+        let count1 = T1::WORD_COUNT;
         let val1 = T1::read_words(&words[start .. start+count1])?;
         start += count1;
 
-        let count2 = T2::WORDS_COUNT;
+        let count2 = T2::WORD_COUNT;
         let val2 = T2::read_words(&words[start .. start+count2])?;
         start += count2;
 
-        let count3 = T3::WORDS_COUNT;
+        let count3 = T3::WORD_COUNT;
         let val3 = T3::read_words(&words[start .. start+count3])?;
         start += count3;
 
-        let count4 = T4::WORDS_COUNT;
+        let count4 = T4::WORD_COUNT;
         let val4 = T4::read_words(&words[start .. start+count4])?;
         start += count4;
 
@@ -562,30 +562,30 @@ impl<T1: Readable, T2: Readable, T3: Readable, T4: Readable, T5: Readable> Reada
 
 impl<T1: Readable, T2: Readable, T3: Readable, T4: Readable, T5: Readable, T6: Readable> Readable for (T1, T2, T3, T4, T5, T6) {
     type Output = (T1::Output, T2::Output, T3::Output, T4::Output, T5::Output, T6::Output);
-    const WORDS_COUNT: usize = T1::WORDS_COUNT + T2::WORDS_COUNT + T3::WORDS_COUNT + T4::WORDS_COUNT + T5::WORDS_COUNT + T6::WORDS_COUNT;
+    const WORD_COUNT: usize = T1::WORD_COUNT + T2::WORD_COUNT + T3::WORD_COUNT + T4::WORD_COUNT + T5::WORD_COUNT + T6::WORD_COUNT;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-        assert_eq!(words.len(), Self::WORDS_COUNT);
+        assert_eq!(words.len(), Self::WORD_COUNT);
 
         let mut start = 0;
 
-        let count1 = T1::WORDS_COUNT;
+        let count1 = T1::WORD_COUNT;
         let val1 = T1::read_words(&words[start .. start+count1])?;
         start += count1;
 
-        let count2 = T2::WORDS_COUNT;
+        let count2 = T2::WORD_COUNT;
         let val2 = T2::read_words(&words[start .. start+count2])?;
         start += count2;
 
-        let count3 = T3::WORDS_COUNT;
+        let count3 = T3::WORD_COUNT;
         let val3 = T3::read_words(&words[start .. start+count3])?;
         start += count3;
 
-        let count4 = T4::WORDS_COUNT;
+        let count4 = T4::WORD_COUNT;
         let val4 = T4::read_words(&words[start .. start+count4])?;
         start += count4;
 
-        let count5 = T5::WORDS_COUNT;
+        let count5 = T5::WORD_COUNT;
         let val5 = T5::read_words(&words[start .. start+count5])?;
         start += count5;
 
@@ -597,75 +597,75 @@ impl<T1: Readable, T2: Readable, T3: Readable, T4: Readable, T5: Readable, T6: R
 
 impl<T: Readable> Readable for [T; 2] {
     type Output = [T::Output; 2];
-    const WORDS_COUNT: usize = T::WORDS_COUNT * 2;
+    const WORD_COUNT: usize = T::WORD_COUNT * 2;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-        assert_eq!(words.len(), Self::WORDS_COUNT);
+        assert_eq!(words.len(), Self::WORD_COUNT);
 
-        let val1 = T::read_words(&words[T::WORDS_COUNT*0 .. T::WORDS_COUNT*1])?;
-        let val2 = T::read_words(&words[T::WORDS_COUNT*1 .. T::WORDS_COUNT*2])?;
+        let val1 = T::read_words(&words[T::WORD_COUNT*0 .. T::WORD_COUNT*1])?;
+        let val2 = T::read_words(&words[T::WORD_COUNT*1 .. T::WORD_COUNT*2])?;
         Ok([val1, val2])
     }
 }
 
 impl<T: Readable> Readable for [T; 3] {
     type Output = [T::Output; 3];
-    const WORDS_COUNT: usize = T::WORDS_COUNT * 3;
+    const WORD_COUNT: usize = T::WORD_COUNT * 3;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-        assert_eq!(words.len(), Self::WORDS_COUNT);
+        assert_eq!(words.len(), Self::WORD_COUNT);
 
-        let val1 = T::read_words(&words[T::WORDS_COUNT*0 .. T::WORDS_COUNT*1])?;
-        let val2 = T::read_words(&words[T::WORDS_COUNT*1 .. T::WORDS_COUNT*2])?;
-        let val3 = T::read_words(&words[T::WORDS_COUNT*2 .. T::WORDS_COUNT*3])?;
+        let val1 = T::read_words(&words[T::WORD_COUNT*0 .. T::WORD_COUNT*1])?;
+        let val2 = T::read_words(&words[T::WORD_COUNT*1 .. T::WORD_COUNT*2])?;
+        let val3 = T::read_words(&words[T::WORD_COUNT*2 .. T::WORD_COUNT*3])?;
         Ok([val1, val2, val3])
     }
 }
 
 impl<T: Readable> Readable for [T; 4] {
     type Output = [T::Output; 4];
-    const WORDS_COUNT: usize = T::WORDS_COUNT * 4;
+    const WORD_COUNT: usize = T::WORD_COUNT * 4;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-        assert_eq!(words.len(), Self::WORDS_COUNT);
+        assert_eq!(words.len(), Self::WORD_COUNT);
 
-        let val1 = T::read_words(&words[T::WORDS_COUNT*0 .. T::WORDS_COUNT*1])?;
-        let val2 = T::read_words(&words[T::WORDS_COUNT*1 .. T::WORDS_COUNT*2])?;
-        let val3 = T::read_words(&words[T::WORDS_COUNT*2 .. T::WORDS_COUNT*3])?;
-        let val4 = T::read_words(&words[T::WORDS_COUNT*3 .. T::WORDS_COUNT*4])?;
+        let val1 = T::read_words(&words[T::WORD_COUNT*0 .. T::WORD_COUNT*1])?;
+        let val2 = T::read_words(&words[T::WORD_COUNT*1 .. T::WORD_COUNT*2])?;
+        let val3 = T::read_words(&words[T::WORD_COUNT*2 .. T::WORD_COUNT*3])?;
+        let val4 = T::read_words(&words[T::WORD_COUNT*3 .. T::WORD_COUNT*4])?;
         Ok([val1, val2, val3, val4])
     }
 }
 
 impl<T: Readable> Readable for [T; 5] {
     type Output = [T::Output; 5];
-    const WORDS_COUNT: usize = T::WORDS_COUNT * 5;
+    const WORD_COUNT: usize = T::WORD_COUNT * 5;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-        assert_eq!(words.len(), Self::WORDS_COUNT);
+        assert_eq!(words.len(), Self::WORD_COUNT);
 
-        let val1 = T::read_words(&words[T::WORDS_COUNT*0 .. T::WORDS_COUNT*1])?;
-        let val2 = T::read_words(&words[T::WORDS_COUNT*1 .. T::WORDS_COUNT*2])?;
-        let val3 = T::read_words(&words[T::WORDS_COUNT*2 .. T::WORDS_COUNT*3])?;
-        let val4 = T::read_words(&words[T::WORDS_COUNT*3 .. T::WORDS_COUNT*4])?;
-        let val5 = T::read_words(&words[T::WORDS_COUNT*4 .. T::WORDS_COUNT*5])?;
+        let val1 = T::read_words(&words[T::WORD_COUNT*0 .. T::WORD_COUNT*1])?;
+        let val2 = T::read_words(&words[T::WORD_COUNT*1 .. T::WORD_COUNT*2])?;
+        let val3 = T::read_words(&words[T::WORD_COUNT*2 .. T::WORD_COUNT*3])?;
+        let val4 = T::read_words(&words[T::WORD_COUNT*3 .. T::WORD_COUNT*4])?;
+        let val5 = T::read_words(&words[T::WORD_COUNT*4 .. T::WORD_COUNT*5])?;
         Ok([val1, val2, val3, val4, val5])
     }
 }
 
 impl<T: Readable> Readable for [T; 6] {
     type Output = [T::Output; 6];
-    const WORDS_COUNT: usize = T::WORDS_COUNT * 6;
+    const WORD_COUNT: usize = T::WORD_COUNT * 6;
 
     fn read_words(words: &[&str]) -> Result<Self::Output, String> {
-        assert_eq!(words.len(), Self::WORDS_COUNT);
+        assert_eq!(words.len(), Self::WORD_COUNT);
 
-        let val1 = T::read_words(&words[T::WORDS_COUNT*0 .. T::WORDS_COUNT*1])?;
-        let val2 = T::read_words(&words[T::WORDS_COUNT*1 .. T::WORDS_COUNT*2])?;
-        let val3 = T::read_words(&words[T::WORDS_COUNT*2 .. T::WORDS_COUNT*3])?;
-        let val4 = T::read_words(&words[T::WORDS_COUNT*3 .. T::WORDS_COUNT*4])?;
-        let val5 = T::read_words(&words[T::WORDS_COUNT*4 .. T::WORDS_COUNT*5])?;
-        let val6 = T::read_words(&words[T::WORDS_COUNT*5 .. T::WORDS_COUNT*6])?;
+        let val1 = T::read_words(&words[T::WORD_COUNT*0 .. T::WORD_COUNT*1])?;
+        let val2 = T::read_words(&words[T::WORD_COUNT*1 .. T::WORD_COUNT*2])?;
+        let val3 = T::read_words(&words[T::WORD_COUNT*2 .. T::WORD_COUNT*3])?;
+        let val4 = T::read_words(&words[T::WORD_COUNT*3 .. T::WORD_COUNT*4])?;
+        let val5 = T::read_words(&words[T::WORD_COUNT*4 .. T::WORD_COUNT*5])?;
+        let val6 = T::read_words(&words[T::WORD_COUNT*5 .. T::WORD_COUNT*6])?;
         Ok([val1, val2, val3, val4, val5, val6])
     }
 }
@@ -686,9 +686,9 @@ impl<T: Readable> ReadableFromLine for T {
 
     fn read_line(line: &str) -> Result<T::Output, String> {
         let words = split_into_words(line);
-        if words.len() != T::WORDS_COUNT {
+        if words.len() != T::WORD_COUNT {
             return Err(format!("line `{}` has {} words, expected {}",
-                               line, words.len(), T::WORDS_COUNT));
+                               line, words.len(), T::WORD_COUNT));
         }
 
         T::read_words(&words)
@@ -696,7 +696,7 @@ impl<T: Readable> ReadableFromLine for T {
 }
 
 pub fn read_words_into_vec<T: Readable>(words: &[&str], line: &str) -> Result<Vec<T::Output>, String> {
-    let n = T::WORDS_COUNT;
+    let n = T::WORD_COUNT;
     assert_eq!(words.len() % n, 0);
 
     let mut result = Vec::new();
@@ -722,7 +722,7 @@ pub fn read_words_into_vec<T: Readable>(words: &[&str], line: &str) -> Result<Ve
 pub fn split_into_words_for_collection<T: Readable>(
     line: &str, prefix_words_count: usize
 ) -> Result<Vec<&str>, String> {
-    let n = T::WORDS_COUNT;
+    let n = T::WORD_COUNT;
     let words = split_into_words(line);
     if words.len() < prefix_words_count {
         return Err(
@@ -730,7 +730,7 @@ pub fn split_into_words_for_collection<T: Readable>(
                     line, words.len(), prefix_words_count)
         );
     }
-    if (words.len() - prefix_words_count) % T::WORDS_COUNT != 0 {
+    if (words.len() - prefix_words_count) % T::WORD_COUNT != 0 {
         return Err(
             format!("line `{}` has {} words, expected {} + {}",
                     line, words.len(), prefix_words_count, n)
@@ -792,7 +792,7 @@ macro_rules! readable_collection {
             type Output = (T1::Output, $collection_out);
 
             fn read_line(line: &str) -> Result<Self::Output, String> {
-                let prefix_len = T1::WORDS_COUNT;
+                let prefix_len = T1::WORD_COUNT;
                 let words = split_into_words_for_collection::<$u>(line, prefix_len)?;
 
                 let val1 = T1::read_words(&words[..prefix_len])?;
@@ -808,15 +808,15 @@ macro_rules! readable_collection {
             type Output = (T1::Output, T2::Output, $collection_out);
 
             fn read_line(line: &str) -> Result<Self::Output, String> {
-                let prefix_len = <(T1, T2)>::WORDS_COUNT;
+                let prefix_len = <(T1, T2)>::WORD_COUNT;
                 let words = split_into_words_for_collection::<$u>(line, prefix_len)?;
                 let mut start = 0;
 
-                let count1 = T1::WORDS_COUNT;
+                let count1 = T1::WORD_COUNT;
                 let val1 = T1::read_words(&words[start .. start+count1])?;
                 start += count1;
 
-                let count2 = T2::WORDS_COUNT;
+                let count2 = T2::WORD_COUNT;
                 let val2 = T2::read_words(&words[start .. start+count2])?;
 
                 let rest = read_words_into_vec::<$u>(&words[prefix_len..], line)?;
@@ -831,19 +831,19 @@ macro_rules! readable_collection {
             type Output = (T1::Output, T2::Output, T3::Output, $collection_out);
 
             fn read_line(line: &str) -> Result<Self::Output, String> {
-                let prefix_len = <(T1, T2, T3)>::WORDS_COUNT;
+                let prefix_len = <(T1, T2, T3)>::WORD_COUNT;
                 let words = split_into_words_for_collection::<$u>(line, prefix_len)?;
                 let mut start = 0;
 
-                let count1 = T1::WORDS_COUNT;
+                let count1 = T1::WORD_COUNT;
                 let val1 = T1::read_words(&words[start .. start+count1])?;
                 start += count1;
 
-                let count2 = T2::WORDS_COUNT;
+                let count2 = T2::WORD_COUNT;
                 let val2 = T2::read_words(&words[start .. start+count2])?;
                 start += count2;
 
-                let count3 = T3::WORDS_COUNT;
+                let count3 = T3::WORD_COUNT;
                 let val3 = T3::read_words(&words[start .. start+count3])?;
 
                 let rest = read_words_into_vec::<$u>(&words[prefix_len..], line)?;
@@ -858,23 +858,23 @@ macro_rules! readable_collection {
             type Output = (T1::Output, T2::Output, T3::Output, T4::Output, $collection_out);
 
             fn read_line(line: &str) -> Result<Self::Output, String> {
-                let prefix_len = <(T1, T2, T3, T4)>::WORDS_COUNT;
+                let prefix_len = <(T1, T2, T3, T4)>::WORD_COUNT;
                 let words = split_into_words_for_collection::<$u>(line, prefix_len)?;
                 let mut start = 0;
 
-                let count1 = T1::WORDS_COUNT;
+                let count1 = T1::WORD_COUNT;
                 let val1 = T1::read_words(&words[start .. start+count1])?;
                 start += count1;
 
-                let count2 = T2::WORDS_COUNT;
+                let count2 = T2::WORD_COUNT;
                 let val2 = T2::read_words(&words[start .. start+count2])?;
                 start += count2;
 
-                let count3 = T3::WORDS_COUNT;
+                let count3 = T3::WORD_COUNT;
                 let val3 = T3::read_words(&words[start .. start+count3])?;
                 start += count3;
 
-                let count4 = T4::WORDS_COUNT;
+                let count4 = T4::WORD_COUNT;
                 let val4 = T4::read_words(&words[start .. start+count4])?;
 
                 let rest = read_words_into_vec::<$u>(&words[prefix_len..], line)?;
@@ -1353,7 +1353,7 @@ mod test {
 
     impl Readable for Pair {
         type Output = Self;
-        const WORDS_COUNT: usize = 2;
+        const WORD_COUNT: usize = 2;
 
         fn read_words(words: &[&str]) -> Result<Pair, String> {
             let x1 = i32::read_words(&words[0..1])?;
