@@ -144,13 +144,10 @@ impl<S: Copy, T: std::ops::DivAssign<S>> std::ops::DivAssign<S> for Vec2<T> {
 
 impl<T: Readable> Readable for Vec2<T> {
     type Output = Vec2<T::Output>;
-
-    fn words_count() -> usize {
-        T::words_count() * 2
-    }
+    const WORDS_COUNT: usize = T::WORDS_COUNT * 2;
 
     fn read_words(words: &[&str]) -> Result<Vec2<T::Output>, String> {
-        let n = T::words_count();
+        let n = T::WORDS_COUNT;
         Ok(Vec2::new(T::read_words(&words[..n])?,
                      T::read_words(&words[n..])?))
     }
@@ -280,13 +277,10 @@ impl<S: Copy, T: std::ops::DivAssign<S>> std::ops::DivAssign<S> for Vec3<T> {
 
 impl<T: Readable> Readable for Vec3<T> {
     type Output = Vec3<T::Output>;
-
-    fn words_count() -> usize {
-        T::words_count() * 3
-    }
+    const WORDS_COUNT: usize = T::WORDS_COUNT * 3;
 
     fn read_words(words: &[&str]) -> Result<Vec3<T::Output>, String> {
-        let n = T::words_count();
+        let n = T::WORDS_COUNT;
         Ok(Vec3::new(T::read_words(&words[..n])?,
                      T::read_words(&words[n..2*n])?,
                      T::read_words(&words[2*n..])?))
