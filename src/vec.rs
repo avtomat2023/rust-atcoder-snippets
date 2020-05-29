@@ -44,6 +44,31 @@ impl<T> Vec2<T> {
     }
 }
 
+impl Vec2<f64> {
+    /// Creates a vector by polar notation.
+    ///
+    /// If radius is less than 0.0, returns `None`.
+    pub fn from_polar(radius: f64, argument_radian: f64) -> Option<Vec2<f64>> {
+        if radius < 0.0 {
+            return None;
+        }
+
+        let x = radius * argument_radian.cos();
+        let y = radius * argument_radian.sin();
+        Some(Vec2::new(x, y))
+    }
+
+    /// Euclid distance from the origin.
+    pub fn norm(self) -> f64 {
+        self.square_norm().sqrt()
+    }
+
+    /// Square of norm.
+    pub fn square_norm(self) -> f64 {
+        self.x * self.x + self.y * self.y
+    }
+}
+
 impl<T: std::fmt::Display> std::fmt::Display for Vec2<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{} {}", self.x, self.y)

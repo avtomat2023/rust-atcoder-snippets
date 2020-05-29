@@ -14,6 +14,7 @@ pub mod slice;
 pub mod collections;
 pub mod modulo;
 pub mod vec;
+pub mod geometry;
 pub mod table;
 pub mod bsearch;
 pub mod interval;
