@@ -20,4 +20,5 @@ pub mod bsearch;
 pub mod interval;
 pub mod z;
 pub mod rolling_hash;
+pub mod xorshift;
 pub mod utils;
