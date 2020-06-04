@@ -24,36 +24,49 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use std;
+use crate::num::PrimitiveUnsigned;
 
-// BEGIN SNIPPET bitset
+// BEGIN SNIPPET bitset DEPENDS ON int
 
 const BITSET_TRUE: &'static bool = &true;
 const BITSET_FALSE: &'static bool = &false;
 
 /// Efficient boolean vector
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct BitSet {
+    // 64-bit chunks ordered lowest chunk first and high chunk last
     buf: Vec<u64>,
-    size: usize,
+    bit_len: usize
 }
 
 impl BitSet {
-    pub fn new(size: usize) -> BitSet {
+    /// Creates a bitset of the specified bit length.
+    pub fn new(bit_len: usize) -> BitSet {
         BitSet {
-            buf: vec![0; (size + 63) / 64],
-            size: size,
+            buf: vec![0; bit_len.ceil_div(64)],
+            bit_len,
         }
     }
 
+    /// Gets bit length.
+    pub fn len(&self) -> usize {
+        self.bit_len
+    }
+
+    /// Gets `i`-th bit.
+    ///
+    /// If `i` is out of range, returns `None`.
     pub fn get(&self, i: usize) -> Option<bool> {
-        if i <= self.size {
-            Some(self.buf[i >> 6] & 1 << (i & 63) != 0)
+        if i <= self.len() {
+            Some(self.buf[i / 64] & (1 << (i % 64)) != 0)
         } else {
             None
         }
     }
 
+    /// Gets `i`-th bit as a mutable boolean.
+    ///
+    /// If `i` is out of range, returns `None`.
     pub fn get_mut(&mut self, i: usize) -> Option<BitSetRef> {
         self.get(i).map(move |b| BitSetRef {
             bitset: self,
@@ -62,16 +75,36 @@ impl BitSet {
         })
     }
 
+    /// Panicking `get_mut`.
+    ///
+    /// # Panic
+    ///
+    /// If `i` is out of range, it panics.
     pub fn at(&mut self, i: usize) -> BitSetRef {
-        self.get_mut(i).unwrap()
+        let len = self.len();
+        self.get_mut(i).unwrap_or_else(|| {
+            panic!("index out of bounds: the bit-length is {} but index is {}",
+                   len, i)
+        })
     }
 
+    /// Counts how many bits are sets.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use atcoder_snippets::collections::bitset::*;
+    /// let mut set = BitSet::new(256);
+    /// *set.at(0) = true;
+    /// *set.at(128) = true;
+    /// assert_eq!(set.count_ones(), 2)
+    /// ```
     pub fn count_ones(&self) -> u32 {
         self.buf.iter().map(|x| x.count_ones()).sum()
     }
 
     fn chomp(&mut self) {
-        let r = self.size & 63;
+        let r = self.len() % 64;
         if r != 0 {
             if let Some(x) = self.buf.last_mut() {
                 let d = 64 - r;
