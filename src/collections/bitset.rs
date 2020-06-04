@@ -58,10 +58,17 @@ impl BitSet {
     /// If `i` is out of range, returns `None`.
     pub fn get(&self, i: usize) -> Option<bool> {
         if i <= self.len() {
-            Some(self.buf[i / 64] & (1 << (i % 64)) != 0)
+            Some(unsafe { self.get_unchecked(i) })
         } else {
             None
         }
+    }
+
+    /// Gets `i`-th bit without bound checking.
+    ///
+    /// Maybe causes undefined behavior if `i` is out of range,
+    pub unsafe fn get_unchecked(&self, i: usize) -> bool {
+        *self.buf.get_unchecked(i / 64) & (1 << (i % 64)) != 0
     }
 
     /// Gets `i`-th bit as a mutable boolean.
@@ -101,6 +108,29 @@ impl BitSet {
     /// ```
     pub fn count_ones(&self) -> u32 {
         self.buf.iter().map(|x| x.count_ones()).sum()
+    }
+
+    /// Gets an iterator from the lowest bit to the highest, yielding `bool`s.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use atcoder_snippets::collections::bitset::*;
+    /// let mut set = BitSet::new(4);
+    /// *set.at(0) = true;
+    ///
+    /// let bits: Vec<bool> = set.iter().collect();
+    /// assert_eq!(bits, vec![true, false, false, false]);
+    ///
+    /// // The iterator is reversible.
+    /// let rev_bits: Vec<bool> = set.iter().rev().collect();
+    /// assert_eq!(rev_bits, vec![false, false, false, true]);
+    /// ```
+    pub fn iter(&self) -> BitSetIter {
+        BitSetIter {
+            bitset: self,
+            range: 0..self.len()
+        }
     }
 
     fn chomp(&mut self) {
@@ -165,6 +195,58 @@ impl Drop for BitSetRef<'_> {
         } else {
             self.bitset.buf[self.index >> 6] &= !(1 << (self.index & 63));
         }
+    }
+}
+
+pub struct BitSetIter<'a> {
+    bitset: &'a BitSet,
+    range: std::ops::Range<usize>
+}
+
+impl Iterator for BitSetIter<'_> {
+    type Item = bool;
+
+    fn next(&mut self) -> Option<bool> {
+        self.range.next().map(|i| unsafe { self.bitset.get_unchecked(i) })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.range.size_hint()
+    }
+
+    fn count(self) -> usize {
+        self.range.count()
+    }
+
+    fn last(mut self) -> Option<bool> {
+        self.range.next_back().map(|i| unsafe { self.bitset.get_unchecked(i) })
+    }
+
+    fn nth(&mut self, n: usize) -> Option<bool> {
+        self.range.nth(n).map(|i| unsafe { self.bitset.get_unchecked(i) })
+    }
+}
+
+impl DoubleEndedIterator for BitSetIter<'_> {
+    fn next_back(&mut self) -> Option<bool> {
+        self.range.next_back().map(|i| unsafe { self.bitset.get_unchecked(i) } )
+    }
+
+    fn nth_back(&mut self, n: usize) -> Option<bool> {
+        self.range.nth_back(n).map(|i| unsafe { self.bitset.get_unchecked(i) } )
+    }
+}
+
+impl ExactSizeIterator for BitSetIter<'_> {}
+
+impl std::iter::FusedIterator for BitSetIter<'_> {}
+
+impl<'a> IntoIterator for &'a BitSet {
+    type Item = bool;
+    type IntoIter = BitSetIter<'a>;
+
+    fn into_iter(self) -> BitSetIter<'a> {
+        self.iter()
     }
 }
 
@@ -421,5 +503,17 @@ mod tests {
         assert_eq!((set1.clone() | &set2).count_ones(), 4);
         assert_eq!((set1.clone() & &set2).count_ones(), 2);
         assert_eq!((set1.clone() ^ &set2).count_ones(), 2);
+    }
+
+    #[test]
+    fn test_bits_len() {
+        let set = BitSet::new(0);
+        assert_eq!(set.iter().len(), 0);
+
+        let set = BitSet::new(1);
+        assert_eq!(set.iter().len(), 1);
+
+        let set = BitSet::new(100);
+        assert_eq!(set.iter().len(), 100);
     }
 }
