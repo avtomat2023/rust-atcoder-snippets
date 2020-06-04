@@ -114,6 +114,23 @@ impl BitSet {
     }
 }
 
+impl std::fmt::Debug for BitSet {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        for i in 0 .. self.len().ceil_div(64) {
+            let bits_msb_to_lsb = format!("{:064b}", self.buf[i]);
+            let mut bits_lsb_to_msb: Vec<char> = bits_msb_to_lsb.chars().collect();
+            bits_lsb_to_msb.reverse();
+            if i == self.len() / 64 {
+                bits_lsb_to_msb.truncate(self.len() % 64);
+            }
+            for ch in bits_lsb_to_msb {
+                write!(f, "{}", ch)?;
+            }
+        }
+        Ok(())
+    }
+}
+
 impl std::ops::Index<usize> for BitSet {
     type Output = bool;
     fn index(&self, index: usize) -> &bool {
