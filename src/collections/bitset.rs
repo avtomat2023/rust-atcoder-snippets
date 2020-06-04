@@ -46,7 +46,7 @@ impl BitSet {
         }
     }
 
-    pub fn get(&mut self, i: usize) -> Option<bool> {
+    pub fn get(&self, i: usize) -> Option<bool> {
         if i <= self.size {
             Some(self.buf[i >> 6] & 1 << (i & 63) != 0)
         } else {
