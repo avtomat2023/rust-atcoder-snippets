@@ -119,15 +119,15 @@ impl BitSet {
     /// let mut set = BitSet::new(4);
     /// *set.at(0) = true;
     ///
-    /// let bits: Vec<bool> = set.iter().collect();
+    /// let bits: Vec<bool> = set.bits().collect();
     /// assert_eq!(bits, vec![true, false, false, false]);
     ///
     /// // The iterator is reversible.
-    /// let rev_bits: Vec<bool> = set.iter().rev().collect();
+    /// let rev_bits: Vec<bool> = set.bits().rev().collect();
     /// assert_eq!(rev_bits, vec![false, false, false, true]);
     /// ```
-    pub fn iter(&self) -> BitSetIter {
-        BitSetIter {
+    pub fn bits(&self) -> BitSetBits {
+        BitSetBits {
             bitset: self,
             range: 0..self.len()
         }
@@ -198,12 +198,12 @@ impl Drop for BitSetRef<'_> {
     }
 }
 
-pub struct BitSetIter<'a> {
+pub struct BitSetBits<'a> {
     bitset: &'a BitSet,
     range: std::ops::Range<usize>
 }
 
-impl Iterator for BitSetIter<'_> {
+impl Iterator for BitSetBits<'_> {
     type Item = bool;
 
     fn next(&mut self) -> Option<bool> {
@@ -227,7 +227,7 @@ impl Iterator for BitSetIter<'_> {
     }
 }
 
-impl DoubleEndedIterator for BitSetIter<'_> {
+impl DoubleEndedIterator for BitSetBits<'_> {
     fn next_back(&mut self) -> Option<bool> {
         self.range.next_back().map(|i| unsafe { self.bitset.get_unchecked(i) } )
     }
@@ -237,18 +237,9 @@ impl DoubleEndedIterator for BitSetIter<'_> {
     }
 }
 
-impl ExactSizeIterator for BitSetIter<'_> {}
+impl ExactSizeIterator for BitSetBits<'_> {}
 
-impl std::iter::FusedIterator for BitSetIter<'_> {}
-
-impl<'a> IntoIterator for &'a BitSet {
-    type Item = bool;
-    type IntoIter = BitSetIter<'a>;
-
-    fn into_iter(self) -> BitSetIter<'a> {
-        self.iter()
-    }
-}
+impl std::iter::FusedIterator for BitSetBits<'_> {}
 
 impl std::ops::ShlAssign<usize> for BitSet {
     fn shl_assign(&mut self, x: usize) {
@@ -508,12 +499,12 @@ mod tests {
     #[test]
     fn test_bits_len() {
         let set = BitSet::new(0);
-        assert_eq!(set.iter().len(), 0);
+        assert_eq!(set.bits().len(), 0);
 
         let set = BitSet::new(1);
-        assert_eq!(set.iter().len(), 1);
+        assert_eq!(set.bits().len(), 1);
 
         let set = BitSet::new(100);
-        assert_eq!(set.iter().len(), 100);
+        assert_eq!(set.bits().len(), 100);
     }
 }
