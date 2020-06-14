@@ -223,6 +223,38 @@ impl<T: Integer + Clone> BSearch for std::ops::Range<T> {
     }
 }
 
+impl<T: Integer + Clone> BSearch for std::ops::RangeInclusive<T> {
+    type Item = T;
+
+    fn is_empty(&self) -> bool {
+        self.end() < self.start()
+    }
+
+    fn leftmost_item(&self) -> T {
+        self.start().clone()
+    }
+
+    fn rightmost_item(&self) -> T {
+        self.end().clone()
+    }
+
+    fn middle_item(&self) -> T {
+        (self.leftmost_item() + &self.rightmost_item()) / &(T::one() + &T::one())
+    }
+
+    fn left_half(&self) -> std::ops::RangeInclusive<T> {
+        self.start().clone()..=self.middle_item()
+    }
+
+    fn right_half(&self) -> std::ops::RangeInclusive<T> {
+        self.middle_item()..=self.end().clone()
+    }
+
+    fn is_bsearch_converged(&self) -> bool {
+        BSearch::is_empty(self) || self.end().clone() - &self.start() <= T::one()
+    }
+}
+
 impl<'a, T> BSearch for &'a [T] {
     type Item = &'a T;
 
@@ -378,5 +410,39 @@ mod tests {
         assert_eq!(seq.bsearch_index_right_min(|&x| x >= 0), Some(0));
         assert_eq!(seq.bsearch_index_right_min(|&x| x >= 10), Some(3));
         assert_eq!(seq.bsearch_index_right_min(|&x| x >= 20), None);
+    }
+
+    #[test]
+    fn test_range_inclusive_middle_item() {
+        assert_eq!((10..=10).middle_item(), 10);
+        assert!((10..=11).middle_item() == 10 || (10..=11).middle_item() == 11);
+        assert_eq!((10..=12).middle_item(), 11);
+
+        assert_eq!((-10..=-10).middle_item(), -10);
+        assert!((-10..=-9).middle_item() == -10 || (-10..=-9).middle_item() == -9);
+        assert_eq!((-10..=-8).middle_item(), -9);
+        assert_eq!((-10..=2).middle_item(), -4);
+    }
+
+    #[test]
+    fn test_range_inclusive_left_max() {
+        let empty = 1..=0;
+        assert_eq!(empty.bsearch_left_max(|&x| x*x <= 1000), None);
+        let range = 1..=10;
+        assert_eq!(range.bsearch_left_max(|&x| x*x <= 100), Some(10));
+        assert_eq!(range.bsearch_left_max(|&x| x*x <= 10), Some(3));
+        assert_eq!(range.bsearch_left_max(|&x| x*x <= 1), Some(1));
+        assert_eq!(range.bsearch_left_max(|&x| x*x <= 0), None);
+    }
+
+    #[test]
+    fn test_range_inclusive_right_min() {
+        let empty = 1..=0;
+        assert_eq!(empty.bsearch_right_min(|&x| x*x >= 1), None);
+        let range = 1..=10;
+        assert_eq!(range.bsearch_right_min(|&x| x*x >= 1), Some(1));
+        assert_eq!(range.bsearch_right_min(|&x| x*x >= 10), Some(4));
+        assert_eq!(range.bsearch_right_min(|&x| x*x >= 100), Some(10));
+        assert_eq!(range.bsearch_right_min(|&x| x*x >= 1000), None);
     }
 }
