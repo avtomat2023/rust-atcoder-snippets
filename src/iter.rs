@@ -362,45 +362,43 @@ where
 {}
 
 /// An iterator created by [`unfold`](fn.unfold.html) function.
-pub struct Unfold<T, F> where F: FnMut(&T) -> Option<T> {
-    state: Option<T>,
+pub struct Unfold<State, T, F> where F: FnMut(&State) -> Option<(T, State)> {
+    state: State,
     f: F
 }
 
-impl<T, F> Iterator for Unfold<T, F> where F: FnMut(&T) -> Option<T> {
+impl<State, T, F> Iterator for Unfold<State, T, F> where F: FnMut(&State) -> Option<(T, State)> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        if self.state.is_none() {
-            return None;
-        }
-
-        let state_inner = self.state.take().unwrap();
-        self.state = (self.f)(&state_inner);
-        Some(state_inner)
+        (self.f)(&self.state).map(|(value, state)| {
+            self.state = state;
+            value
+        })
     }
 }
 
-/// Returns an iterator applying `f` to `init` repeatedly.
+
+/// Returns an iterator applying a function creating a value and a new state repeatedly.
 ///
-/// The iterator yields inner values of `Options` until `f` returns `None`.
-///
-/// In Rust >= 1.34.0, the same functionality is provided as `iter::succesors`.
+/// The iterator yields inner values of `Option`s until `f` returns `None`.
 ///
 /// # Example
 ///
 /// ```
 /// # #[macro_use] extern crate atcoder_snippets;
 /// # use atcoder_snippets::iter::*;
-/// fn twice_until_10(x: &i32) -> Option<i32> {
-///    let y = *x * 2;
-///    if y < 10 { Some(y) } else { None }
+/// fn fibonacci_next((x0, x1): (i32, i32)) -> (i32, (i32, i32)) {
+///    (x0, (x1, x0 + x1))
 /// }
 ///
-/// assert_eq!(unfold(1, twice_until_10).collect::<Vec<_>>(), vec![1, 2, 4, 8]);
+/// assert_eq!(
+///     unfold((1, 1), |&pair| Some(fibonacci_next(pair))).take(10).collect::<Vec<_>>(),
+///     vec![1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+/// );
 /// ```
-pub fn unfold<T, F>(init: T, f: F) -> Unfold<T, F> where F: FnMut(&T) -> Option<T> {
-    Unfold { state: Some(init), f: f }
+pub fn unfold<State, T, F>(init: State, f: F) -> Unfold<State, T, F> where F: FnMut(&State) -> Option<(T, State)> {
+    Unfold { state: init, f: f }
 }
 
 /// An iterator created by [`iterate`](fn.iterate.html) function.
