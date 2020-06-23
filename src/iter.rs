@@ -1,11 +1,12 @@
 //! Enriches iterators.
 
 use crate::option::BoolExt;
+use crate::num::PrimitiveUnsigned;
 
-// BEGIN SNIPPET iter DEPENDS ON option
+// BEGIN SNIPPET iter DEPENDS ON option int
 
 /// An iterator created by [`chunks`](trait.IteratorExt.html#method.chunks) method on iterators.
-pub struct Chunks<I: Iterator> {
+pub struct Chunks<I> {
     iter: I,
     size: usize
 }
@@ -29,22 +30,45 @@ impl<I: Iterator> Iterator for Chunks<I> {
         }
         Some(chunk)
     }
+
+    // Not tested
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (lower, upper) = self.iter.size_hint();
+        (lower.ceil_div(self.size), upper.map(|u| u.ceil_div(self.size)))
+    }
+
+    // Not tested
+    fn count(self) -> usize {
+        self.iter.count().ceil_div(self.size)
+    }
+
+    // Not tested
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        if n > 0 {
+            self.iter.nth(n * self.size - 1);
+        }
+        self.next()
+    }
 }
+
+impl<I: ExactSizeIterator> ExactSizeIterator for Chunks<I> {}
+impl<I: std::iter::FusedIterator> std::iter::FusedIterator for Chunks<I> {}
 
 /// An iterator created by [`lscan`](trait.IteratorExt.html#method.lscan) method
 /// on iterators.
 #[derive(Clone)]
-pub struct LScan<I: Iterator, S: Clone, F: FnMut(&S, I::Item) -> S> {
+pub struct LScan<I, S, F> {
     iter: I,
     state: Option<S>,
     f: F,
 }
 
-impl<I: Iterator, S: Clone, F> Iterator for LScan<I, S, F>
+impl<I: Iterator, S, F> Iterator for LScan<I, S, F>
 where
-    F: FnMut(&S, I::Item) -> S,
+    F: FnMut(&S, I::Item) -> S
 {
     type Item = S;
+
     fn next(&mut self) -> Option<S> {
         if self.state.is_none() {
             return None;
@@ -55,11 +79,25 @@ where
         }
         Some(state_inner)
     }
+
+    // Not tested
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (lower, upper) = self.iter.size_hint();
+        (lower + 1, upper.map(|u| u + 1))
+    }
+
+    // Not tested
+    fn count(self) -> usize {
+        self.iter.count() + 1
+    }
 }
+
+impl<I: ExactSizeIterator, S, F: FnMut(&S, I::Item) -> S> ExactSizeIterator for LScan<I, S, F> {}
+impl<I: std::iter::FusedIterator, S, F: FnMut(&S, I::Item) -> S> std::iter::FusedIterator for LScan<I, S, F> {}
 
 /// An iterator created by [`group_by`](trait.IteratorExt#method.group_by) method
 /// on iterators.
-pub struct GroupBy<K: Eq, I: Iterator, F: FnMut(&I::Item) -> K> {
+pub struct GroupBy<K, I: Iterator, F> {
     cur: Option<(I::Item, K)>,
     iter: I,
     key_fn: F
@@ -93,7 +131,19 @@ impl<K: Eq, I: Iterator, F: FnMut(&I::Item) -> K> Iterator for GroupBy<K, I, F> 
             (key, group)
         })
     }
+
+    // Not tested
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        if self.cur.is_none() {
+            (0, Some(0))
+        } else {
+            let (_, upper) = self.iter.size_hint();
+            (1, upper.map(|u| u + 1))
+        }
+    }
 }
+
+impl<K: Eq, I: Iterator, F: FnMut(&I::Item) -> K> std::iter::FusedIterator for GroupBy<K, I, F> {}
 
 /// An iterator created by [`run_length`](trait.IteratorExt#method.run_length) method
 /// on iterators.
@@ -129,7 +179,22 @@ impl<I: Iterator> Iterator for RunLength<I> where I::Item: Eq {
             (value, length)
         })
     }
+
+    // Not tested
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        if self.cur.is_none() {
+            (0, Some(0))
+        } else {
+            let (_, upper) = self.iter.size_hint();
+            (1, upper.map(|u| u + 1))
+        }
+    }
 }
+
+impl<I: Iterator> std::iter::FusedIterator for RunLength<I> where I::Item: Eq {}
+// RunLength can be DoubleEndedIterator,
+// but impl-ing it has almost no practical importance
+// over additional complication of implementation.
 
 /// Enriches iterators by adding various methods.
 pub trait IteratorExt: Iterator {
@@ -174,7 +239,7 @@ pub trait IteratorExt: Iterator {
     /// let cumsum: Vec<i32> = data.into_iter().lscan(0, |&acc, x| acc + x).collect();
     /// assert_eq!(cumsum, vec![0, 1, 3, 6, 10, 15]);
     /// ```
-    fn lscan<S: Clone, F>(self, state: S, f: F) -> LScan<Self, S, F>
+    fn lscan<S, F>(self, state: S, f: F) -> LScan<Self, S, F>
     where
         Self: Sized,
         F: FnMut(&S, Self::Item) -> S,
