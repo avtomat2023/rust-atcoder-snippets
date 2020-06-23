@@ -378,7 +378,6 @@ impl<State, T, F> Iterator for Unfold<State, T, F> where F: FnMut(&State) -> Opt
     }
 }
 
-
 /// Returns an iterator applying a function creating a value and a new state repeatedly.
 ///
 /// The iterator yields inner values of `Option`s until `f` returns `None`.
@@ -433,9 +432,49 @@ impl<T, F> Iterator for Iterate<T, F> where F: FnMut(&T) -> T {
 /// ```
 pub fn iterate<T, F>(init: T, f: F) -> Iterate<T, F>
 where
-    F: FnMut(&T) -> T,
+    F: FnMut(&T) -> T
 {
     Iterate { state: init, f: f }
+}
+
+/// An iterator created by [`iterate_map`](fn.iterate_map.html) function.
+pub struct IterateMap<State, T, F> where F: FnMut(&State) -> (T, State) {
+    state: State,
+    f: F
+}
+
+impl<State, T, F> Iterator for IterateMap<State, T, F> where F: FnMut(&State) -> (T, State) {
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        // reborrow
+        let (value, state) = (self.f)(&self.state);
+        self.state = state;
+        Some(value)
+    }
+}
+
+/// Returns an iterator applying a function creating a value and a new state infinitely.
+///
+/// This is infinite version of [`unfold`](fn.unfold.html) function.
+///
+/// `iterate_map(init, |s| (f(s), g(s)))` is almost equivalent to `iterate(init, |s| g(s)).map(|s| f(&s))`.
+///
+/// # Example
+///
+/// ```
+/// # #[macro_use] extern crate atcoder_snippets;
+/// # use atcoder_snippets::iter::*;
+/// let num = 0b1101;
+/// let mut binary_digits: Vec<u8> = iterate_map(num, |&n| (n % 2, n / 2)).take(8).collect();
+/// binary_digits.reverse();
+/// assert_eq!(binary_digits, vec![0, 0, 0, 0, 1, 1, 0, 1]);
+/// ```
+pub fn iterate_map<State, T, F>(init: State, f: F) -> IterateMap<State, T, F>
+where
+    F: FnMut(&State) -> (T, State)
+{
+    IterateMap { state: init, f }
 }
 
 // END SNIPPET
