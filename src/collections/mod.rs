@@ -4,6 +4,7 @@ pub mod list;
 pub mod vec_union_find_sets;
 pub mod hash_union_find_sets;
 pub mod hash_counter;
+pub mod btree_counter;
 pub mod segment_tree;
 pub mod heap;
 pub mod bitset;
