@@ -484,7 +484,19 @@ pub struct CombinatoricsCache {
 }
 
 impl CombinatoricsCache {
-    /// `n` choose `m`.
+    /// Binomial coefficient.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use atcoder_snippets::modulo::modp::*;
+    /// unsafe {
+    ///     ModP::set_mod(7).unwrap();
+    /// }
+    /// let mut cc = ModP::combinatorics_cache();
+    /// // 5 choose 3 = 5*4*3 / (1*2*3) = 10 = 3 mod 7
+    /// assert_eq!(cc.choose(5, 3), ModP::new(3));
+    /// ```
     pub fn choose(&mut self, n: ModPBase, m: ModPBase) -> ModP {
         if n < m {
             return ModP::new(0);
@@ -493,13 +505,61 @@ impl CombinatoricsCache {
         self.fact(n) * self.finvs[m as usize] * self.finvs[(n-m) as usize]
     }
 
-    /// `n` multi-choose `m`.
-    pub fn homo(&mut self, n: ModPBase, m: ModPBase) -> ModP {
+    /// Number of permutations.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use atcoder_snippets::modulo::modp::*;
+    /// unsafe {
+    ///     ModP::set_mod(7).unwrap();
+    /// }
+    /// let mut cc = ModP::combinatorics_cache();
+    /// // 5 permutation 3 = 5*4*3 = 60 = 4 mod 7
+    /// assert_eq!(cc.permutation(5, 3), ModP::new(4));
+    /// ```
+    pub fn permutation(&mut self, n: ModPBase, m: ModPBase) -> ModP {
+        if n < m {
+            return ModP::new(0);
+        }
+        self.extend_finvs((n-m) as usize);
+        self.fact(n) * self.finvs[(n-m) as usize]
+    }
+
+    /// Number of combinations with replacement.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use atcoder_snippets::modulo::modp::*;
+    /// unsafe {
+    ///     ModP::set_mod(7).unwrap();
+    /// }
+    /// let mut cc = ModP::combinatorics_cache();
+    /// // 2 multichoose 5 = (2+5-1) choose 5 = 6
+    /// assert_eq!(cc.multichoose(2, 5), ModP::new(6));
+    /// ```
+    pub fn multichoose(&mut self, n: ModPBase, m: ModPBase) -> ModP {
         if m == 0 {
             ModP::new(1)
         } else {
             self.choose(n+m-1, m)
         }
+    }
+
+    /// Shorthand of `choose`
+    pub fn c(&mut self, n: ModPBase, m: ModPBase) -> ModP {
+        self.choose(n, m)
+    }
+
+    /// Shorthand of `permutaion`
+    pub fn p(&mut self, n: ModPBase, m: ModPBase) -> ModP {
+        self.permutation(n, m)
+    }
+
+    /// Shorthand of `multichoose`
+    pub fn h(&mut self, n: ModPBase, m: ModPBase) -> ModP {
+        self.multichoose(n, m)
     }
 
     pub fn fact(&mut self, n: ModPBase) -> ModP {
