@@ -16,7 +16,7 @@ use crate::iter::IteratorExt;
 ///
 /// Table can have 0-length rows, but it's impossible to have 0-length columns.
 // TODO: derive(Debug) is for doctest. Implement human-readble Debug.
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone, Hash)]
 pub struct Table<T> {
     inner: Vec<Vec<T>>
 }
