@@ -2,6 +2,31 @@
 
 // BEGIN SNIPPET utils
 
+/// Output values by `println!("{} {} ... {}", value_1, value_2, ..., value_n`)`.
+#[macro_export]
+macro_rules! echo {
+    () => {
+        println!()
+    };
+
+    ($e: expr $(,)?) => {
+        println!("{}", $e)
+    };
+
+    ($e: expr, $($es: expr),+ $(,)?) => {
+        {
+            use std::io::Write;
+            let stdout = std::io::stdout();
+            let mut handle = stdout.lock();
+            write!(handle, "{}", $e).unwrap();
+            $(
+                write!(handle, " {}", $es).unwrap();
+            )+
+            writeln!(handle).unwrap();
+        }
+    };
+}
+
 /// Prints "Yes" or "No" according to `result`.
 pub fn yn(result: bool) {
     if result {
