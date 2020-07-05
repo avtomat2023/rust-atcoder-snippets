@@ -197,6 +197,42 @@ impl PartialEq<ModP> for ModPBase {
     }
 }
 
+macro_rules! impl_from_signed_for_modp {
+    ( $($t: ty)* ) => { $(
+        impl From<$t> for ModP {
+            fn from(num: $t) -> ModP {
+                unsafe { ModP::new_unchecked((num as i64).rem_euclid(MODULUS as i64) as u64) }
+            }
+        }
+    )* }
+}
+
+impl_from_signed_for_modp!(i8 i16 i32 i64 isize);
+
+macro_rules! impl_from_unsigned_for_modp {
+    ( $($t: ty)* ) => { $(
+        impl From<$t> for ModP {
+            fn from(num: $t) -> ModP {
+                unsafe { ModP::new_unchecked((num as u64).rem_euclid(MODULUS)) }
+            }
+        }
+    )* }
+}
+
+impl_from_unsigned_for_modp!(u8 u16 u32 u64 usize);
+
+impl From<i128> for ModP {
+    fn from(num: i128) -> ModP {
+        unsafe { ModP::new_unchecked(num.rem_euclid(MODULUS as i128) as u64) }
+    }
+}
+
+impl From<u128> for ModP {
+    fn from(num: u128) -> ModP {
+        unsafe { ModP::new_unchecked(num.rem_euclid(MODULUS as u128) as u64) }
+    }
+}
+
 impl std::ops::Add for ModP {
     type Output = ModP;
 
