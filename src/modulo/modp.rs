@@ -25,6 +25,14 @@ pub struct ModP {
 }
 
 impl ModP {
+    #[cfg(local)]
+    fn assert_mod_already_set() {
+        assert!(unsafe { MODULUS } != 0, "Call ModP::set_mod before using ModP.");
+    }
+
+    #[cfg(not(local))]
+    fn assert_mod_already_set() {}
+
     /// Sets the modulus.
     ///
     /// If `modulus` is not a prime number, returns `Err`.
@@ -72,10 +80,7 @@ impl ModP {
 
     /// Create a number.
     pub fn new(n: ModPBase) -> ModP {
-        if !cfg!(test) {
-            assert!(unsafe { MODULUS } != 0,
-                    "Call ModP::set_mod before using ModP.");
-        }
+        ModP::assert_mod_already_set();
         ModP { base: n % unsafe { MODULUS } }
     }
 
@@ -84,6 +89,7 @@ impl ModP {
     /// If n is greater than or equal to the modulus,
     /// the correctness of calculations is not guaranteed.
     pub unsafe fn new_unchecked(n: ModPBase) -> ModP {
+        ModP::assert_mod_already_set();
         ModP { base: n }
     }
 
