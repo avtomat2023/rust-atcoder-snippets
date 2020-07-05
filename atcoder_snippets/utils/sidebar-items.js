@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["YN","Prints \"YES\" or \"NO\" according to `result`."],["exit","Prints the given message with newline and exits the process successfully."],["yn","Prints \"Yes\" or \"No\" according to `result`."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["modp","Shorthand of `ModP::new(x)`."]],"struct":[["CombinatoricsCache",""],["FactCache",""],["InvCache",""],["ModP","A number whose arithmetics is carried modulo a prime number."],["PowCache",""]],"type":[["ModPBase",""],["ModPModulus",""]]});

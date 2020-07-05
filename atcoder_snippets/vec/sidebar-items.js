@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Vec2",""],["Vec3",""]]});

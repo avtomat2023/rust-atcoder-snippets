@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["SegmentTree","Seqence updateble by point and aggregatable by interval."],["SegmentTreeItemRef",""]],"trait":[["IteratorExtForSegmentTree",""]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ListInner","For pattern match."]],"struct":[["List","Immutable and persistent list heavily used in functional languages."],["ListIter","An iterator over the items of a `List`."]],"trait":[["IntoCons","A trait for making a cons cell in intuitive way."],["IntoConsByMove",""]]});

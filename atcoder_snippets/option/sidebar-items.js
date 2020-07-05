@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["BoolExt",""],["Guard","Enrich all types by adding `guard` method"],["OptionExt",""]]});

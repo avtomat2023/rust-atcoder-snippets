@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["with_stdout","Make tons of output to stdout much faster."]]});

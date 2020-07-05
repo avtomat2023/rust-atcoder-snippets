@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["PrefixRollingHash","Sliding rolling hashes of a sequence."],["RollingHashMatches",""],["RollingHashValue","A rolling hash of a sequence."]],"trait":[["RollingHash","A rolling-hashable sequence."]],"type":[["RollingHashBase","Unsigned integer type for rolling hash."]]});

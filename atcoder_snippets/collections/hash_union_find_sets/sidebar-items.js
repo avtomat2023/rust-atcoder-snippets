@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["HashUnionFindSets","Disjoint-set data structure, known as union-find, for hashable types."]]});

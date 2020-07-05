@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["backward2_indices",""],["read_char_table",""],["read_char_table_rows",""],["read_table",""],["read_table_rows",""]],"struct":[["CumulativeTable","A table created by `Table::accumulate`."],["Table","2-dimentional array."],["TableIndicesIterator",""],["TableRows","An iterator created by `Table::rows`."]],"trait":[["TableRangeBounds",""]]});

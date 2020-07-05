@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["BSearch","A sequence that binary search is applicable to."],["SliceBSearch",""]]});

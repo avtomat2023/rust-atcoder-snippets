@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Interval","Interval including endpoints."],["IntervalMerge","Iterator created by `merge` method."]],"trait":[["IntervalEndpoint","Point on a number line."],["IntervalIterator","Iterator yielding intervals."]]});

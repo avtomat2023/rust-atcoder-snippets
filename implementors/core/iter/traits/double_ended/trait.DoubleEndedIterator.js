@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["atcoder_snippets"] = [{"text":"impl&lt;'_&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/iter/traits/double_ended/trait.DoubleEndedIterator.html\" title=\"trait core::iter::traits::double_ended::DoubleEndedIterator\">DoubleEndedIterator</a> for <a class=\"struct\" href=\"atcoder_snippets/collections/bitset/struct.BitSetBits.html\" title=\"struct atcoder_snippets::collections::bitset::BitSetBits\">BitSetBits</a>&lt;'_&gt;","synthetic":false,"types":["atcoder_snippets::collections::bitset::BitSetBits"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
