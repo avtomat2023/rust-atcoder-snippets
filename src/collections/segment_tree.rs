@@ -247,15 +247,6 @@ where
     }
 }
 
-/*
-pub fn range_sum_segment_tree<T>(len: usize) -> SegmentTree<T, impl Fn(&T, &T) -> T>
-where
-    T: Clone + Numeric
-{
-    SegmentTree::new(len, T::zero(), |x, y| x.clone() + y)
-}
-*/
-
 pub trait IteratorExtForSegmentTree: Sized + Iterator
 where
     Self::Item: Clone

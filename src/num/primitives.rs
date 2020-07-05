@@ -1,11 +1,11 @@
 //! Extension traits for primitive integer types.
 
-use crate::num::{WithZero, WithOne, Numeric, Integer, Float};
+use crate::num::{WithZero, WithOne, Integer, ToSigned, ToUnsigned};
 
 // BEGIN SNIPPET int DEPENDS ON num_types
 
 /// Enriches signed and unsigned integer types.
-pub trait PrimitiveInteger: Integer {
+pub trait PrimitiveInteger: Integer + Copy + ToSigned + ToUnsigned {
     /// Calculate absolute value of *a* - *b*.
     ///
     /// This is useful for unsigned integers because overflow never happens
@@ -18,28 +18,10 @@ pub trait PrimitiveInteger: Integer {
     /// assert_eq!(3u8.abs_diff(5u8), 2u8);
     /// ```
     fn abs_diff(self, rhs: Self) -> Self;
-
-    /// The least nonnegative remainder of *a* mod *b*.
-    ///
-    /// You can use this method in [the latest nightly Rust](https://doc.rust-lang.org/std/primitive.i32.html#method.rem_euclid).
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use atcoder_snippets::num::*;
-    /// let a = 7i32;
-    /// let b = 4i32;
-    ///
-    /// assert_eq!(a.rem_euclid(b), 3);
-    /// assert_eq!((-a).rem_euclid(b), 1);
-    /// assert_eq!(a.rem_euclid(-b), 3);
-    /// assert_eq!((-a).rem_euclid(-b), 1);
-    /// ```
-    fn rem_euclid(self, rhs: Self) -> Self;
 }
 
-macro_rules! impl_primitive_integer {
-    ( $($t: ty)* ) => { $(
+macro_rules! impl_primitive_integer_unsigned {
+    ( $($t: ty, $t_signed: ty);* ) => { $(
         impl WithZero for $t {
             fn zero() -> $t { 0 }
         }
@@ -48,30 +30,95 @@ macro_rules! impl_primitive_integer {
             fn one() -> $t { 1 }
         }
 
-        impl Numeric for $t {}
-
         impl Integer for $t {}
+
+        impl ToSigned for $t {
+            type Signed = $t_signed;
+
+            fn to_signed(&self) -> Option<$t_signed> {
+                use std::convert::TryInto;
+                (*self).try_into().ok()
+            }
+
+            unsafe fn to_signed_unchecked(&self) -> $t_signed {
+                *self as $t_signed
+            }
+        }
+
+        impl ToUnsigned for $t {
+            type Unsigned = $t;
+
+            fn to_unsigned(&self) -> Option<$t> {
+                Some(*self)
+            }
+        }
 
         impl PrimitiveInteger for $t {
             fn abs_diff(self, rhs: $t) -> $t {
                 if self < rhs { rhs - self } else { self - rhs }
             }
+        }
+    )* }
+}
 
-            // Implementation: https://doc.rust-lang.org/src/core/num/mod.rs.html
-            #[allow(unused_comparisons)]
-            fn rem_euclid(self, rhs: $t) -> $t {
-                let r = self % rhs;
-                if r < 0 {
-                    if rhs < 0 { r - rhs } else { r + rhs }
-                } else {
-                    r
-                }
+impl_primitive_integer_unsigned!(
+    u8, i8;
+    u16, i16;
+    u32, i32;
+    u64, i64;
+    u128, i128;
+    usize, isize
+);
+
+macro_rules! impl_primitive_integer_signed {
+    ( $($t: ty, $t_unsigned: ty);* ) => { $(
+        impl WithZero for $t {
+            fn zero() -> $t { 0 }
+        }
+
+        impl WithOne for $t {
+            fn one() -> $t { 1 }
+        }
+
+        impl Integer for $t {}
+
+        impl ToSigned for $t {
+            type Signed = $t;
+
+            fn to_signed(&self) -> Option<$t> {
+                Some(*self)
+            }
+        }
+
+        impl ToUnsigned for $t {
+            type Unsigned = $t_unsigned;
+
+            fn to_unsigned(&self) -> Option<$t_unsigned> {
+                use std::convert::TryInto;
+                (*self).try_into().ok()
+            }
+
+            unsafe fn to_unsigned_unchecked(&self) -> $t_unsigned {
+                *self as $t_unsigned
+            }
+        }
+
+        impl PrimitiveInteger for $t {
+            fn abs_diff(self, rhs: $t) -> $t {
+                if self < rhs { rhs - self } else { self - rhs }
             }
         }
     )* }
 }
 
-impl_primitive_integer!(u8 u16 u32 u64 usize i8 i16 i32 i64 isize);
+impl_primitive_integer_signed!(
+    i8, u8;
+    i16, u16;
+    i32, u32;
+    i64, u64;
+    i128, u128;
+    isize, usize
+);
 
 /// Enriches unsigned integer types.
 pub trait PrimitiveUnsigned: PrimitiveInteger {
@@ -133,6 +180,14 @@ pub trait PrimitiveUnsigned: PrimitiveInteger {
     /// ```
     fn sqrt(self) -> Self;
 
+    /// Greatest common divisor.
+    ///
+    /// If both numbers are 0, returns 0.
+    /// That's because 0 is the identity element as we see (ℕ, gcd) as a monoid.
+    fn gcd(self, other: Self) -> Self {
+        if other == Self::zero() { self } else { other.gcd(self % &other) }
+    }
+
     // fn to_le_big_digits(self) -> Vec<BigDigit>;
 }
 
@@ -177,58 +232,47 @@ macro_rules! impl_primitive_unsigned {
     )* }
 }
 
-impl_primitive_unsigned!(u8 u16 u32 u64 usize);
+impl_primitive_unsigned!(u8 u16 u32 u64 u128 usize);
 
-// TODO: Make generic
-/// Greatest common divisor.
-///
-/// If both `a` and `b` are 0, returns 0.
-/// That's because 0 is the identity element as we see (ℕ, gcd) as a monoid.
-pub fn gcd(a: u64, b: u64) -> u64 {
-    if b == 0 { a } else { gcd(b, a%b) }
+/// Enriches signed integer types.
+pub trait PrimitiveSigned: PrimitiveInteger {
+    /// Calculates Bézout coefficients, that's (*x*, *y*) satisfying *ax* + *by* = gcd(*a*, *b*).
+    ///
+    /// Returned value is a 3-tuple `(x, y, g)`.
+    ///
+    /// `g` is `gcd(a.abs(), b.abs())`. The right hand side of the equation is `g`.
+    ///
+    /// `x` and `y` are Bézout coefficients. When both `a.abs()` and `b.abs()` are positive,
+    /// the coefficients satisfy `x.abs() <= b.abs()` and `y.abs() <= a.abs()`.
+    /// When one of `a` and `b` is 0, either `x.abs()` or `y.abs()` is 1 and the other is 0.
+    /// Otherwise, both `x` and `y` are 0.
+    fn bezout(self, other: Self) -> (Self, Self, Self::Unsigned);
 }
 
-// TODO: Make generic
-/// Calculates Bézout coefficients, that's (*x*, *y*) satisfying *ax* + *by* = gcd(*a*, *b*).
-///
-/// Returned value is a 3-tuple `(x, y, g)`.
-///
-/// `g` is `gcd(a.abs(), b.abs())`. The right hand side of the equation is `g`.
-///
-/// `x` and `y` are Bézout coefficients. When both `a.abs()` and `b.abs()` are positive,
-/// the coefficients satisfy `x.abs() <= b.abs()` and `y.abs() <= a.abs()`.
-/// When one of `a` and `b` is 0, either `x.abs()` or `y.abs()` is 1 and the other is 0.
-/// Otherwise, both `x` and `y` are 0.
-pub fn bezout(a: i64, b: i64) -> (i64, i64, u64) {
-    let (x, y, g) = bezout_sub((a * a.signum()) as u64, (b * b.signum()) as u64);
-    (x * a.signum(), y * b.signum(), g)
-}
-
-fn bezout_sub(a: u64, b: u64) -> (i64, i64, u64) {
-    if b == 0 { (1, 0, a) } else {
-        let m = (a / b) as i64;
-        let (x, y, g) = bezout_sub(b, a%b);
-        (y, x - m*y, g)
+unsafe fn bezout_sub<T: PrimitiveUnsigned>(a: T, b: T) -> (T::Signed, T::Signed, T) {
+    if b == T::zero() { (T::Signed::one(), T::Signed::zero(), a) } else {
+        let m = (a / &b).to_signed_unchecked();
+        let (x, y, g) = bezout_sub(b, a % &b);
+        let solution_b = x - &(m * &y);
+        (y, solution_b, g)
     }
 }
 
-macro_rules! impl_primitive_float {
-    ( $($t:ty)* ) => { $(
-        impl WithZero for $t {
-            fn zero() -> $t { 0.0 }
+macro_rules! impl_primitive_signed {
+    ( $($t: ty)* ) => { $(
+        impl PrimitiveSigned for $t {
+            fn bezout(self, other: $t) -> ($t, $t, <$t as ToUnsigned>::Unsigned) {
+                let (x, y, g) = unsafe { bezout_sub(
+                    (self * self.signum()).to_unsigned_unchecked(),
+                    (other * other.signum()).to_unsigned_unchecked()
+                ) };
+                (x * self.signum(), y * other.signum(), g)
+            }
         }
-
-        impl WithOne for $t {
-            fn one() -> $t { 1.0 }
-        }
-
-        impl Numeric for $t {}
-
-        impl Float for $t {}
     )* }
 }
 
-impl_primitive_float!(f32 f64);
+impl_primitive_signed!(i8 i16 i32 i64 i128 isize);
 
 // END SNIPPET
 
@@ -292,46 +336,46 @@ mod tests {
 
     #[test]
     fn test_gcd() {
-        assert_eq!(gcd(0, 0), 0);
-        assert_eq!(gcd(1, 0), 1);
-        assert_eq!(gcd(123, 0), 123);
-        assert_eq!(gcd(0, 1), 1);
-        assert_eq!(gcd(0, 123), 123);
-        assert_eq!(gcd(1, 1), 1);
-        assert_eq!(gcd(31, 31), 31);
-        assert_eq!(gcd(56, 56), 56);
-        assert_eq!(gcd(31, 47), 1);
-        assert_eq!(gcd(47, 31), 1);
-        assert_eq!(gcd(56, 42), 14);
-        assert_eq!(gcd(42, 56), 14);
+        assert_eq!(u32::gcd(0, 0), 0);
+        assert_eq!(u32::gcd(1, 0), 1);
+        assert_eq!(u32::gcd(123, 0), 123);
+        assert_eq!(u32::gcd(0, 1), 1);
+        assert_eq!(u32::gcd(0, 123), 123);
+        assert_eq!(u32::gcd(1, 1), 1);
+        assert_eq!(u32::gcd(31, 31), 31);
+        assert_eq!(u32::gcd(56, 56), 56);
+        assert_eq!(u32::gcd(31, 47), 1);
+        assert_eq!(u32::gcd(47, 31), 1);
+        assert_eq!(u32::gcd(56, 42), 14);
+        assert_eq!(u32::gcd(42, 56), 14);
     }
 
     #[test]
     fn test_bezout() {
-        assert_eq!(bezout(0, 0), (0, 0, 0));
-        assert_eq!(bezout(1, 0), (1, 0, 1));
-        assert_eq!(bezout(0, 1), (0, 1, 1));
-        assert_eq!(bezout(-1, 0), (-1, 0, 1));
-        assert_eq!(bezout(0, -1), (0, -1, 1));
+        assert_eq!(i32::bezout(0, 0), (0, 0, 0));
+        assert_eq!(i32::bezout(1, 0), (1, 0, 1));
+        assert_eq!(i32::bezout(0, 1), (0, 1, 1));
+        assert_eq!(i32::bezout(-1, 0), (-1, 0, 1));
+        assert_eq!(i32::bezout(0, -1), (0, -1, 1));
 
-        let (x1, y1, g1) = bezout(31, 47);
+        let (x1, y1, g1) = i32::bezout(31, 47);
         assert_eq!(g1, 1);
-        assert_eq!(31*x1 + 47*y1, g1 as i64);
+        assert_eq!(31*x1 + 47*y1, g1 as i32);
         assert!(x1.abs() <= 47 && y1.abs() <= 31);
 
-        let (x2, y2, g2) = bezout(56, 42);
+        let (x2, y2, g2) = i32::bezout(56, 42);
         assert_eq!(g2, 14);
-        assert_eq!(56*x2 + 42*y2, g2 as i64);
+        assert_eq!(56*x2 + 42*y2, g2 as i32);
         assert!(x2.abs() <= 42 && y2.abs() <= 56);
 
-        let (x3, y3, g3) = bezout(-31, 47);
+        let (x3, y3, g3) = i32::bezout(-31, 47);
         assert_eq!(g3, 1);
-        assert_eq!(-31*x3 + 47*y3, g3 as i64);
+        assert_eq!(-31*x3 + 47*y3, g3 as i32);
         assert!(x3.abs() <= 47 && y3.abs() <= 31);
 
-        let (x4, y4, g4) = bezout(-56, -42);
+        let (x4, y4, g4) = i32::bezout(-56, -42);
         assert_eq!(g4, 14);
-        assert_eq!(-56*x4 - 42*y4, g4 as i64);
+        assert_eq!(-56*x4 - 42*y4, g4 as i32);
         assert!(x4.abs() <= 42 && y4.abs() <= 56);
     }
 }
