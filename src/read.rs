@@ -289,6 +289,30 @@ impl Readable for u64 {
     }
 }
 
+impl Readable for i128 {
+    type Output = Self;
+    const WORD_COUNT: usize = 1;
+
+    fn read_words(words: &[&str]) -> Result<i128, String> {
+        use std::str::FromStr;
+        i128::from_str(words[0]).map_err(|_| {
+            format!("cannot parse `{}` as i64", words[0])
+        })
+    }
+}
+
+impl Readable for u128 {
+    type Output = Self;
+    const WORD_COUNT: usize = 1;
+
+    fn read_words(words: &[&str]) -> Result<u128, String> {
+        use std::str::FromStr;
+        u128::from_str(words[0]).map_err(|_| {
+            format!("cannot parse `{}` as u64", words[0])
+        })
+    }
+}
+
 impl Readable for isize {
     type Output = Self;
     const WORD_COUNT: usize = 1;
